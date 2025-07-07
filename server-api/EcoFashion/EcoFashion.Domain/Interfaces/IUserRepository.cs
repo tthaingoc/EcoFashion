@@ -11,5 +11,6 @@ namespace EcoFashion.Domain.Interfaces
         Task DeleteAsync(int userId);
         Task<bool> ExistsAsync(int userId);
         Task<bool> EmailExistsAsync(string email);
+        Task<bool> UsernameExistsAsync(string username);
     }
 }

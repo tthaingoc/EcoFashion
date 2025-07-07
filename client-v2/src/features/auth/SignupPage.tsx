@@ -42,12 +42,13 @@ export const SignupPage: React.FC = () => {
       });
 
       if (result.success) {
-        // Redirect to OTP verification if email is not verified
-        if (!result.isEmailVerified) {
-          navigate(`/verify-otp?email=${encodeURIComponent(data.email)}`);
-        } else {
-          navigate('/login');
-        }
+        // Always redirect to OTP verification since backend sends OTP for email verification
+        navigate(`/verify-otp?email=${encodeURIComponent(data.email)}`, {
+          state: {
+            email: data.email,
+            message: result.message,
+          },
+        });
       }
     } catch (error) {
       // Error is handled by the mutation

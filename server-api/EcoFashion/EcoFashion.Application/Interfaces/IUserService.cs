@@ -9,5 +9,6 @@ namespace EcoFashion.Application.Interfaces
         Task<SignupResponse> SignupAsync(SignupRequest request);
         Task<bool> VerifyOTPAsync(VerifyOTPRequest request);
         Task<bool> ResendOTPAsync(string email);
+        Task<OTPStatusResponse> GetOTPStatusAsync(string email);
     }
 }

@@ -61,9 +61,9 @@ namespace EcoFashion.API.Controllers
             {
                 return BadRequest(ApiResult<object>.Fail(ex.Message));
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return StatusCode(500, ApiResult<object>.Fail(ex.Message));
+                return StatusCode(500, ApiResult<object>.Fail("Đã có lỗi xảy ra. Vui lòng thử lại sau."));
             }
         }
 
@@ -78,7 +78,7 @@ namespace EcoFashion.API.Controllers
                 var result = await _userService.VerifyOTPAsync(request);
                 if (result)
                 {
-                    return Ok(ApiResult<object>.Succeed("Xác thực OTP thành công."));
+                    return Ok(ApiResult<object>.Succeed("Xác thực OTP thành công. Tài khoản đã được kích hoạt."));
                 }
                 return BadRequest(ApiResult<object>.Fail("Xác thực OTP thất bại."));
             }
@@ -86,9 +86,9 @@ namespace EcoFashion.API.Controllers
             {
                 return BadRequest(ApiResult<object>.Fail(ex.Message));
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return StatusCode(500, ApiResult<object>.Fail(ex.Message));
+                return StatusCode(500, ApiResult<object>.Fail("Đã có lỗi xảy ra. Vui lòng thử lại sau."));
             }
         }
 
@@ -103,7 +103,7 @@ namespace EcoFashion.API.Controllers
                 var result = await _userService.ResendOTPAsync(request.Email);
                 if (result)
                 {
-                    return Ok(ApiResult<object>.Succeed("Mã OTP đã được gửi lại."));
+                    return Ok(ApiResult<object>.Succeed("Mã OTP đã được gửi lại thành công."));
                 }
                 return BadRequest(ApiResult<object>.Fail("Không thể gửi lại mã OTP."));
             }
@@ -111,9 +111,30 @@ namespace EcoFashion.API.Controllers
             {
                 return BadRequest(ApiResult<object>.Fail(ex.Message));
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return StatusCode(500, ApiResult<object>.Fail(ex.Message));
+                return StatusCode(500, ApiResult<object>.Fail("Đã có lỗi xảy ra. Vui lòng thử lại sau."));
+            }
+        }
+
+        [HttpGet("otp-status")]
+        public async Task<IActionResult> GetOTPStatus([FromQuery] string email)
+        {
+            if (string.IsNullOrEmpty(email))
+                return BadRequest(ApiResult<object>.Fail("Email là bắt buộc."));
+
+            try
+            {
+                var result = await _userService.GetOTPStatusAsync(email);
+                return Ok(ApiResult<OTPStatusResponse>.Succeed(result));
+            }
+            catch (BadRequestException ex)
+            {
+                return BadRequest(ApiResult<object>.Fail(ex.Message));
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, ApiResult<object>.Fail("Đã có lỗi xảy ra. Vui lòng thử lại sau."));
             }
         }
     }

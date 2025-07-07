@@ -1,12 +1,14 @@
 // Authentication types
 export interface User {
-  id: number;
+  userId: number;
   email: string;
-  fullname: string;
-  username: string;
+  fullName: string;
+  username?: string;
   phone?: string;
-  roleName: string;
-  isEmailVerified: boolean;
+  role: string;
+  roleId: number;
+  status: string;
+  createdAt: string;
 }
 
 export interface LoginRequest {
@@ -17,7 +19,7 @@ export interface LoginRequest {
 export interface SignupRequest {
   email: string;
   password: string;
-  fullname: string;
+  fullName: string; // Đổi từ fullname thành fullName để khớp với backend
   username: string;
   phone?: string;
 }
@@ -40,7 +42,7 @@ export interface AuthResponse {
 export interface SignupResponse {
   success: boolean;
   message: string;
-  isEmailVerified: boolean;
+  email: string; // Đổi từ isEmailVerified thành email để khớp với backend
 }
 
 export interface OTPResponse {

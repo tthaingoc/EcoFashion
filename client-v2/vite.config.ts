@@ -2,16 +2,24 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 
-// https://vite.dev/config/
+// Development configuration for EcoFashion v2
 export default defineConfig({
   plugins: [react()],
+  server: {
+    port: 5173,
+    host: 'localhost',
+    open: true,
+    cors: true
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
       '@/features': path.resolve(__dirname, './src/features'),
-      '@/shared': path.resolve(__dirname, './src/shared'),
-      '@/layouts': path.resolve(__dirname, './src/layouts'),
       '@/api': path.resolve(__dirname, './src/api'),
     },
   },
+  build: {
+    outDir: 'dist',
+    sourcemap: true
+  }
 });

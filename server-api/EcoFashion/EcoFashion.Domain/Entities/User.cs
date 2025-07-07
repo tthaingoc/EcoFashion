@@ -33,6 +33,11 @@ namespace EcoFashion.Domain.Entities
 
         public DateTime? OTPExpiresAt { get; set; }
 
+        // Brute force protection fields
+        public int OTPAttemptCount { get; set; } = 0;
+
+        public DateTime? OTPLockoutExpiresAt { get; set; }
+
         // [ForeignKey("UserRole")]
         public int RoleId { get; set; }
         public virtual UserRole? UserRole { get; set; }

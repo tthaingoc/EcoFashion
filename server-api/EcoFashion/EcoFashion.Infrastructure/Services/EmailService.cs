@@ -38,12 +38,14 @@ namespace EcoFashion.Infrastructure.Services
                 mailMessage.To.Add(new MailAddress(mailData.To, mailData.DisplayName ?? mailData.To.Split('@')[0]));
 
                 await smtpClient.SendMailAsync(mailMessage);
+                Console.WriteLine($"Email sent successfully to {mailData.To}");
                 return true;
             }
             catch (Exception ex)
             {
                 // Log the exception here if you have a logging service
-                Console.WriteLine($"Error sending email: {ex.Message}");
+                Console.WriteLine($"Error sending email to {mailData.To}: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
                 return false;
             }
         }
@@ -55,7 +57,7 @@ namespace EcoFashion.Infrastructure.Services
                 To = email,
                 DisplayName = email.Split('@')[0], // Sử dụng phần trước @ làm tên
                 Subject = "Xác thực tài khoản EcoFashion",
-                Body = $"Mã OTP của bạn là: {otp}\n\nMã này sẽ hết hạn sau 10 phút."
+                Body = $"Mã OTP của bạn là: {otp}\n\nMã này sẽ hết hạn sau 10 phút.\n\nVui lòng không chia sẻ mã này với bất kỳ ai."
             };
 
             return await SendEmailAsync(mailData);

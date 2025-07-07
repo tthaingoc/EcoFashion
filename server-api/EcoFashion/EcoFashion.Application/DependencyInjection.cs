@@ -1,3 +1,4 @@
+using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 
@@ -9,6 +10,9 @@ namespace EcoFashion.Application
         {
             // AutoMapper
             services.AddAutoMapper(Assembly.GetExecutingAssembly());
+
+            // FluentValidation
+            services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 
             return services;
         }

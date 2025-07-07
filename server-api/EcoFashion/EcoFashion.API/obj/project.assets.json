@@ -187,36 +187,6 @@
           }
         }
       },
-      "MediatR/12.4.1": {
-        "type": "package",
-        "dependencies": {
-          "MediatR.Contracts": "[2.0.1, 3.0.0)",
-          "Microsoft.Extensions.DependencyInjection.Abstractions": "8.0.0"
-        },
-        "compile": {
-          "lib/net6.0/MediatR.dll": {
-            "related": ".xml"
-          }
-        },
-        "runtime": {
-          "lib/net6.0/MediatR.dll": {
-            "related": ".xml"
-          }
-        }
-      },
-      "MediatR.Contracts/2.0.1": {
-        "type": "package",
-        "compile": {
-          "lib/netstandard2.0/MediatR.Contracts.dll": {
-            "related": ".xml"
-          }
-        },
-        "runtime": {
-          "lib/netstandard2.0/MediatR.Contracts.dll": {
-            "related": ".xml"
-          }
-        }
-      },
       "Microsoft.AspNetCore.Authentication.JwtBearer/8.0.11": {
         "type": "package",
         "dependencies": {
@@ -3085,7 +3055,6 @@
           "EcoFashion.Domain": "1.0.0",
           "FluentValidation": "12.0.0",
           "FluentValidation.DependencyInjectionExtensions": "12.0.0",
-          "MediatR": "12.4.1",
           "Microsoft.AspNetCore.Http.Abstractions": "2.3.0",
           "Microsoft.Extensions.DependencyInjection.Abstractions": "8.0.2"
         },
@@ -3359,37 +3328,6 @@
         "lib/netstandard2.1/MailKit.xml",
         "mailkit.4.9.0.nupkg.sha512",
         "mailkit.nuspec"
-      ]
-    },
-    "MediatR/12.4.1": {
-      "sha512": "0tLxCgEC5+r1OCuumR3sWyiVa+BMv3AgiU4+pz8xqTc+2q1WbUEXFOr7Orm96oZ9r9FsldgUtWvB2o7b9jDOaw==",
-      "type": "package",
-      "path": "mediatr/12.4.1",
-      "files": [
-        ".nupkg.metadata",
-        ".signature.p7s",
-        "README.md",
-        "gradient_128x128.png",
-        "lib/net6.0/MediatR.dll",
-        "lib/net6.0/MediatR.xml",
-        "lib/netstandard2.0/MediatR.dll",
-        "lib/netstandard2.0/MediatR.xml",
-        "mediatr.12.4.1.nupkg.sha512",
-        "mediatr.nuspec"
-      ]
-    },
-    "MediatR.Contracts/2.0.1": {
-      "sha512": "FYv95bNT4UwcNA+G/J1oX5OpRiSUxteXaUt2BJbRSdRNiIUNbggJF69wy6mnk2wYToaanpdXZdCwVylt96MpwQ==",
-      "type": "package",
-      "path": "mediatr.contracts/2.0.1",
-      "files": [
-        ".nupkg.metadata",
-        ".signature.p7s",
-        "gradient_128x128.png",
-        "lib/netstandard2.0/MediatR.Contracts.dll",
-        "lib/netstandard2.0/MediatR.Contracts.xml",
-        "mediatr.contracts.2.0.1.nupkg.sha512",
-        "mediatr.contracts.nuspec"
       ]
     },
     "Microsoft.AspNetCore.Authentication.JwtBearer/8.0.11": {
@@ -9269,11 +9207,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\testprogram\\Workspaces\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.API\\EcoFashion.API.csproj",
+      "projectUniqueName": "D:\\testprogram\\Workspaces\\CapstoneProject\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.API\\EcoFashion.API.csproj",
       "projectName": "EcoFashion.API",
-      "projectPath": "D:\\testprogram\\Workspaces\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.API\\EcoFashion.API.csproj",
+      "projectPath": "D:\\testprogram\\Workspaces\\CapstoneProject\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.API\\EcoFashion.API.csproj",
       "packagesPath": "C:\\Users\\User\\.nuget\\packages\\",
-      "outputPath": "D:\\testprogram\\Workspaces\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.API\\obj\\",
+      "outputPath": "D:\\testprogram\\Workspaces\\CapstoneProject\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.API\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -9295,11 +9233,11 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "projectReferences": {
-            "D:\\testprogram\\Workspaces\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Application\\EcoFashion.Application.csproj": {
-              "projectPath": "D:\\testprogram\\Workspaces\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Application\\EcoFashion.Application.csproj"
+            "D:\\testprogram\\Workspaces\\CapstoneProject\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Application\\EcoFashion.Application.csproj": {
+              "projectPath": "D:\\testprogram\\Workspaces\\CapstoneProject\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Application\\EcoFashion.Application.csproj"
             },
-            "D:\\testprogram\\Workspaces\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Infrastructure\\EcoFashion.Infrastructure.csproj": {
-              "projectPath": "D:\\testprogram\\Workspaces\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Infrastructure\\EcoFashion.Infrastructure.csproj"
+            "D:\\testprogram\\Workspaces\\CapstoneProject\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Infrastructure\\EcoFashion.Infrastructure.csproj": {
+              "projectPath": "D:\\testprogram\\Workspaces\\CapstoneProject\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Infrastructure\\EcoFashion.Infrastructure.csproj"
             }
           }
         }

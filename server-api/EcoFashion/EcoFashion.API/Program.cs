@@ -5,7 +5,7 @@ using EcoFashion.Application.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add JSON options to handle potential circular references
+// Add Controllers with JSON options
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
@@ -16,53 +16,29 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
-// Remove duplicate JWT configuration since it's now handled in Infrastructure
-// Configure JWT Authentication
-//var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-//var key = Encoding.ASCII.GetBytes(jwtSettings["Key"]!);
-
-//builder.Services.AddAuthentication(options =>
-//{
-//    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-//    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-//})
-//.AddJwtBearer(options =>
-//{
-//    options.RequireHttpsMetadata = false;
-//    options.SaveToken = true;
-//    options.TokenValidationParameters = new TokenValidationParameters
-//    {
-//        ValidateIssuerSigningKey = true,
-//        IssuerSigningKey = new SymmetricSecurityKey(key),
-//        ValidateIssuer = false,
-//        ValidateAudience = false,
-//        ValidateLifetime = true,
-//        ClockSkew = TimeSpan.Zero
-//    };
-//});
-
-// CORS Configuration
+// CORS for Development
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", builder =>
+    options.AddPolicy("DevCors", builder =>
     {
-        builder.AllowAnyOrigin()
+        builder.WithOrigins("http://localhost:5173") // Frontend dev server
                .AllowAnyMethod()
-               .AllowAnyHeader();
+               .AllowAnyHeader()
+               .AllowCredentials();
     });
 });
 
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+// Swagger for Development
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo 
     { 
         Title = "EcoFashion API", 
-        Version = "v1" 
+        Version = "v2 - Development" 
     });
     
-    // Configure JWT in Swagger
+    // JWT Configuration for Swagger
     options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
     {
         In = Microsoft.OpenApi.Models.ParameterLocation.Header,
@@ -91,29 +67,28 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
-// Hook into application lifetime events and trigger only when application is fully started 
+// Database Initialisation
 app.Lifetime.ApplicationStarted.Register(async () =>
 {
-    // Database Initialiser 
     await app.InitialiseDatabaseAsync();
 });
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+// Development-only features
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "EcoFashion API v2 - Development");
+    c.RoutePrefix = "swagger";
+});
 
-app.UseHttpsRedirection();
-app.UseCors("AllowAll");
-
-// Add Exception Middleware
+// Configure pipeline
+app.UseCors("DevCors");
 app.UseMiddleware<ExceptionMiddleware>();
-
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
+
+// Force app to run on port 5199
+app.Urls.Add("http://localhost:5199");
 
 app.Run();

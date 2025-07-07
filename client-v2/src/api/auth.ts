@@ -34,14 +34,14 @@ export const authApi = {
   signup: async (
     email: string,
     password: string,
-    fullname: string,
+    fullName: string,
     username: string,
     phone?: string
   ): Promise<SignupResponse> => {
     const userData: SignupRequest = {
       email,
       password,
-      fullname,
+      fullName,
       username,
       phone,
     };

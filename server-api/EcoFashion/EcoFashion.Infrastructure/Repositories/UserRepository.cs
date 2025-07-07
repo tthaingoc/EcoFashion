@@ -16,9 +16,17 @@ namespace EcoFashion.Infrastructure.Repositories
 
         public async Task<User?> GetByEmailAsync(string email)
         {
-            return await _context.Users
+            var user = await _context.Users
                 .Include(u => u.UserRole)
                 .FirstOrDefaultAsync(u => u.Email == email);
+            
+            // Debug log
+            if (user != null)
+            {
+                Console.WriteLine($"User found: {user.Email}, RoleId: {user.RoleId}, Role: {user.UserRole?.RoleName ?? "NULL"}");
+            }
+            
+            return user;
         }
 
         public async Task<User?> GetByIdAsync(int userId)
@@ -60,6 +68,11 @@ namespace EcoFashion.Infrastructure.Repositories
         public async Task<bool> EmailExistsAsync(string email)
         {
             return await _context.Users.AnyAsync(u => u.Email == email);
+        }
+
+        public async Task<bool> UsernameExistsAsync(string username)
+        {
+            return await _context.Users.AnyAsync(u => u.Username == username);
         }
     }
 }

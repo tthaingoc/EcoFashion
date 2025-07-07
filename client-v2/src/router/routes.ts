@@ -7,6 +7,12 @@ export const ROUTES = {
   VERIFY_OTP: '/verify-otp',
   FORGOT_PASSWORD: '/forgot-password',
 
+  // Protected routes
+  DASHBOARD: '/dashboard',
+  PROFILE: '/profile',
+  ORDERS: '/orders',
+  WISHLIST: '/wishlist',
+
   // Product routes
   PRODUCTS: '/products',
   PRODUCT_DETAIL: '/products/:id',
@@ -14,11 +20,6 @@ export const ROUTES = {
   // Designer routes
   DESIGNERS: '/designers',
   DESIGNER_PROFILE: '/designer/:slug',
-
-  // Protected routes
-  PROFILE: '/profile',
-  ORDERS: '/orders',
-  WISHLIST: '/wishlist',
 
   // Role-specific routes
   REGISTER_DESIGNER: '/register/designer',

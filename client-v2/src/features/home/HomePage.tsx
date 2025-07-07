@@ -17,7 +17,7 @@ export const SimpleHomePage: React.FC = () => {
     if (!isAuthenticated) {
       return 'Chào mừng đến với EcoFashion!';
     }
-    const displayName = user?.fullname || user?.email?.split('@')[0] || 'bạn';
+    const displayName = user?.fullName || user?.email?.split('@')[0] || 'bạn';
     return `Chào mừng ${displayName}!`;
   };
 

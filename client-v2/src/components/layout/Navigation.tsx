@@ -43,7 +43,7 @@ export const Navigation: React.FC<NavigationProps> = () => {
 
   const getUserDisplayName = () => {
     if (!user) return '';
-    return user.fullname || user.email?.split('@')[0] || 'User';
+    return user.fullName || user.email?.split('@')[0] || 'User';
   };
 
   return (
