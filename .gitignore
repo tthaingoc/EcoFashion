@@ -137,3 +137,32 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# ASP.NET Core configuration files (for security)
+appsettings.json
+appsettings.*.json
+!appsettings.Development.json.example
+!appsettings.Production.json.example
+
+# .NET Core build output
+bin/
+obj/
+*.user
+*.suo
+*.cache
+*.docstates
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+
+# .NET Core publish output
+publish/
+
+# Entity Framework
+*.dbmdl
+*.jfm
+*.pfx
+*.publishsettings
