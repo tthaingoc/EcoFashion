@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="..\build\EcoFashion.API.props" />
+</Project>
