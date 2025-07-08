@@ -33,9 +33,11 @@ namespace EcoFashion.Domain.Entities
 
         public DateTime? OTPExpiresAt { get; set; }
 
-        // Brute force protection fields
-        public int OTPAttemptCount { get; set; } = 0;
+        // Brute force protection fields (V2 feature - backward compatible)
+        [Column(TypeName = "int")]
+        public int? OTPAttemptCount { get; set; } = 0;
 
+        [Column(TypeName = "datetime2")]
         public DateTime? OTPLockoutExpiresAt { get; set; }
 
         // [ForeignKey("UserRole")]

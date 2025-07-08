@@ -1,9 +1,9 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { CssBaseline } from '@mui/material';
-import { AppRouter } from './router/AppRouter';
-import { AuthProvider } from '@/features/auth/AuthContext';
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { ThemeProvider, createTheme } from "@mui/material/styles";
+import { CssBaseline } from "@mui/material";
+import { AppRouter } from "./router/AppRouter";
+import { AuthProvider } from "@/features/auth/AuthContext";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -19,13 +19,13 @@ const queryClient = new QueryClient({
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#2e7d32', // Green color for eco theme
+      main: "#2e7d32", // Green color for eco theme
     },
     secondary: {
-      main: '#4caf50',
+      main: "#4caf50",
     },
     background: {
-      default: '#fafafa',
+      default: "#fafafa",
     },
   },
   typography: {
@@ -53,7 +53,7 @@ const theme = createTheme({
     MuiButton: {
       styleOverrides: {
         root: {
-          textTransform: 'none',
+          textTransform: "none",
           borderRadius: 8,
         },
       },
@@ -62,7 +62,7 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: 12,
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
         },
       },
     },
@@ -77,7 +77,8 @@ function App() {
         <AuthProvider>
           <AppRouter />
         </AuthProvider>
-        <ReactQueryDevtools initialIsOpen={false} />
+        {/* Only show DevTools in development */}
+        {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
       </ThemeProvider>
     </QueryClientProvider>
   );

@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("EcoFashion.Infrastructure")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2804fda3ea533788591c23094176a0733335de1c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8b79f14a50d0747408a82cb10fff67402584df89")]
 [assembly: System.Reflection.AssemblyProductAttribute("EcoFashion.Infrastructure")]
 [assembly: System.Reflection.AssemblyTitleAttribute("EcoFashion.Infrastructure")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

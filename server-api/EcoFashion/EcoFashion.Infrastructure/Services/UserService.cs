@@ -191,8 +191,8 @@ namespace EcoFashion.Infrastructure.Services
                 // Kiểm tra OTP
                 if (string.IsNullOrEmpty(user.OTPCode) || user.OTPCode != request.OTPCode)
                 {
-                    // Tăng số lần thử
-                    user.OTPAttemptCount++;
+                    // Tăng số lần thử (backward compatible)
+                    user.OTPAttemptCount = (user.OTPAttemptCount ?? 0) + 1;
                     
                     // Nếu vượt quá số lần cho phép, khóa tài khoản
                     if (user.OTPAttemptCount >= SecurityConstants.MaxOTPAttempts)
@@ -208,7 +208,7 @@ namespace EcoFashion.Infrastructure.Services
 
                     _logger.LogWarning("Invalid OTP attempt for email: {Email}, Attempts: {Attempts}/{MaxAttempts}", 
                         request.Email, user.OTPAttemptCount, SecurityConstants.MaxOTPAttempts);
-                    throw new BadRequestException($"Mã OTP không chính xác. Còn lại {SecurityConstants.MaxOTPAttempts - user.OTPAttemptCount} lần thử.");
+                    throw new BadRequestException($"Mã OTP không chính xác. Còn lại {SecurityConstants.MaxOTPAttempts - (user.OTPAttemptCount ?? 0)} lần thử.");
                 }
 
                 // OTP hợp lệ - kích hoạt tài khoản
@@ -309,7 +309,7 @@ namespace EcoFashion.Infrastructure.Services
                 {
                     IsVerified = user.Status == Domain.Enums.UserStatus.Active,
                     IsLocked = isLocked,
-                    AttemptCount = user.OTPAttemptCount,
+                    AttemptCount = user.OTPAttemptCount ?? 0,
                     MaxAttempts = SecurityConstants.MaxOTPAttempts,
                     LockoutExpiresAt = user.OTPLockoutExpiresAt,
                     OTPExpiresAt = user.OTPExpiresAt,
@@ -340,7 +340,7 @@ namespace EcoFashion.Infrastructure.Services
             if (string.IsNullOrEmpty(user.OTPCode))
                 return "Chưa có mã OTP. Vui lòng đăng ký tài khoản.";
 
-            return $"Mã OTP đã được gửi. Còn lại {SecurityConstants.MaxOTPAttempts - user.OTPAttemptCount} lần thử.";
+            return $"Mã OTP đã được gửi. Còn lại {SecurityConstants.MaxOTPAttempts - (user.OTPAttemptCount ?? 0)} lần thử.";
         }
 
         private string GenerateSecureOTP()

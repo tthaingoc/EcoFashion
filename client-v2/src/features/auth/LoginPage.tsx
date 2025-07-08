@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useNavigate, Link, useSearchParams } from 'react-router-dom';
+import React, { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import {
   Box,
   Typography,
@@ -13,13 +13,14 @@ import {
   InputAdornment,
   FormControlLabel,
   Checkbox,
-  Alert,
   CircularProgress,
-} from '@mui/material';
-import { Visibility, VisibilityOff } from '@mui/icons-material';
-import { useLogin } from '@/hooks/useAuth';
-import { useAuthContext } from './AuthContext';
-import { loginSchema, type LoginFormData } from './validation';
+} from "@mui/material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { useLogin } from "@/hooks/useAuth";
+import { useAuthContext } from "./AuthContext";
+import { useApiError } from "@/hooks/useApiError";
+import { ErrorDisplay } from "@/components/common";
+import { loginSchema, type LoginFormData } from "./authFormSchema";
 
 export const LoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -28,6 +29,7 @@ export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const { user, setUser } = useAuthContext();
   const loginMutation = useLogin();
+  const { error, handleError, clearError } = useApiError();
 
   const {
     register,
@@ -39,8 +41,8 @@ export const LoginPage: React.FC = () => {
 
   // Get redirect path from query params
   const getRedirectPath = () => {
-    const returnUrl = searchParams.get('returnUrl');
-    return returnUrl || '/';
+    const returnUrl = searchParams.get("returnUrl");
+    return returnUrl || "/";
   };
 
   useEffect(() => {
@@ -59,24 +61,24 @@ export const LoginPage: React.FC = () => {
       setUser(result.user);
       navigate(getRedirectPath());
     } catch (error) {
-      // Error is handled by the mutation
+      handleError(error);
     }
   };
 
   return (
     <Box
       sx={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: 'background.default',
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "background.default",
         px: 2,
       }}
     >
       <Card
         sx={{
-          width: '100%',
+          width: "100%",
           maxWidth: 400,
           boxShadow: 3,
         }}
@@ -88,14 +90,14 @@ export const LoginPage: React.FC = () => {
               sx={{
                 width: 60,
                 height: 60,
-                borderRadius: '50%',
-                backgroundColor: 'primary.main',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto',
+                borderRadius: "50%",
+                backgroundColor: "primary.main",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                margin: "0 auto",
                 mb: 2,
-                fontSize: '24px',
+                fontSize: "24px",
               }}
             >
               🌱
@@ -121,12 +123,8 @@ export const LoginPage: React.FC = () => {
             </Typography>
           </Box>
 
-          {/* Error Alert */}
-          {loginMutation.isError && (
-            <Alert severity="error" sx={{ mb: 3 }}>
-              {loginMutation.error?.message || 'Đăng nhập thất bại'}
-            </Alert>
-          )}
+          {/* Error Display */}
+          <ErrorDisplay error={error} onClose={clearError} />
 
           {/* Login Form */}
           <Box component="form" onSubmit={handleSubmit(onSubmit)}>
@@ -136,7 +134,7 @@ export const LoginPage: React.FC = () => {
               placeholder="Nhập email của bạn"
               type="email"
               margin="normal"
-              {...register('email')}
+              {...register("email")}
               error={!!errors.email}
               helperText={errors.email?.message}
               sx={{ mb: 2 }}
@@ -146,9 +144,9 @@ export const LoginPage: React.FC = () => {
               fullWidth
               label="Mật khẩu"
               placeholder="Nhập mật khẩu"
-              type={showPassword ? 'text' : 'password'}
+              type={showPassword ? "text" : "password"}
               margin="normal"
-              {...register('password')}
+              {...register("password")}
               error={!!errors.password}
               helperText={errors.password?.message}
               InputProps={{
@@ -176,7 +174,7 @@ export const LoginPage: React.FC = () => {
                 control={
                   <Checkbox
                     checked={rememberMe}
-                    onChange={e => setRememberMe(e.target.checked)}
+                    onChange={(e) => setRememberMe(e.target.checked)}
                     color="primary"
                   />
                 }
@@ -189,9 +187,9 @@ export const LoginPage: React.FC = () => {
               <Link
                 to="/forgot-password"
                 style={{
-                  color: '#2e7d32',
-                  textDecoration: 'none',
-                  fontSize: '14px',
+                  color: "#2e7d32",
+                  textDecoration: "none",
+                  fontSize: "14px",
                 }}
               >
                 Quên mật khẩu?
@@ -206,26 +204,26 @@ export const LoginPage: React.FC = () => {
               sx={{
                 py: 1.5,
                 fontWeight: 600,
-                fontSize: '16px',
+                fontSize: "16px",
                 mb: 3,
               }}
             >
               {loginMutation.isPending ? (
                 <CircularProgress size={24} color="inherit" />
               ) : (
-                'Đăng nhập'
+                "Đăng nhập"
               )}
             </Button>
 
             {/* Sign Up Link */}
             <Box textAlign="center">
               <Typography variant="body2" color="text.secondary">
-                Chưa có tài khoản?{' '}
+                Chưa có tài khoản?{" "}
                 <Link
                   to="/signup"
                   style={{
-                    color: '#2e7d32',
-                    textDecoration: 'none',
+                    color: "#2e7d32",
+                    textDecoration: "none",
                     fontWeight: 600,
                   }}
                 >

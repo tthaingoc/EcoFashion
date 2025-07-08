@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useNavigate, Link } from "react-router-dom";
 import {
   Box,
   Typography,
@@ -11,17 +11,19 @@ import {
   CardContent,
   IconButton,
   InputAdornment,
-  Alert,
   CircularProgress,
-} from '@mui/material';
-import { Visibility, VisibilityOff } from '@mui/icons-material';
-import { useSignup } from '@/hooks/useAuth';
-import { signupSchema, type SignupFormData } from './validation';
+} from "@mui/material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { useSignup } from "@/hooks/useAuth";
+import { useApiError } from "@/hooks/useApiError";
+import { ErrorDisplay, SuccessDisplay } from "@/components/common";
+import { signupSchema, type SignupFormData } from "./authFormSchema";
 
 export const SignupPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const signupMutation = useSignup();
+  const { error, handleError, clearError } = useApiError();
 
   const {
     register,
@@ -51,24 +53,24 @@ export const SignupPage: React.FC = () => {
         });
       }
     } catch (error) {
-      // Error is handled by the mutation
+      handleError(error);
     }
   };
 
   return (
     <Box
       sx={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: 'background.default',
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "background.default",
         px: 2,
       }}
     >
       <Card
         sx={{
-          width: '100%',
+          width: "100%",
           maxWidth: 400,
           boxShadow: 3,
         }}
@@ -80,14 +82,14 @@ export const SignupPage: React.FC = () => {
               sx={{
                 width: 60,
                 height: 60,
-                borderRadius: '50%',
-                backgroundColor: 'primary.main',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto',
+                borderRadius: "50%",
+                backgroundColor: "primary.main",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                margin: "0 auto",
                 mb: 2,
-                fontSize: '24px',
+                fontSize: "24px",
               }}
             >
               🌱
@@ -113,19 +115,17 @@ export const SignupPage: React.FC = () => {
             </Typography>
           </Box>
 
-          {/* Success Alert */}
-          {signupMutation.isSuccess && (
-            <Alert severity="success" sx={{ mb: 3 }}>
-              Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản.
-            </Alert>
-          )}
+          {/* Error Display */}
+          <ErrorDisplay error={error} onClose={clearError} />
 
-          {/* Error Alert */}
-          {signupMutation.isError && (
-            <Alert severity="error" sx={{ mb: 3 }}>
-              {signupMutation.error?.message || 'Đăng ký thất bại'}
-            </Alert>
-          )}
+          {/* Success Display */}
+          <SuccessDisplay
+            message={
+              signupMutation.isSuccess
+                ? "Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản."
+                : null
+            }
+          />
 
           {/* Signup Form */}
           <Box component="form" onSubmit={handleSubmit(onSubmit)}>
@@ -135,7 +135,7 @@ export const SignupPage: React.FC = () => {
               placeholder="Nhập email của bạn"
               type="email"
               margin="normal"
-              {...register('email')}
+              {...register("email")}
               error={!!errors.email}
               helperText={errors.email?.message}
               sx={{ mb: 2 }}
@@ -146,7 +146,7 @@ export const SignupPage: React.FC = () => {
               label="Họ và tên"
               placeholder="Nhập họ và tên"
               margin="normal"
-              {...register('fullname')}
+              {...register("fullname")}
               error={!!errors.fullname}
               helperText={errors.fullname?.message}
               sx={{ mb: 2 }}
@@ -157,7 +157,7 @@ export const SignupPage: React.FC = () => {
               label="Tên đăng nhập"
               placeholder="Nhập tên đăng nhập"
               margin="normal"
-              {...register('username')}
+              {...register("username")}
               error={!!errors.username}
               helperText={errors.username?.message}
               sx={{ mb: 2 }}
@@ -169,7 +169,7 @@ export const SignupPage: React.FC = () => {
               placeholder="Nhập số điện thoại"
               type="tel"
               margin="normal"
-              {...register('phone')}
+              {...register("phone")}
               error={!!errors.phone}
               helperText={errors.phone?.message}
               sx={{ mb: 2 }}
@@ -179,9 +179,9 @@ export const SignupPage: React.FC = () => {
               fullWidth
               label="Mật khẩu"
               placeholder="Nhập mật khẩu"
-              type={showPassword ? 'text' : 'password'}
+              type={showPassword ? "text" : "password"}
               margin="normal"
-              {...register('password')}
+              {...register("password")}
               error={!!errors.password}
               helperText={errors.password?.message}
               InputProps={{
@@ -207,26 +207,26 @@ export const SignupPage: React.FC = () => {
               sx={{
                 py: 1.5,
                 fontWeight: 600,
-                fontSize: '16px',
+                fontSize: "16px",
                 mb: 3,
               }}
             >
               {signupMutation.isPending ? (
                 <CircularProgress size={24} color="inherit" />
               ) : (
-                'Đăng ký'
+                "Đăng ký"
               )}
             </Button>
 
             {/* Login Link */}
             <Box textAlign="center">
               <Typography variant="body2" color="text.secondary">
-                Đã có tài khoản?{' '}
+                Đã có tài khoản?{" "}
                 <Link
                   to="/login"
                   style={{
-                    color: '#2e7d32',
-                    textDecoration: 'none',
+                    color: "#2e7d32",
+                    textDecoration: "none",
                     fontWeight: 600,
                   }}
                 >

@@ -1,97 +1,36 @@
-import { apiClient } from './client';
-import type {
-  LoginRequest,
-  SignupRequest,
-  VerifyOTPRequest,
-  ResendOTPRequest,
-  AuthResponse,
-  SignupResponse,
-  OTPResponse,
-  ApiResponse,
-} from '@/types/auth';
+import { apiClient } from "./client";
+import type { ApiResponse } from "@/types/apiError";
+import type { User } from "@/types/auth";
+
+// Auth request types
+export interface LoginRequest {
+  email: string;
+  passwordHash: string;
+}
+
+export interface AuthResponse {
+  token: string;
+  expiresAt: string;
+  user: User;
+}
 
 export const authApi = {
-  // User login
+  // Simple login function
   login: async (email: string, password: string): Promise<AuthResponse> => {
-    const credentials: LoginRequest = {
-      email,
-      passwordHash: password, // Backend expects raw password in "passwordHash" field
-    };
-
     const response = await apiClient.post<ApiResponse<AuthResponse>>(
-      '/User/login',
-      credentials
+      "/User/login",
+      {
+        email,
+        passwordHash: password,
+      }
     );
 
-    if (!response.data.success) {
-      throw new Error(response.data.errorMessage || 'Login failed');
+    // Backend trả về { Success: true, Result: AuthResponse }
+    if (response.data.Success && response.data.Result) {
+      return response.data.Result;
     }
 
-    return response.data.result;
-  },
-
-  // User signup/registration
-  signup: async (
-    email: string,
-    password: string,
-    fullName: string,
-    username: string,
-    phone?: string
-  ): Promise<SignupResponse> => {
-    const userData: SignupRequest = {
-      email,
-      password,
-      fullName,
-      username,
-      phone,
-    };
-
-    const response = await apiClient.post<ApiResponse<SignupResponse>>(
-      '/User/signup',
-      userData
-    );
-
-    if (!response.data.success) {
-      throw new Error(response.data.errorMessage || 'Signup failed');
-    }
-
-    return response.data.result;
-  },
-
-  // Verify OTP after signup
-  verifyOTP: async (email: string, otpCode: string): Promise<OTPResponse> => {
-    const verifyData: VerifyOTPRequest = {
-      email,
-      otpCode,
-    };
-
-    const response = await apiClient.post<ApiResponse<OTPResponse>>(
-      '/User/verify-otp',
-      verifyData
-    );
-
-    if (!response.data.success) {
-      throw new Error(response.data.errorMessage || 'OTP verification failed');
-    }
-
-    return response.data.result;
-  },
-
-  // Resend OTP
-  resendOTP: async (email: string): Promise<OTPResponse> => {
-    const resendData: ResendOTPRequest = {
-      email,
-    };
-
-    const response = await apiClient.post<ApiResponse<OTPResponse>>(
-      '/User/resend-otp',
-      resendData
-    );
-
-    if (!response.data.success) {
-      throw new Error(response.data.errorMessage || 'Resend OTP failed');
-    }
-
-    return response.data.result;
+    // Nếu không có Result, throw error
+    throw new Error("Invalid response format");
   },
 };

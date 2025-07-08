@@ -1,15 +1,9 @@
 import axios from 'axios';
-import type {
-  AxiosResponse,
-  AxiosError,
-  InternalAxiosRequestConfig,
-} from 'axios';
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || 'http://localhost:5199/api';
-
+// Create axios instance with base configuration
 export const apiClient = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: 'http://localhost:5199/api',
+  timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -17,31 +11,33 @@ export const apiClient = axios.create({
 
 // Request interceptor to add auth token
 apiClient.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
+  (config) => {
     const token = localStorage.getItem('authToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  (error: AxiosError) => {
+  (error) => {
     return Promise.reject(error);
   }
 );
 
-// Response interceptor to handle errors
+// Response interceptor for common error handling
 apiClient.interceptors.response.use(
-  (response: AxiosResponse) => response,
-  (error: AxiosError) => {
+  (response) => {
+    return response;
+  },
+  (error) => {
+    // Handle token expiration
     if (error.response?.status === 401) {
-      // Handle unauthorized - redirect to login
+      // Clear auth data and redirect to login
       localStorage.removeItem('authToken');
       localStorage.removeItem('tokenExpiresAt');
       localStorage.removeItem('userInfo');
       window.location.href = '/login';
     }
+    
     return Promise.reject(error);
   }
 );
-
-export default apiClient;

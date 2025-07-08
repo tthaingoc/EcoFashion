@@ -1,19 +1,19 @@
-import React from 'react';
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import { MainLayout } from '@/layouts/MainLayout';
-import { SimpleHomePage } from '@/features/home/HomePage';
-import Login from '@/pages/Login';
-import Signup from '@/pages/Signup';
-import VerifyOTP from '@/pages/VerifyOTP';
-import Dashboard from '@/pages/Dashboard';
-import { UnauthorizedPage } from '@/pages/UnauthorizedPage';
-import { ROUTES } from './routes';
+import React from "react";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { MainLayout } from "@/layouts/MainLayout";
+import { SimpleHomePage } from "@/features/pages/HomePage";
+import { LoginPage } from "@/features/auth/LoginPage";
+import Signup from "@/features/pages/Signup";
+import VerifyOTP from "@/features/pages/VerifyOTP";
+import Dashboard from "@/features/pages/Dashboard";
+import { UnauthorizedPage } from "@/features/pages/UnauthorizedPage";
+import { ROUTES } from "./routes";
 
 const router = createBrowserRouter([
   // Auth routes (outside MainLayout)
   {
     path: ROUTES.LOGIN,
-    element: <Login />,
+    element: <LoginPage />,
   },
   {
     path: ROUTES.SIGNUP,
