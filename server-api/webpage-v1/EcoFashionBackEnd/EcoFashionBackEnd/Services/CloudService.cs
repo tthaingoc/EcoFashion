@@ -39,7 +39,7 @@ namespace EcoFashionBackEnd.Services
                 var uploadParams = new ImageUploadParams
                 {
                     File = new FileDescription(file.FileName, stream),
-                    UploadPreset = "Ecofashion",           
+                    UploadPreset = "upimage-jdwjskbl",           
                     //ResourceType = ResourceType.Image 
                 };
 

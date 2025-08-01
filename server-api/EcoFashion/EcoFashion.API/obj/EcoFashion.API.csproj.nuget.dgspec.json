@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\testprogram\\Workspaces\\CapstoneProject\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.API\\EcoFashion.API.csproj": {}
+    "D:\\testprogram\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.API\\EcoFashion.API.csproj": {}
   },
   "projects": {
-    "D:\\testprogram\\Workspaces\\CapstoneProject\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.API\\EcoFashion.API.csproj": {
+    "D:\\testprogram\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.API\\EcoFashion.API.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\testprogram\\Workspaces\\CapstoneProject\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.API\\EcoFashion.API.csproj",
+        "projectUniqueName": "D:\\testprogram\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.API\\EcoFashion.API.csproj",
         "projectName": "EcoFashion.API",
-        "projectPath": "D:\\testprogram\\Workspaces\\CapstoneProject\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.API\\EcoFashion.API.csproj",
+        "projectPath": "D:\\testprogram\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.API\\EcoFashion.API.csproj",
         "packagesPath": "C:\\Users\\User\\.nuget\\packages\\",
-        "outputPath": "D:\\testprogram\\Workspaces\\CapstoneProject\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.API\\obj\\",
+        "outputPath": "D:\\testprogram\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.API\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -33,11 +33,11 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "D:\\testprogram\\Workspaces\\CapstoneProject\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Application\\EcoFashion.Application.csproj": {
-                "projectPath": "D:\\testprogram\\Workspaces\\CapstoneProject\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Application\\EcoFashion.Application.csproj"
+              "D:\\testprogram\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Application\\EcoFashion.Application.csproj": {
+                "projectPath": "D:\\testprogram\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Application\\EcoFashion.Application.csproj"
               },
-              "D:\\testprogram\\Workspaces\\CapstoneProject\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Infrastructure\\EcoFashion.Infrastructure.csproj": {
-                "projectPath": "D:\\testprogram\\Workspaces\\CapstoneProject\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Infrastructure\\EcoFashion.Infrastructure.csproj"
+              "D:\\testprogram\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Infrastructure\\EcoFashion.Infrastructure.csproj": {
+                "projectPath": "D:\\testprogram\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Infrastructure\\EcoFashion.Infrastructure.csproj"
               }
             }
           }
@@ -52,7 +52,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.200"
+        "SdkAnalysisLevel": "9.0.300"
       },
       "frameworks": {
         "net8.0": {
@@ -100,18 +100,18 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.202/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.302/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "D:\\testprogram\\Workspaces\\CapstoneProject\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Application\\EcoFashion.Application.csproj": {
+    "D:\\testprogram\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Application\\EcoFashion.Application.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\testprogram\\Workspaces\\CapstoneProject\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Application\\EcoFashion.Application.csproj",
+        "projectUniqueName": "D:\\testprogram\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Application\\EcoFashion.Application.csproj",
         "projectName": "EcoFashion.Application",
-        "projectPath": "D:\\testprogram\\Workspaces\\CapstoneProject\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Application\\EcoFashion.Application.csproj",
+        "projectPath": "D:\\testprogram\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Application\\EcoFashion.Application.csproj",
         "packagesPath": "C:\\Users\\User\\.nuget\\packages\\",
-        "outputPath": "D:\\testprogram\\Workspaces\\CapstoneProject\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Application\\obj\\",
+        "outputPath": "D:\\testprogram\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Application\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -133,8 +133,8 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "D:\\testprogram\\Workspaces\\CapstoneProject\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Domain\\EcoFashion.Domain.csproj": {
-                "projectPath": "D:\\testprogram\\Workspaces\\CapstoneProject\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Domain\\EcoFashion.Domain.csproj"
+              "D:\\testprogram\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Domain\\EcoFashion.Domain.csproj": {
+                "projectPath": "D:\\testprogram\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Domain\\EcoFashion.Domain.csproj"
               }
             }
           }
@@ -149,7 +149,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.200"
+        "SdkAnalysisLevel": "9.0.300"
       },
       "frameworks": {
         "net8.0": {
@@ -192,18 +192,18 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.202/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.302/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "D:\\testprogram\\Workspaces\\CapstoneProject\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Domain\\EcoFashion.Domain.csproj": {
+    "D:\\testprogram\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Domain\\EcoFashion.Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\testprogram\\Workspaces\\CapstoneProject\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Domain\\EcoFashion.Domain.csproj",
+        "projectUniqueName": "D:\\testprogram\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Domain\\EcoFashion.Domain.csproj",
         "projectName": "EcoFashion.Domain",
-        "projectPath": "D:\\testprogram\\Workspaces\\CapstoneProject\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Domain\\EcoFashion.Domain.csproj",
+        "projectPath": "D:\\testprogram\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Domain\\EcoFashion.Domain.csproj",
         "packagesPath": "C:\\Users\\User\\.nuget\\packages\\",
-        "outputPath": "D:\\testprogram\\Workspaces\\CapstoneProject\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Domain\\obj\\",
+        "outputPath": "D:\\testprogram\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Domain\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -237,7 +237,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.200"
+        "SdkAnalysisLevel": "9.0.300"
       },
       "frameworks": {
         "net8.0": {
@@ -258,18 +258,18 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.202/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.302/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "D:\\testprogram\\Workspaces\\CapstoneProject\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Infrastructure\\EcoFashion.Infrastructure.csproj": {
+    "D:\\testprogram\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Infrastructure\\EcoFashion.Infrastructure.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\testprogram\\Workspaces\\CapstoneProject\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Infrastructure\\EcoFashion.Infrastructure.csproj",
+        "projectUniqueName": "D:\\testprogram\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Infrastructure\\EcoFashion.Infrastructure.csproj",
         "projectName": "EcoFashion.Infrastructure",
-        "projectPath": "D:\\testprogram\\Workspaces\\CapstoneProject\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Infrastructure\\EcoFashion.Infrastructure.csproj",
+        "projectPath": "D:\\testprogram\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Infrastructure\\EcoFashion.Infrastructure.csproj",
         "packagesPath": "C:\\Users\\User\\.nuget\\packages\\",
-        "outputPath": "D:\\testprogram\\Workspaces\\CapstoneProject\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Infrastructure\\obj\\",
+        "outputPath": "D:\\testprogram\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Infrastructure\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -291,11 +291,11 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "D:\\testprogram\\Workspaces\\CapstoneProject\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Application\\EcoFashion.Application.csproj": {
-                "projectPath": "D:\\testprogram\\Workspaces\\CapstoneProject\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Application\\EcoFashion.Application.csproj"
+              "D:\\testprogram\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Application\\EcoFashion.Application.csproj": {
+                "projectPath": "D:\\testprogram\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Application\\EcoFashion.Application.csproj"
               },
-              "D:\\testprogram\\Workspaces\\CapstoneProject\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Domain\\EcoFashion.Domain.csproj": {
-                "projectPath": "D:\\testprogram\\Workspaces\\CapstoneProject\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Domain\\EcoFashion.Domain.csproj"
+              "D:\\testprogram\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Domain\\EcoFashion.Domain.csproj": {
+                "projectPath": "D:\\testprogram\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Domain\\EcoFashion.Domain.csproj"
               }
             }
           }
@@ -310,7 +310,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.200"
+        "SdkAnalysisLevel": "9.0.300"
       },
       "frameworks": {
         "net8.0": {
@@ -371,7 +371,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.202/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.302/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

@@ -1,0 +1,92 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "D:\\testprogram\\EcoFashion-v2\\server-api\\EcoFashion\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{43F2DF5C-02CB-4CDD-9C3F-16632077DF32}|EcoFashion.Application\\EcoFashion.Application.csproj|d:\\testprogram\\ecofashion-v2\\server-api\\ecofashion\\ecofashion.application\\ecofashion.application.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "RelativeMoniker": "D:0:0:{43F2DF5C-02CB-4CDD-9C3F-16632077DF32}|EcoFashion.Application\\EcoFashion.Application.csproj|solutionrelative:ecofashion.application\\ecofashion.application.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{43F2DF5C-02CB-4CDD-9C3F-16632077DF32}|EcoFashion.Application\\EcoFashion.Application.csproj|d:\\testprogram\\ecofashion-v2\\server-api\\ecofashion\\ecofashion.application\\common\\settings\\mailsettings.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{43F2DF5C-02CB-4CDD-9C3F-16632077DF32}|EcoFashion.Application\\EcoFashion.Application.csproj|solutionrelative:ecofashion.application\\common\\settings\\mailsettings.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5EF0D95D-BB76-42BC-8B82-CD268F93342F}|EcoFashion.Infrastructure\\EcoFashion.Infrastructure.csproj|d:\\testprogram\\ecofashion-v2\\server-api\\ecofashion\\ecofashion.infrastructure\\services\\generatejsontokenstring.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5EF0D95D-BB76-42BC-8B82-CD268F93342F}|EcoFashion.Infrastructure\\EcoFashion.Infrastructure.csproj|solutionrelative:ecofashion.infrastructure\\services\\generatejsontokenstring.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9173A255-9A70-4F83-ADB5-B81165019BC9}|EcoFashion.API\\EcoFashion.API.csproj|d:\\testprogram\\ecofashion-v2\\server-api\\ecofashion\\ecofashion.api\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9173A255-9A70-4F83-ADB5-B81165019BC9}|EcoFashion.API\\EcoFashion.API.csproj|solutionrelative:ecofashion.api\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "EcoFashion.Application",
+              "DocumentMoniker": "D:\\testprogram\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Application\\EcoFashion.Application.csproj",
+              "RelativeDocumentMoniker": "EcoFashion.Application\\EcoFashion.Application.csproj",
+              "ToolTip": "D:\\testprogram\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Application\\EcoFashion.Application.csproj",
+              "RelativeToolTip": "EcoFashion.Application\\EcoFashion.Application.csproj",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
+              "WhenOpened": "2025-08-01T02:32:34.669Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "GenerateJsonTokenString.cs",
+              "DocumentMoniker": "D:\\testprogram\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Infrastructure\\Services\\GenerateJsonTokenString.cs",
+              "RelativeDocumentMoniker": "EcoFashion.Infrastructure\\Services\\GenerateJsonTokenString.cs",
+              "ToolTip": "D:\\testprogram\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Infrastructure\\Services\\GenerateJsonTokenString.cs",
+              "RelativeToolTip": "EcoFashion.Infrastructure\\Services\\GenerateJsonTokenString.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-01T02:31:52.435Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "MailSettings.cs",
+              "DocumentMoniker": "D:\\testprogram\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Application\\Common\\Settings\\MailSettings.cs",
+              "RelativeDocumentMoniker": "EcoFashion.Application\\Common\\Settings\\MailSettings.cs",
+              "ToolTip": "D:\\testprogram\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.Application\\Common\\Settings\\MailSettings.cs",
+              "RelativeToolTip": "EcoFashion.Application\\Common\\Settings\\MailSettings.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAuwAIAAAARAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-01T02:30:59.998Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "Program.cs",
+              "DocumentMoniker": "D:\\testprogram\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.API\\Program.cs",
+              "RelativeDocumentMoniker": "EcoFashion.API\\Program.cs",
+              "ToolTip": "D:\\testprogram\\EcoFashion-v2\\server-api\\EcoFashion\\EcoFashion.API\\Program.cs",
+              "RelativeToolTip": "EcoFashion.API\\Program.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAAjAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-01T02:29:16.574Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{3ae79031-e1bc-11d0-8f78-00a0c9110057}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
