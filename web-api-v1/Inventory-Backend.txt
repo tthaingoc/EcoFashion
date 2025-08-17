@@ -1,0 +1,53 @@
+Mình muốn bổ sung thêm link để bạn hiểu hơn về quản lý kho trong dự án :
+Entities - cho Vật Liệu Vải - bán Material do tài khoản role name = 'supplier' tạo
+Material.cs 
+
+MaterialTransactionType.cs
+
+MaterialStock.cs
+
+MaterialStockTransaction.cs
+
+Warehouse.cs
+
+Entities - cho sản phẩm thiết kế - bán Product do tài khoản role name = 'designer' tạo
+Product.cs
+
+ProductInventory.cs
+
+ProductInventoryTransaction.cs
+
+DesignersMaterialsInventory.cs
+
+
+Controllers:
+MaterialInventoryController
+
+
+InventoryAnalyticsController
+
+
+DesignerMaterialInventoryController
+
+
+Services :
+InventoryAnalyticsService
+
+
+MaterialInventoryService 
+
+InventoryService
+
+
+DesignerMaterialInventoryService
+
+
+------------
+Front-end Typescript React tailwindcss
+/page
+InventoryReport.tsx
+
+
+
+--------
+Vì hệ thống back-end đang chia kho cho Supplier quản lý 1 kho của Supplier . Designer quản lý 2 kho của Designer. Với tiến trình hiện tại của front end đang quản lý cho 1 kho của Supplier. Mình muốn trang InventoryReport.tsx của Admin có thể quản lý được tất cả kho .. Giúp mình redesign lại trang này với .. có nút dropdown chọn kiểu kho bạn muốn quản lý, thấy log các lịch sử ... Nếu bạn cần thêm file nào để xử lý mình có thể bổ sung.
