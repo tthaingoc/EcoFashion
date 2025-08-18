@@ -58,7 +58,7 @@ namespace EcoFashionBackEnd.Entities
     public enum PaymentStatus
     {
         Pending,
-        Paid,
+        Paid,// check out trừ tiền trong ví customer + ở ví admin (ví hệ thống)+ hết có walletTransaction 
         Failed,
         Expired
     }
@@ -67,7 +67,7 @@ namespace EcoFashionBackEnd.Entities
         None,
         Processing,
         Shipped,
-        Delivered,
+        Delivered,// chia tiền admin trả tiền lại người bán 90% 
         Canceled
     }
 }

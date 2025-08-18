@@ -100,7 +100,7 @@ namespace EcoFashionBackEnd.Services
                 }
             }
 
-            await _inventoryService.DeductMaterialsAsync(designerId, totalUsageMap);
+            //await _inventoryService.DeductMaterialsAsync(designerId, totalUsageMap);
 
             var createdProductIds = new List<int>();
             var productInventoryChanges = new List<(int productId, int warehouseId, int quantity)>();

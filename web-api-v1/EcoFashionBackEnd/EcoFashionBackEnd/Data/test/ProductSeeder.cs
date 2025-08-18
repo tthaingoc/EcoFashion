@@ -40,7 +40,6 @@ namespace EcoFashionBackEnd.Data.test
                         var product = new Product
                         {
                             DesignId = design.DesignId,
-                            VariantId = variant?.Id,
                             SizeId = size.SizeId,
                             ColorCode = color,
                             SKU = sku,
