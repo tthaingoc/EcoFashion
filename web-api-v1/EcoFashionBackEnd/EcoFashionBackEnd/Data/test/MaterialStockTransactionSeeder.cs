@@ -180,10 +180,10 @@ namespace EcoFashionBackEnd.Data.test
 
                     var currentStock = await context.MaterialStocks
                         .FirstOrDefaultAsync(ms => ms.MaterialId == stock.MaterialId && ms.WarehouseId == stock.WarehouseId);
-                    
+
                     if (currentStock != null)
                     {
-                        var beforeQty = currentStock.QuantityOnHand;
+                        var beforeQty = (int)currentStock.QuantityOnHand;
                         var afterQty = beforeQty + quantityChange;
 
                         // Ensure we don't go below 0

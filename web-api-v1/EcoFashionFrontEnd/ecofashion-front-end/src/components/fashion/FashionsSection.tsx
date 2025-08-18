@@ -18,6 +18,7 @@ interface ProductsSectionProps {
   title?: string;
   type?: string;
   onProductSelect?: (product: Design) => void;
+  onProductClick?: (product: Design) => void;
   onAddToCart?: (product: Design) => void;
   onToggleFavorite?: (product: Design) => void;
   onViewMore?: () => string;
@@ -29,6 +30,7 @@ const FashionsSection: React.FC<ProductsSectionProps> = ({
   title,
   type,
   onProductSelect,
+  onProductClick,
   onAddToCart,
   onToggleFavorite,
   onViewMore,
@@ -119,25 +121,16 @@ const FashionsSection: React.FC<ProductsSectionProps> = ({
         <Grid container spacing={2}>
           {visibleProducts.map((product) => (
             <Grid key={product.designId} size={3}>
-              {type === "special" ? (
-                <div className="design-card">
-                  <FashionCard
-                    product={product}
-                    type={type}
-                    onSelect={onProductSelect}
-                    onAddToCart={onAddToCart}
-                    onToggleFavorite={onToggleFavorite}
-                  />
-                </div>
-              ) : (
+              <div className="design-card">
                 <FashionCard
                   product={product}
                   type={type}
                   onSelect={onProductSelect}
                   onAddToCart={onAddToCart}
                   onToggleFavorite={onToggleFavorite}
+                  onProductClick={onProductClick}
                 />
-              )}
+              </div>
             </Grid>
           ))}
         </Grid>

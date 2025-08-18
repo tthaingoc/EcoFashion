@@ -46,7 +46,7 @@ namespace EcoFashionBackEnd.Data.test
             var endDate = DateTime.UtcNow;
 
             // Transaction types for products
-            var transactionTypes = new[]
+            var transactionTypes = new (string, string, bool?)[]
             {
                 ("Production", "Sản xuất hoàn thành", true),      // +
                 ("Sale", "Bán hàng", false),                      // -

@@ -46,10 +46,11 @@ export const cartService = {
     const resp = await apiClient.put<BaseApiResponse<ServerCartDto>>(`/Cart/items`, payload);
     return handleApiResponse(resp);
   },
-  async upsertProductItem(payload: { productId: number; quantity: number }): Promise<ServerCartDto> {
-    const resp = await apiClient.put<BaseApiResponse<ServerCartDto>>(`/Cart/items`, { productId: payload.productId, quantity: payload.quantity });
-    return handleApiResponse(resp);
-  },
+    async upsertProductItem(payload: { productId: number; quantity: number }): Promise<ServerCartDto> {
+      // Sử dụng endpoint đúng cho product
+      const resp = await apiClient.put<BaseApiResponse<ServerCartDto>>(`/Cart/products`, { productId: payload.productId, quantity: payload.quantity });
+      return handleApiResponse(resp);
+    },
   async updateQuantity(cartItemId: number, quantity: number): Promise<ServerCartDto> {
     const resp = await apiClient.patch<BaseApiResponse<ServerCartDto>>(`/Cart/items/${cartItemId}`, { quantity });
     return handleApiResponse(resp);

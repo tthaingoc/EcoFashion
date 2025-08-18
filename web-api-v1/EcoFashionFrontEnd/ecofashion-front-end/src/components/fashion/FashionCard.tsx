@@ -42,14 +42,16 @@ interface FashionCardProps {
   onSelect?: (product: Design) => void;
   onAddToCart?: (product: Design) => void;
   onToggleFavorite?: (product: Design) => void;
+  onProductClick?: (product: Design) => void;
 }
 
 const FashionCard: React.FC<FashionCardProps> = ({
   product,
   type,
-  // onSelect,
-  // onAddToCart,
-  // onToggleFavorite,
+  onSelect,
+  onAddToCart,
+  onToggleFavorite,
+  onProductClick,
 }) => {
   const navigate = useNavigate();
   const addProductToCart = useCartStore((s) => s.addProductToCart);
@@ -225,9 +227,13 @@ const FashionCard: React.FC<FashionCardProps> = ({
           marginTop: "auto",
           cursor: "pointer",
         }}
-        onClick={() =>
-          navigate(`/detail/${product.designId}/${product.designer.designerId}`)
-        }
+        onClick={() => {
+          if (onProductClick) {
+            onProductClick(product);
+          } else {
+            navigate(`/detail/${product.designId}/${product.designer.designerId}`);
+          }
+        }}
       />
 
       {/* Content */}
@@ -456,22 +462,24 @@ const FashionCard: React.FC<FashionCardProps> = ({
           </Box>
 
           {/* Add To Cart */}
-          <Button
-            variant="contained"
-            fullWidth
-            disabled={product.productCount <= 0 || isAddingToCart}
-            sx={{
-              backgroundColor: product.productCount <= 0 ? "#ccc" : "rgba(22, 163, 74, 1)",
-              "&:hover": {
-                backgroundColor: product.productCount <= 0 ? "#ccc" : "rgba(20, 140, 65, 1)",
-              },
-              pointerEvents: "auto",
-            }}
-            onClick={handleAddToCart}
-          >
-            <AddToCart />
-            {isAddingToCart ? "Đang thêm..." : product.productCount <= 0 ? "Hết hàng" : "Thêm vào giỏ"}
-          </Button>
+          {onAddToCart && (
+            <Button
+              variant="contained"
+              fullWidth
+              disabled={product.productCount <= 0 || isAddingToCart}
+              sx={{
+                backgroundColor: product.productCount <= 0 ? "#ccc" : "rgba(22, 163, 74, 1)",
+                "&:hover": {
+                  backgroundColor: product.productCount <= 0 ? "#ccc" : "rgba(20, 140, 65, 1)",
+                },
+                pointerEvents: "auto",
+              }}
+              onClick={handleAddToCart}
+            >
+              <AddToCart />
+              {isAddingToCart ? "Đang thêm..." : product.productCount <= 0 ? "Hết hàng" : "Thêm vào giỏ"}
+            </Button>
+          )}
         </Box>
       </CardContent>
     </Card>

@@ -180,7 +180,7 @@ namespace EcoFashionBackEnd.Services
 				.Select(i => i.ProductId!.Value).Distinct().ToList();
 			var products = await _db.Products
 				.Where(p => productIds.Contains(p.ProductId))
-				.Include(p => p.Design).ThenInclude(d => d.Designer)
+				.Include(p => p.Design).ThenInclude(d => d.DesignerProfile)
 				.Include(p => p.Design).ThenInclude(d => d.DesignImages).ThenInclude(di => di.Image)
 				.Include(p => p.Size)
 				.ToListAsync();
@@ -225,7 +225,7 @@ namespace EcoFashionBackEnd.Services
 							DesignId = p.DesignId,
 							DesignName = p.Design.Name,
 							DesignerId = p.Design.DesignerId,
-							DesignerName = p.Design.Designer?.FullName,
+							DesignerName = p.Design.DesignerProfile?.DesignerName,
 							Quantity = i.Quantity,
 							UnitPriceSnapshot = i.UnitPriceSnapshot,
 							CurrentPrice = p.Price,

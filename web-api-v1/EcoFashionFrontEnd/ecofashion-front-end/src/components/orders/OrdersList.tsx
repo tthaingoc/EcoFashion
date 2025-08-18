@@ -4,6 +4,8 @@ import { ordersService, type OrderModel } from '../../services/api/ordersService
 import { formatViDateTime } from '../../utils/date';
 
 const formatVND = (n: number) => n.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
+// Helper: x1000 nếu là vật liệu
+const formatMaterialVND = (n: number, type?: string) => type === 'material' ? formatVND(n * 1000) : formatVND(n);
 
 const getFulfillmentStatusColor = (status?: string, paymentStatus?: string) => {
   // Auto-fix: nếu đã paid nhưng fulfillment = none, hiển thị màu xanh
@@ -41,6 +43,7 @@ export default function OrdersList() {
   const [orders, setOrders] = useState<OrderModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -48,12 +51,7 @@ export default function OrdersList() {
       try {
         setLoading(true);
         const data = await ordersService.getAll();
-        // Filter chỉ hiển thị orders đã paid (ẩn pending payments)
-        const filteredOrders = data.filter(order => 
-          order.paymentStatus && 
-          order.paymentStatus.toLowerCase() === 'paid'
-        );
-        setOrders(filteredOrders);
+        setOrders(data);
       } catch (e: any) {
         setError(e?.message || 'Không tải được danh sách đơn');
       } finally {
@@ -66,8 +64,37 @@ export default function OrdersList() {
   if (loading) return <div className="p-6">Đang tải đơn hàng...</div>;
   if (error) return <div className="p-6 text-red-600">{error}</div>;
 
+  // Lọc theo status
+  const filteredOrders = statusFilter === 'all'
+    ? orders
+    : orders.filter(o => o.status && o.status.toLowerCase() === statusFilter);
+
+  // Các trạng thái có thể chọn
+  const statusOptions = [
+    { value: 'all', label: 'Tất cả' },
+    { value: 'pending', label: 'Chờ xử lý' },
+    { value: 'processing', label: 'Đang xử lý' },
+    { value: 'shipped', label: 'Đang giao' },
+    { value: 'delivered', label: 'Đã giao' },
+    { value: 'returned', label: 'Đã trả hàng' },
+  ];
+
   return (
     <div className="bg-white border rounded-md">
+      <div className="flex items-center justify-between px-4 py-3 border-b">
+        <div className="text-sm text-gray-600 font-semibold">Danh sách đơn hàng</div>
+        <div>
+          <select
+            className="border rounded px-2 py-1 text-sm"
+            value={statusFilter}
+            onChange={e => setStatusFilter(e.target.value)}
+          >
+            {statusOptions.map(opt => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+        </div>
+      </div>
       <div className="grid grid-cols-12 px-4 py-3 border-b text-sm text-gray-600">
         <div className="col-span-2">Mã đơn</div>
         <div className="col-span-2">Ngày đặt</div>
@@ -76,7 +103,7 @@ export default function OrdersList() {
         <div className="col-span-2">Thanh toán</div>
         <div className="col-span-2">Vận chuyển</div>
       </div>
-      {orders.map((o) => (
+      {filteredOrders.map((o) => (
         <button
           key={o.orderId}
           className="grid grid-cols-12 px-4 py-3 border-b items-center w-full text-left hover:bg-gray-50"
@@ -92,7 +119,7 @@ export default function OrdersList() {
             )}
             <span>{o.sellerName || '—'}</span>
           </div>
-          <div className="col-span-2 font-semibold text-green-700">{formatVND(Number(o.totalPrice || 0))}</div>
+          <div className="col-span-2 font-semibold text-green-700">{formatMaterialVND(Number(o.totalPrice || 0), o.sellerType === 'Supplier' ? 'material' : undefined)}</div>
           <div className="col-span-2">
             <span className={`px-2 py-1 rounded text-xs ${String(o.paymentStatus || '').toLowerCase()==='paid' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
               {o.paymentStatus || 'Pending'}
@@ -105,7 +132,7 @@ export default function OrdersList() {
           </div>
         </button>
       ))}
-      {orders.length === 0 && <div className="p-6 text-center text-gray-500">Chưa có đơn hàng</div>}
+      {filteredOrders.length === 0 && <div className="p-6 text-center text-gray-500">Không có đơn hàng phù hợp</div>}
     </div>
   );
 }

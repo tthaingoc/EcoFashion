@@ -74,7 +74,7 @@ const DesignsSection: React.FC<ProductsSectionProps> = ({
   // const productsPerPage = 12; // 9 rows * 4 per row
   const [page, setPage] = useState(currentPage);
 
-  const getCategoryColor = (category: Design["designTypeName"]) => {
+  const getCategoryColor = (category: Design["itemTypeName"]) => {
     const colors = {
       Áo: "#2196f3",
       Quần: "#ff9800",

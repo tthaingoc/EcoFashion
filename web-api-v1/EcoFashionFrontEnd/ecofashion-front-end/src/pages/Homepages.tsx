@@ -485,7 +485,8 @@ export default function Homepage() {
         <FashionsSection
           products={designs}
           title="SẢN PHẨM NỔI BẬT"
-          type="special"
+          type="special"          
+          onProductClick={(design) => navigate(`/detail/${design.designId}/${design.designer?.designerId}`)} // Navigate to Detail page with designerId
           onViewMore={() => "/fashion"}
         />
         <Divider

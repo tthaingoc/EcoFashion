@@ -119,7 +119,7 @@ const PopupCart: React.FC<PopupCartProps> = ({ open, onClose }) => {
           >
             Xem Giỏ Hàng
           </button>
-          <button
+          {/* <button
             className="flex-1 py-2 rounded bg-green-500 text-white font-semibold hover:bg-green-600"
             onClick={() => {
               onClose();
@@ -127,7 +127,7 @@ const PopupCart: React.FC<PopupCartProps> = ({ open, onClose }) => {
             }}
           >
             Thanh Toán
-          </button>
+          </button> */}
         </div>
         {/* Nút xóa tất cả */}
         {cartItems.length > 0 && (

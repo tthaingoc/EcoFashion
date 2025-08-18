@@ -48,6 +48,8 @@ import PaymentMethodModal from '../../components/checkout/PaymentMethodModal';
 import bg from '../../assets/img/images/grid-image/fabric.png';
 
 const formatVND = (n: number) => n.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
+// Helper: x1000 nếu là vật liệu
+const formatMaterialVND = (n: number, type?: string) => type === 'material' ? formatVND(n * 1000) : formatVND(n);
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
@@ -96,9 +98,12 @@ export default function CheckoutPage() {
     }
     try {
       setLoading(true);
+      // Nếu là vật liệu thì x1000 khi gửi payment
+      const isMaterial = items.find(i => i.type === 'material');
+      const amount = isMaterial ? currentOrder.totalAmount * 1000 : currentOrder.totalAmount;
       const { redirectUrl } = await paymentsService.createVnpay({
         orderId: currentOrder.orderId,
-        amount: currentOrder.totalAmount,
+        amount,
         createdDate: new Date().toISOString(),
         bankCode: preferredBank || undefined,
         fullName: shipping?.fullName || 'Khach hang',
@@ -116,9 +121,12 @@ export default function CheckoutPage() {
       setLoading(true);
       const order = wizard.orders.find(o => o.orderId === orderId);
       if (!order) return;
+      // Nếu là vật liệu thì x1000 khi gửi payment
+      const isMaterial = items.find(i => i.type === 'material');
+      const amount = isMaterial ? order.totalAmount * 1000 : order.totalAmount;
       const { redirectUrl } = await paymentsService.createVnpay({
         orderId: order.orderId,
-        amount: order.totalAmount,
+        amount,
         createdDate: new Date().toISOString(),
         bankCode: preferredBank || undefined,
         fullName: shipping?.fullName || 'Khach hang',
@@ -261,7 +269,7 @@ export default function CheckoutPage() {
       <Container maxWidth="lg" sx={{ pb: 8 }}>
         <Grid container spacing={4}>
           {/* Orders List */}
-          <Grid item xs={12} lg={8}>
+          <Grid >
             <Card sx={{ borderRadius: 3, boxShadow: 2, mb: 3 }}>
               <CardContent sx={{ p: 0 }}>
                 {/* Header */}
@@ -318,7 +326,7 @@ export default function CheckoutPage() {
                         }}
                       >
                         <Grid container alignItems="center" spacing={2}>
-                          <Grid item xs={12} md={6}>
+                          <Grid >
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                               <Store sx={{ color: '#16a34a' }} />
                               <Box>
@@ -331,7 +339,7 @@ export default function CheckoutPage() {
                               </Box>
                             </Box>
                           </Grid>
-                          <Grid item xs={6} md={3}>
+                          <Grid >
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                               {statusIcon}
                               <Chip 
@@ -346,9 +354,9 @@ export default function CheckoutPage() {
                               />
                             </Box>
                           </Grid>
-                          <Grid item xs={6} md={3}>
+                          <Grid >
                             <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#16a34a', textAlign: 'right' }}>
-                              {formatVND(order.totalAmount)}
+                              {formatMaterialVND(order.totalAmount, items.find(i => i.type === 'material') ? 'material' : undefined)}
                             </Typography>
                           </Grid>
                         </Grid>
@@ -358,7 +366,7 @@ export default function CheckoutPage() {
                         <AccordionDetails sx={{ pt: 0 }}>
                           <Divider sx={{ mb: 3 }} />
                           <Grid container spacing={3}>
-                            <Grid item xs={12} md={8}>
+                            <Grid >
                               <Typography variant="subtitle2" sx={{ mb: 2, color: '#6b7280' }}>
                                 Chi tiết đơn hàng
                               </Typography>
@@ -368,7 +376,7 @@ export default function CheckoutPage() {
                                 </Typography>
                               </Alert>
                             </Grid>
-                            <Grid item xs={12} md={4}>
+                            <Grid >
                               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                                 {status === 'Failed' && (
                                   <Button
@@ -420,7 +428,7 @@ export default function CheckoutPage() {
           </Grid>
 
           {/* Summary Sidebar */}
-          <Grid item xs={12} lg={4}>
+          <Grid >
             <Card sx={{ borderRadius: 3, boxShadow: 2, position: 'sticky', top: 20, mb: 3 }}>
               <CardContent sx={{ p: 3 }}>
                 <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 3 }}>
@@ -446,7 +454,7 @@ export default function CheckoutPage() {
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
                     <Typography variant="h6" sx={{ fontWeight: 'bold' }}>Tổng giá trị:</Typography>
                     <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#16a34a' }}>
-                      {formatVND(wizard.orders.reduce((sum, o) => sum + o.totalAmount, 0))}
+                      {formatMaterialVND(wizard.orders.reduce((sum, o) => sum + o.totalAmount, 0), items.find(i => i.type === 'material') ? 'material' : undefined)}
                     </Typography>
                   </Box>
                 </Box>

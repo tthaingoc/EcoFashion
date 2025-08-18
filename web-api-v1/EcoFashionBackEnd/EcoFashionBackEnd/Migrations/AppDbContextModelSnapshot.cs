@@ -235,7 +235,15 @@ namespace EcoFashionBackEnd.Migrations
                     b.Property<int>("CartId")
                         .HasColumnType("int");
 
-                    b.Property<int>("MaterialId")
+                    b.Property<string>("ItemType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int?>("MaterialId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ProductId")
                         .HasColumnType("int");
 
                     b.Property<int>("Quantity")
@@ -250,8 +258,13 @@ namespace EcoFashionBackEnd.Migrations
 
                     b.HasKey("CartItemId");
 
+                    b.HasIndex("MaterialId");
+
+                    b.HasIndex("ProductId");
+
                     b.HasIndex("CartId", "MaterialId")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[MaterialId] IS NOT NULL");
 
                     b.ToTable("CartItems");
                 });
@@ -1102,6 +1115,9 @@ namespace EcoFashionBackEnd.Migrations
                     b.Property<int>("OrderId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("ProductId")
+                        .HasColumnType("int");
+
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
 
@@ -1129,6 +1145,8 @@ namespace EcoFashionBackEnd.Migrations
                     b.HasIndex("MaterialId");
 
                     b.HasIndex("OrderId");
+
+                    b.HasIndex("ProductId");
 
                     b.HasIndex("SupplierId");
 
@@ -1748,7 +1766,19 @@ namespace EcoFashionBackEnd.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("EcoFashionBackEnd.Entities.Material", "Material")
+                        .WithMany()
+                        .HasForeignKey("MaterialId");
+
+                    b.HasOne("EcoFashionBackEnd.Entities.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId");
+
                     b.Navigation("Cart");
+
+                    b.Navigation("Material");
+
+                    b.Navigation("Product");
                 });
 
             modelBuilder.Entity("EcoFashionBackEnd.Entities.Design", b =>
@@ -2071,6 +2101,10 @@ namespace EcoFashionBackEnd.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("EcoFashionBackEnd.Entities.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId");
+
                     b.HasOne("EcoFashionBackEnd.Entities.Supplier", "Supplier")
                         .WithMany()
                         .HasForeignKey("SupplierId")
@@ -2083,6 +2117,8 @@ namespace EcoFashionBackEnd.Migrations
                     b.Navigation("Material");
 
                     b.Navigation("Order");
+
+                    b.Navigation("Product");
 
                     b.Navigation("Supplier");
                 });
