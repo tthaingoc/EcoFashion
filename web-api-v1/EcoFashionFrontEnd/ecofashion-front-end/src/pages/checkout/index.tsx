@@ -4,9 +4,48 @@ import { useCartStore } from '../../store/cartStore';
 import { checkoutService } from '../../services/api/checkoutService';
 import { paymentsService } from '../../services/api/paymentsService';
 import { useCheckoutWizard } from '../../store/checkoutWizardStore';
+import {
+  Box,
+  Container,
+  Typography,
+  Button,
+  Card,
+  CardContent,
+  Grid,
+  Chip,
+  Paper,
+  Stepper,
+  Step,
+  StepLabel,
+  LinearProgress,
+  Alert,
+  CircularProgress,
+  Divider,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemIcon,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails
+} from '@mui/material';
+import {
+  Payment,
+  CheckCircle,
+  Error,
+  Refresh,
+  SkipNext,
+  Store,
+  AccessTime,
+  ExpandMore,
+  Security,
+  LocalShipping,
+  Receipt
+} from '@mui/icons-material';
 //---------
 import { useCheckoutInfoStore } from '../../store/checkoutInfoStore';
 import PaymentMethodModal from '../../components/checkout/PaymentMethodModal';
+import bg from '../../assets/img/images/grid-image/fabric.png';
 
 const formatVND = (n: number) => n.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
 
@@ -102,54 +141,363 @@ export default function CheckoutPage() {
   };
 
   if (loading && !wizard.orders.length) {
-    return <div className="max-w-[1120px] mx-auto p-6">Đang tạo phiên thanh toán...</div>;
+    return (
+      <Box sx={{ minHeight: '100vh', bgcolor: '#f8fafc' }}>
+        <Box
+          sx={{
+            height: 250,
+            backgroundImage: `linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.35)), url(${bg})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Container maxWidth="lg">
+            <Typography variant="h3" sx={{ color: 'white', fontWeight: 'bold', textAlign: 'center' }}>
+              Thanh Toán
+            </Typography>
+          </Container>
+        </Box>
+        <Container maxWidth="md" sx={{ py: 8 }}>
+          <Card sx={{ textAlign: 'center', p: 6, borderRadius: 3, boxShadow: 3 }}>
+            <CircularProgress size={60} sx={{ mb: 3, color: '#16a34a' }} />
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
+              Đang tạo phiên thanh toán...
+            </Typography>
+            <Typography variant="body2" sx={{ color: '#6b7280' }}>
+              Vui lòng đợi trong giây lát
+            </Typography>
+          </Card>
+        </Container>
+      </Box>
+    );
   }
+
   if (error) {
-    return <div className="max-w-[1120px] mx-auto p-6 text-red-600">{error}</div>;
+    return (
+      <Box sx={{ minHeight: '100vh', bgcolor: '#f8fafc' }}>
+        <Box
+          sx={{
+            height: 250,
+            backgroundImage: `linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.35)), url(${bg})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Container maxWidth="lg">
+            <Typography variant="h3" sx={{ color: 'white', fontWeight: 'bold', textAlign: 'center' }}>
+              Thanh Toán
+            </Typography>
+          </Container>
+        </Box>
+        <Container maxWidth="md" sx={{ py: 8 }}>
+          <Alert severity="error" sx={{ mb: 3 }}>
+            <Typography variant="h6" sx={{ mb: 1 }}>Có lỗi xảy ra</Typography>
+            <Typography>{error}</Typography>
+          </Alert>
+          <Button
+            variant="contained"
+            sx={{ bgcolor: '#16a34a', '&:hover': { bgcolor: '#15803d' } }}
+            onClick={() => navigate('/cart')}
+          >
+            Quay lại giỏ hàng
+          </Button>
+        </Container>
+      </Box>
+    );
   }
+
+  const completedOrders = wizard.orders.filter(o => wizard.statusByOrderId[o.orderId] === 'Paid').length;
+  const progressPercentage = (completedOrders / wizard.orders.length) * 100;
 
   return (
-    <div className="max-w-[1120px] mx-auto px-4 py-6 space-y-4">
-      <h1 className="text-2xl font-semibold">Thanh toán theo từng nhà cung cấp</h1>
+    <Box sx={{ minHeight: '100vh', bgcolor: '#f8fafc' }}>
+      {/* Header */}
+      <Box
+        sx={{
+          height: 250,
+          backgroundImage: `linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.35)), url(${bg})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Container maxWidth="lg">
+          <Typography variant="h3" sx={{ color: 'white', fontWeight: 'bold', textAlign: 'center', mb: 2 }}>
+            Thanh Toán Đơn Hàng
+          </Typography>
+          <Typography variant="h6" sx={{ color: 'white', textAlign: 'center', opacity: 0.9 }}>
+            Thanh toán theo từng nhà cung cấp để đảm bảo giao dịch an toàn
+          </Typography>
+        </Container>
+      </Box>
 
-      <div className="grid md:grid-cols-3 gap-4">
-        <div className="md:col-span-2 space-y-3">
-          {wizard.orders.map((o, idx) => (
-            <div key={o.orderId} className={`border rounded-md ${idx === wizard.currentIndex ? 'ring-2 ring-green-600' : ''}`}>
-              <div className="px-4 py-3 border-b flex items-center justify-between bg-white">
-                <div className="font-medium">Đơn #{o.orderId} • {o.sellerType}</div>
-                <div className="text-sm text-gray-500">Tổng: <span className="font-semibold text-green-700">{formatVND(o.totalAmount)}</span></div>
-              </div>
-              <div className="p-4 flex items-center justify-between bg-gray-50">
-                <div className="text-sm flex items-center gap-2">
-                  Trạng thái:
-                  <span className={`font-medium ${wizard.statusByOrderId[o.orderId]==='Failed' ? 'text-red-600' : wizard.statusByOrderId[o.orderId]==='Paid' ? 'text-green-700' : 'text-gray-800'}`}>
-                    {wizard.statusByOrderId[o.orderId]}
-                  </span>
-                </div>
-                <div className="flex gap-2">
-                  {wizard.statusByOrderId[o.orderId] === 'Failed' && (
-                    <button onClick={() => handleRetry(o.orderId)} className="px-4 py-2 border rounded-md">Thử lại</button>
-                  )}
-                  {idx === wizard.currentIndex && (
-                    <>
-                      <button onClick={handleSkip} className="px-4 py-2 border rounded-md">Bỏ qua</button>
-                      <button onClick={handlePay} className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md">Thanh toán đơn này</button>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="space-y-3">
-          <div className="border rounded-md p-4 bg-white">
-            <div className="font-medium mb-2">Tiến trình</div>
-            <div className="text-sm">Đơn hiện tại: {wizard.currentIndex + 1}/{wizard.orders.length}</div>
-            <div className="text-sm">Hết hạn: {wizard.expiresAt ? new Date(wizard.expiresAt).toLocaleString() : '-'}</div>
-          </div>
-        </div>
-      </div>
+      {/* Progress Steps */}
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Stepper activeStep={1} sx={{ mb: 4 }}>
+          <Step completed>
+            <StepLabel>Giỏ hàng</StepLabel>
+          </Step>
+          <Step>
+            <StepLabel>Thông tin</StepLabel>
+          </Step>
+          <Step>
+            <StepLabel>Thanh toán</StepLabel>
+          </Step>
+          <Step>
+            <StepLabel>Hoàn thành</StepLabel>
+          </Step>
+        </Stepper>
+      </Container>
+
+      {/* Main Content */}
+      <Container maxWidth="lg" sx={{ pb: 8 }}>
+        <Grid container spacing={4}>
+          {/* Orders List */}
+          <Grid item xs={12} lg={8}>
+            <Card sx={{ borderRadius: 3, boxShadow: 2, mb: 3 }}>
+              <CardContent sx={{ p: 0 }}>
+                {/* Header */}
+                <Box sx={{ p: 3, borderBottom: '1px solid #e5e7eb', bgcolor: '#f9fafb' }}>
+                  <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>
+                    Danh sách đơn hàng ({wizard.orders.length})
+                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                    <Typography variant="body2" sx={{ minWidth: 120 }}>
+                      Tiến độ thanh toán:
+                    </Typography>
+                    <LinearProgress
+                      variant="determinate"
+                      value={progressPercentage}
+                      sx={{ flexGrow: 1, height: 8, borderRadius: 4 }}
+                    />
+                    <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#16a34a' }}>
+                      {completedOrders}/{wizard.orders.length}
+                    </Typography>
+                  </Box>
+                </Box>
+
+                {/* Orders */}
+                {wizard.orders.map((order, idx) => {
+                  const isActive = idx === wizard.currentIndex;
+                  const status = wizard.statusByOrderId[order.orderId];
+                  const statusIcon = status === 'Paid' ? <CheckCircle color="success" /> : 
+                                   status === 'Failed' ? <Error color="error" /> : 
+                                   <AccessTime color="action" />;
+                  const statusColor = status === 'Paid' ? '#16a34a' : 
+                                     status === 'Failed' ? '#dc2626' : '#6b7280';
+
+                  return (
+                    <Accordion 
+                      key={order.orderId} 
+                      expanded={isActive}
+                      sx={{ 
+                        '&:before': { display: 'none' },
+                        boxShadow: 'none',
+                        border: isActive ? '2px solid #16a34a' : '1px solid #e5e7eb',
+                        borderRadius: '12px !important',
+                        mb: 2,
+                        mx: 2
+                      }}
+                    >
+                      <AccordionSummary
+                        expandIcon={isActive ? <ExpandMore /> : null}
+                        sx={{ 
+                          bgcolor: isActive ? '#f0f9ff' : 'white',
+                          borderRadius: '12px',
+                          '& .MuiAccordionSummary-content': {
+                            margin: '16px 0'
+                          }
+                        }}
+                      >
+                        <Grid container alignItems="center" spacing={2}>
+                          <Grid item xs={12} md={6}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                              <Store sx={{ color: '#16a34a' }} />
+                              <Box>
+                                <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                                  Đơn hàng #{order.orderId}
+                                </Typography>
+                                <Typography variant="body2" sx={{ color: '#6b7280' }}>
+                                  {order.sellerType}
+                                </Typography>
+                              </Box>
+                            </Box>
+                          </Grid>
+                          <Grid item xs={6} md={3}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              {statusIcon}
+                              <Chip 
+                                label={status}
+                                size="small"
+                                sx={{ 
+                                  bgcolor: statusColor === '#16a34a' ? '#dcfce7' : 
+                                          statusColor === '#dc2626' ? '#fee2e2' : '#f3f4f6',
+                                  color: statusColor,
+                                  fontWeight: 'bold'
+                                }}
+                              />
+                            </Box>
+                          </Grid>
+                          <Grid item xs={6} md={3}>
+                            <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#16a34a', textAlign: 'right' }}>
+                              {formatVND(order.totalAmount)}
+                            </Typography>
+                          </Grid>
+                        </Grid>
+                      </AccordionSummary>
+                      
+                      {isActive && (
+                        <AccordionDetails sx={{ pt: 0 }}>
+                          <Divider sx={{ mb: 3 }} />
+                          <Grid container spacing={3}>
+                            <Grid item xs={12} md={8}>
+                              <Typography variant="subtitle2" sx={{ mb: 2, color: '#6b7280' }}>
+                                Chi tiết đơn hàng
+                              </Typography>
+                              <Alert severity="info" sx={{ mb: 2 }}>
+                                <Typography variant="body2">
+                                  Đây là đơn hàng hiện tại cần thanh toán. Vui lòng hoàn tất thanh toán để tiếp tục.
+                                </Typography>
+                              </Alert>
+                            </Grid>
+                            <Grid item xs={12} md={4}>
+                              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                {status === 'Failed' && (
+                                  <Button
+                                    variant="outlined"
+                                    startIcon={<Refresh />}
+                                    onClick={() => handleRetry(order.orderId)}
+                                    disabled={loading}
+                                  >
+                                    Thử lại
+                                  </Button>
+                                )}
+                                {isActive && status !== 'Paid' && (
+                                  <>
+                                    <Button
+                                      variant="outlined"
+                                      startIcon={<SkipNext />}
+                                      onClick={handleSkip}
+                                      disabled={loading}
+                                    >
+                                      Bỏ qua
+                                    </Button>
+                                    <Button
+                                      variant="contained"
+                                      size="large"
+                                      startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <Payment />}
+                                      onClick={handlePay}
+                                      disabled={loading}
+                                      sx={{
+                                        bgcolor: '#16a34a',
+                                        '&:hover': { bgcolor: '#15803d' },
+                                        py: 1.5,
+                                        fontWeight: 'bold'
+                                      }}
+                                    >
+                                      {loading ? 'Đang xử lý...' : 'Thanh toán ngay'}
+                                    </Button>
+                                  </>
+                                )}
+                              </Box>
+                            </Grid>
+                          </Grid>
+                        </AccordionDetails>
+                      )}
+                    </Accordion>
+                  );
+                })}
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* Summary Sidebar */}
+          <Grid item xs={12} lg={4}>
+            <Card sx={{ borderRadius: 3, boxShadow: 2, position: 'sticky', top: 20, mb: 3 }}>
+              <CardContent sx={{ p: 3 }}>
+                <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 3 }}>
+                  Tóm tắt thanh toán
+                </Typography>
+                
+                <Box sx={{ mb: 3 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                    <Typography>Tổng số đơn hàng:</Typography>
+                    <Typography sx={{ fontWeight: 'bold' }}>{wizard.orders.length}</Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                    <Typography>Đã thanh toán:</Typography>
+                    <Typography sx={{ fontWeight: 'bold', color: '#16a34a' }}>{completedOrders}</Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                    <Typography>Còn lại:</Typography>
+                    <Typography sx={{ fontWeight: 'bold', color: '#dc2626' }}>
+                      {wizard.orders.length - completedOrders}
+                    </Typography>
+                  </Box>
+                  <Divider sx={{ my: 2 }} />
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>Tổng giá trị:</Typography>
+                    <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#16a34a' }}>
+                      {formatVND(wizard.orders.reduce((sum, o) => sum + o.totalAmount, 0))}
+                    </Typography>
+                  </Box>
+                </Box>
+
+                {wizard.expiresAt && (
+                  <Alert severity="warning" sx={{ mb: 3 }}>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>
+                      Thời gian còn lại
+                    </Typography>
+                    <Typography variant="body2">
+                      Hết hạn: {new Date(wizard.expiresAt).toLocaleString()}
+                    </Typography>
+                  </Alert>
+                )}
+
+                {/* Security Notice */}
+                <Box sx={{ p: 2, bgcolor: '#f0f9ff', borderRadius: 2, border: '1px solid #bae6fd' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                    <Security sx={{ fontSize: 20, color: '#0284c7' }} />
+                    <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: '#0284c7' }}>
+                      Thanh toán an toàn
+                    </Typography>
+                  </Box>
+                  <Typography variant="caption" sx={{ color: '#0369a1' }}>
+                    Giao dịch được bảo mật bởi VNPay với mã hóa SSL 256-bit
+                  </Typography>
+                </Box>
+              </CardContent>
+            </Card>
+
+            {/* Support Card */}
+            <Card sx={{ borderRadius: 3, boxShadow: 2 }}>
+              <CardContent sx={{ p: 3 }}>
+                <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>
+                  Cần hỗ trợ?
+                </Typography>
+                <Typography variant="body2" sx={{ mb: 2, color: '#6b7280' }}>
+                  Liên hệ với chúng tôi nếu bạn gặp khó khăn trong quá trình thanh toán
+                </Typography>
+                <Button
+                  variant="outlined"
+                  fullWidth
+                  sx={{ color: '#16a34a', borderColor: '#16a34a' }}
+                >
+                  Liên hệ hỗ trợ
+                </Button>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+      </Container>
 
       <PaymentMethodModal
         open={openPayment}
@@ -159,7 +507,7 @@ export default function CheckoutPage() {
           setTimeout(() => handlePay(), 0);
         }}
       />
-    </div>
+    </Box>
   );
 }
 

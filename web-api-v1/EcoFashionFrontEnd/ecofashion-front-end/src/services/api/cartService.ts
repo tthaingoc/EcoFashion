@@ -2,15 +2,23 @@ import apiClient, { handleApiResponse, type BaseApiResponse } from './baseApi';
 
 export type ServerCartItemDto = {
   cartItemId: number;
-  materialId: number;
+  materialId?: number;
+  productId?: number;
+  itemType: string; // 'material' or 'product'
   quantity: number;
   unitPriceSnapshot: number;
   currentPrice: number;
   materialName?: string;
+  productName?: string;
   imageUrl?: string;
   unitLabel?: string;
-  supplierId: string;
+  supplierId?: string;
   supplierName?: string;
+  designerId?: string;
+  designerName?: string;
+  colorCode?: string;
+  sizeName?: string;
+  sku?: string;
 };
 
 export type ServerCartDto = {
@@ -22,7 +30,8 @@ export type ServerCartDto = {
 };
 
 export type UpsertCartItemRequest = {
-  materialId: number;
+  materialId?: number;
+  productId?: number;
   quantity: number;
 };
 
@@ -35,6 +44,10 @@ export const cartService = {
   },
   async upsertItem(payload: UpsertCartItemRequest): Promise<ServerCartDto> {
     const resp = await apiClient.put<BaseApiResponse<ServerCartDto>>(`/Cart/items`, payload);
+    return handleApiResponse(resp);
+  },
+  async upsertProductItem(payload: { productId: number; quantity: number }): Promise<ServerCartDto> {
+    const resp = await apiClient.put<BaseApiResponse<ServerCartDto>>(`/Cart/items`, { productId: payload.productId, quantity: payload.quantity });
     return handleApiResponse(resp);
   },
   async updateQuantity(cartItemId: number, quantity: number): Promise<ServerCartDto> {

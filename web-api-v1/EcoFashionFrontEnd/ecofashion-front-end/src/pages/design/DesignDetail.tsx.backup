@@ -341,29 +341,18 @@ export default function DesignDetail() {
 
   const handleAddToCart = async () => {
     if (!selectedProduct) {
-      toast.error("Chọn màu và kích thước trước!");
+      alert("Chọn màu và kích thước trước!");
       return;
     }
-
-    if (quantity <= 0) {
-      toast.error("Vui lòng nhập số lượng hợp lệ!");
-      return;
-    }
-
-    if (quantity > selectedProduct.quantityAvailable) {
-      toast.error(`Chỉ còn ${selectedProduct.quantityAvailable} sản phẩm có sẵn!`);
-      return;
-    }
-
-    try {
-      await addProductToCart({ productId: selectedProduct.productId, quantity });
-      toast.success(
-        `Đã thêm ${quantity} sản phẩm ${designDetail.name} vào giỏ hàng! 🛒`
-      );
-    } catch (error) {
-      console.error("Error adding product to cart:", error);
-      toast.error("Không thể thêm sản phẩm vào giỏ hàng. Vui lòng thử lại!");
-    }
+    console.log(
+      "Add to cart với productId:",
+      selectedProduct.productId,
+      "Số lượng:",
+      quantity,
+      "Giá: ",
+      designDetail.salePrice * quantity
+    );
+    // dispatch(addToCart(selectedProduct.productId, quantity))
   };
 
   //Add Số Lượng

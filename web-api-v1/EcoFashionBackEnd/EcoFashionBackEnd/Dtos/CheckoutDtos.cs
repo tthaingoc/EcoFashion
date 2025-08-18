@@ -9,9 +9,10 @@ namespace EcoFashionBackEnd.Dtos
 
     public class CartItemDto
     {
-        public string ItemType { get; set; } = string.Empty; // material/design
+        public string ItemType { get; set; } = string.Empty; // material/design/product
         public int? MaterialId { get; set; }
         public int? DesignId { get; set; }
+        public int? ProductId { get; set; }
         public Guid? SellerId { get; set; }
         public string SellerType { get; set; } = string.Empty; // Supplier/Designer
         public int Quantity { get; set; }

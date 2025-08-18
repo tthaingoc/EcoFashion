@@ -39,6 +39,57 @@ namespace EcoFashionBackEnd.Dtos.Warehouse
         public decimal Quantity { get; set; }
         public string? SupplierName { get; set; }
     }
+
+    public class ProductSummaryDto
+    {
+        public int TotalProducts { get; set; }
+        public int TotalCompleted { get; set; }
+        public int TotalInProduction { get; set; }
+        public decimal TotalInventoryValue { get; set; }
+        public int LowStockCount { get; set; }
+    }
+
+    public class ProductLowStockItemDto
+    {
+        public int ProductId { get; set; }
+        public string? ProductName { get; set; }
+        public string? SKU { get; set; }
+        public int WarehouseId { get; set; }
+        public string? WarehouseName { get; set; }
+        public int QuantityAvailable { get; set; }
+        public int MinThreshold { get; set; }
+        public int Difference { get; set; }
+        public decimal EstimatedValue { get; set; }
+        public DateTime LastUpdated { get; set; }
+        public string? DesignName { get; set; }
+        public string? SizeName { get; set; }
+        public string? ColorCode { get; set; }
+    }
+
+    public class ProductActivityPointDto
+    {
+        public DateTime Date { get; set; }
+        public int Produced { get; set; }
+        public int Sold { get; set; }
+        public string? DesignName { get; set; }
+    }
+
+    public class ProductTransactionDto
+    {
+        public int TransactionId { get; set; }
+        public int ProductId { get; set; }
+        public int WarehouseId { get; set; }
+        public string TransactionType { get; set; } = string.Empty;
+        public int QuantityChanged { get; set; }
+        public DateTime TransactionDate { get; set; }
+        public string? Notes { get; set; }
+        public string? ProductName { get; set; }
+        public string? SKU { get; set; }
+        public string? WarehouseName { get; set; }
+        public string? DesignName { get; set; }
+        public string? SizeName { get; set; }
+        public string? ColorCode { get; set; }
+    }
 }
 
 

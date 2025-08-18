@@ -33,20 +33,29 @@ namespace EcoFashionBackEnd.Services
         {
             var expiresAt = DateTime.UtcNow.AddMinutes(request.HoldMinutes <= 0 ? 30 : request.HoldMinutes);
 
-            // Server-derivation: xác định Seller theo dữ liệu gốc (Material/Design), không tin vào payload
-            var normalizedItems = new List<(string SellerType, Guid? SellerId, string ItemType, int? MaterialId, int? DesignId, int Quantity, decimal UnitPrice)>();
+            // Server-derivation: xác định Seller theo dữ liệu gốc (Material/Design/Product), không tin vào payload
+            var normalizedItems = new List<(string SellerType, Guid? SellerId, string ItemType, int? MaterialId, int? DesignId, int? ProductId, int Quantity, decimal UnitPrice)>();
             foreach (var i in request.Items)
             {
                 if (i.ItemType.Equals("material", StringComparison.OrdinalIgnoreCase) && i.MaterialId.HasValue)
                 {
                     var material = await _dbContext.Materials.AsNoTracking().FirstOrDefaultAsync(m => m.MaterialId == i.MaterialId.Value);
                     if (material == null) throw new ArgumentException($"Material không tồn tại: {i.MaterialId}");
-                    normalizedItems.Add(("Supplier", material.SupplierId, "material", i.MaterialId, null, i.Quantity, material.PricePerUnit));
+                    normalizedItems.Add(("Supplier", material.SupplierId, "material", i.MaterialId, null, null, i.Quantity, material.PricePerUnit));
                 }
                 else if (i.ItemType.Equals("design", StringComparison.OrdinalIgnoreCase) && i.DesignId.HasValue)
                 {
                     // Hiện chưa mở bán design; tạm để seller null
-                    normalizedItems.Add(("Designer", null, "design", null, i.DesignId, i.Quantity, i.UnitPrice));
+                    normalizedItems.Add(("Designer", null, "design", null, i.DesignId, null, i.Quantity, i.UnitPrice));
+                }
+                else if (i.ItemType.Equals("product", StringComparison.OrdinalIgnoreCase) && i.ProductId.HasValue)
+                {
+                    var product = await _dbContext.Products
+                        .Include(p => p.Design)
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(p => p.ProductId == i.ProductId.Value);
+                    if (product == null) throw new ArgumentException($"Product không tồn tại: {i.ProductId}");
+                    normalizedItems.Add(("Designer", product.Design.DesignerId, "product", null, null, i.ProductId, i.Quantity, product.Price));
                 }
             }
 
@@ -108,11 +117,13 @@ namespace EcoFashionBackEnd.Services
                         OrderId = order.OrderId,
                         MaterialId = item.ItemType == "material" ? item.MaterialId : null,
                         DesignId = item.ItemType == "design" ? item.DesignId : null,
+                        ProductId = item.ItemType == "product" ? item.ProductId : null,
                         SupplierId = item.SellerType == "Supplier" ? item.SellerId : null,
                         DesignerId = item.SellerType == "Designer" ? item.SellerId : null,
                         Quantity = item.Quantity,
                         UnitPrice = item.UnitPrice,
-                        Type = item.ItemType == "material" ? OrderDetailType.material : OrderDetailType.design,
+                        Type = item.ItemType == "material" ? OrderDetailType.material : 
+                               item.ItemType == "product" ? OrderDetailType.product : OrderDetailType.design,
                         Status = OrderDetailStatus.pending
                     };
                     await _orderDetailRepository.AddAsync(detail);
@@ -158,19 +169,38 @@ namespace EcoFashionBackEnd.Services
             var requestItems = new List<CartItemDto>();
             foreach (var cartItem in cart.Items)
             {
-                var material = await _materialRepository.GetByIdAsync(cartItem.MaterialId);
-                if (material == null)
+                if (cartItem.ItemType == "material" && cartItem.MaterialId.HasValue)
                 {
-                    throw new InvalidOperationException($"Material với ID {cartItem.MaterialId} không tồn tại.");
-                }
+                    var material = await _materialRepository.GetByIdAsync(cartItem.MaterialId.Value);
+                    if (material == null)
+                    {
+                        throw new InvalidOperationException($"Material với ID {cartItem.MaterialId} không tồn tại.");
+                    }
 
-                requestItems.Add(new CartItemDto
+                    requestItems.Add(new CartItemDto
+                    {
+                        ItemType = "material",
+                        MaterialId = cartItem.MaterialId,
+                        Quantity = cartItem.Quantity,
+                        UnitPrice = material.PricePerUnit // Dùng giá hiện tại
+                    });
+                }
+                else if (cartItem.ItemType == "product" && cartItem.ProductId.HasValue)
                 {
-                    ItemType = "material",
-                    MaterialId = cartItem.MaterialId,
-                    Quantity = cartItem.Quantity,
-                    UnitPrice = material.PricePerUnit // Dùng giá hiện tại
-                });
+                    var product = await _dbContext.Products.AsNoTracking().FirstOrDefaultAsync(p => p.ProductId == cartItem.ProductId.Value);
+                    if (product == null)
+                    {
+                        throw new InvalidOperationException($"Product với ID {cartItem.ProductId} không tồn tại.");
+                    }
+
+                    requestItems.Add(new CartItemDto
+                    {
+                        ItemType = "product",
+                        ProductId = cartItem.ProductId,
+                        Quantity = cartItem.Quantity,
+                        UnitPrice = product.Price // Dùng giá hiện tại
+                    });
+                }
             }
 
             var request = new CreateSessionRequest

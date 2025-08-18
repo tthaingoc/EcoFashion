@@ -3,6 +3,34 @@ import { useEffect, useMemo, useState } from "react";
 import Aos from "aos";
 import { useCartStore } from "../../store/cartStore";
 import { useNavigate } from "react-router-dom";
+import { 
+  Box, 
+  Container, 
+  Typography, 
+  Button, 
+  Card, 
+  CardContent, 
+  Grid, 
+  Chip, 
+  IconButton,
+  Divider,
+  Avatar,
+  Badge,
+  TextField,
+  Stepper,
+  Step,
+  StepLabel
+} from "@mui/material";
+import { 
+  Add, 
+  Remove, 
+  Delete, 
+  ShoppingCart, 
+  LocalShipping, 
+  Security,
+  ArrowForward,
+  Store
+} from "@mui/icons-material";
 //----------------
 import ShippingModal from "../../components/checkout/ShippingModal";
 import { useState as useReactState } from 'react';
@@ -12,10 +40,10 @@ const formatVND = (n: number) => n.toLocaleString('vi-VN', { style: 'currency', 
 
 export default function Cart() {
   const navigate = useNavigate();
-//-----------------
   const [openShip, setOpenShip] = useReactState(false);
   const [pendingSellerId, setPendingSellerId] = useReactState<string | null>(null);
   const items = useCartStore((s) => s.items);
+  const syncFromServer = useCartStore((s) => s.syncFromServer);
   const grouped = useMemo(() => {
     const groups: Record<string, typeof items> = {} as any;
     items.forEach((item) => {
@@ -27,10 +55,12 @@ export default function Cart() {
   const increaseQuantity = useCartStore((s) => s.increaseQuantity);
   const decreaseQuantity = useCartStore((s) => s.decreaseQuantity);
   const removeFromCart = useCartStore((s) => s.removeFromCart);
+  const clearCart = useCartStore((s) => s.clearCart);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   useEffect(() => {
     setSelectedIds(items.map(i => i.id));
+    syncFromServer();
   }, [items.length]);
 
   const allSelected = selectedIds.length > 0 && selectedIds.length === items.length;
@@ -45,130 +75,363 @@ export default function Cart() {
   const vatRate = 0.05;
   const vat = Math.round(selectedSubtotal * vatRate);
   const total = selectedSubtotal + vat;
+  
   useEffect(() => {
     Aos.init();
   }, []);
-  return (
-    <>
-        
-
-        <div
-          className="relative w-full h-48 sm:h-60 md:h-72 bg-center bg-cover flex items-center justify-center"
-          style={{
+  if (items.length === 0) {
+    return (
+      <Box sx={{ minHeight: '100vh', bgcolor: '#f8fafc' }}>
+        {/* Header */}
+        <Box
+          sx={{
+            height: 250,
             backgroundImage: `linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.35)), url(${bg})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
         >
-          <div className="text-center w-full px-4">
-            <h2 className="text-white text-4xl md:text-[40px] font-semibold leading-none">Cart</h2>
-            <ul className="flex items-center justify-center gap-2 text-sm md:text-base font-medium text-white/90 mt-3">
-              <li>
-                <Link to="/" className="hover:underline">Home</Link>
-              </li>
-              <li>/</li>
-              <li className="text-green-300">Cart</li>
-            </ul>
-          </div>
-        </div>
+          <Container maxWidth="lg">
+            <Typography variant="h3" sx={{ color: 'white', fontWeight: 'bold', textAlign: 'center', mb: 2 }}>
+              Giỏ Hàng
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, color: 'white' }}>
+              <Link to="/" style={{ color: 'white', textDecoration: 'none' }}>Trang chủ</Link>
+              <Typography>/</Typography>
+              <Typography sx={{ color: '#4ade80' }}>Giỏ hàng</Typography>
+            </Box>
+          </Container>
+        </Box>
 
-        <div className="mt-8 md:mt-10 lg:mt-12 mb-16 md:mb-24">
-            <div className="max-w-[1120px] mx-auto px-3 sm:px-4 space-y-4 md:space-y-6 pb-10 md:pb-14">
-                {/* Header  */}
-                <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-4 bg-white border rounded-md text-gray-700 text-sm">
-                  <div className="col-span-6 flex items-center gap-3">
-                    <input type="checkbox" checked={allSelected} onChange={toggleAll} className="w-4 h-4" />
-                    <span>Sản phẩm</span>
-                  </div>
-                  <div className="col-span-2">Đơn giá</div>
-                  <div className="col-span-2">Số lượng</div>
-                  <div className="col-span-2">Số tiền</div>
-                </div>
+        {/* Empty Cart */}
+        <Container maxWidth="md" sx={{ py: 8 }}>
+          <Card sx={{ textAlign: 'center', p: 6, borderRadius: 3, boxShadow: 3 }}>
+            <ShoppingCart sx={{ fontSize: 80, color: '#e5e7eb', mb: 3 }} />
+            <Typography variant="h5" sx={{ mb: 2, fontWeight: 'bold', color: '#374151' }}>
+              Giỏ hàng của bạn đang trống
+            </Typography>
+            <Typography variant="body1" sx={{ mb: 4, color: '#6b7280' }}>
+              Hãy khám phá các sản phẩm thời trang bền vững của chúng tôi
+            </Typography>
+            <Button
+              variant="contained"
+              size="large"
+              sx={{
+                bgcolor: '#16a34a',
+                '&:hover': { bgcolor: '#15803d' },
+                px: 4,
+                py: 1.5,
+                borderRadius: 2,
+              }}
+              onClick={() => navigate('/fashion')}
+            >
+              Tiếp tục mua sắm
+            </Button>
+          </Card>
+        </Container>
+      </Box>
+    );
+  }
 
-                {/* Items grouped by seller */}
-                <div className="mt-2 space-y-4">
-                  {items.length === 0 && (
-                    <div className="p-10 text-center text-gray-500 bg-white rounded-md">Giỏ hàng trống</div>
-                  )}
-                  {Object.entries(grouped).map(([sellerId, sellerItems]) => {
-                    const sellerName = sellerItems[0]?.sellerName || `Nhà cung cấp ${sellerId.substring(0, 6)}`;
-                    const sellerSubtotal = sellerItems.reduce((s, i) => s + i.price * i.quantity, 0);
-                    return (
-                      <div key={sellerId} className="border rounded-md bg-white">
-                        <div className="px-4 py-3 border-b flex items-center justify-between">
-                          <div className="font-semibold text-gray-900">{sellerName}</div>
-                          <div className="text-sm text-gray-500">Tạm tính nhóm: <span className="font-medium text-green-700">{formatVND(sellerSubtotal)}</span></div>
-                        </div>
-                        <div className="divide-y">
-                          {sellerItems.map(item => (
-                            <div key={item.id} className="grid grid-cols-12 gap-4 items-center px-4 py-3">
-                              <div className="col-span-12 md:col-span-6 flex items-center gap-3">
-                                <input type="checkbox" className="w-4 h-4" checked={selectedIds.includes(item.id)} onChange={() => toggleOne(item.id)} />
-                                <img src={item.image} alt={item.name} className="w-16 h-16 object-cover rounded" />
-                                <div>
-                                  <div className="font-medium text-gray-900">{item.name}</div>
-                                  <div className="text-xs text-gray-500">{item.type} • ĐVT: {item.unit}</div>
-                                </div>
-                              </div>
-                              <div className="col-span-6 md:col-span-2 text-gray-900">{formatVND(item.price)}</div>
-                              <div className="col-span-3 md:col-span-2 flex items-center gap-2">
-                                <button onClick={() => decreaseQuantity(item.id)} className="w-8 h-8 border rounded">-</button>
-                                <span className="w-10 text-center">{item.quantity}</span>
-                                <button onClick={() => increaseQuantity(item.id)} className="w-8 h-8 border rounded">+</button>
-                              </div>
-                              <div className="col-span-3 md:col-span-2 font-semibold text-green-700">{formatVND(item.price * item.quantity)}</div>
-                              <div className="col-span-12 md:col-span-12 flex md:justify-end">
-                                <button onClick={() => removeFromCart(item.id)} className="text-red-500 text-sm hover:underline">Xóa</button>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                        <div className="px-4 py-3 bg-gray-50 border-t flex items-center justify-end gap-3">
-                          <button className="px-4 py-2 rounded-md border hover:bg-gray-100 text-sm">Lưu nhóm</button>
-                          <button
-                            className="px-4 py-2 rounded-md bg-green-600 hover:bg-green-700 text-white text-sm"
-                            onClick={() => {
-                              //-------------------
-                              setPendingSellerId(sellerId);
-                              setOpenShip(true);
-                            }}
-                          >
-                            Thanh toán nhóm này
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+  return (
+    <Box sx={{ minHeight: '100vh', bgcolor: '#f8fafc' }}>
+      {/* Header */}
+      <Box
+        sx={{
+          height: 250,
+          backgroundImage: `linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.35)), url(${bg})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Container maxWidth="lg">
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Box>
+              <Typography variant="h3" sx={{ color: 'white', fontWeight: 'bold', mb: 2 }}>
+                Giỏ Hàng
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'white' }}>
+                <Link to="/" style={{ color: 'white', textDecoration: 'none' }}>Trang chủ</Link>
+                <Typography>/</Typography>
+                <Typography sx={{ color: '#4ade80' }}>Giỏ hàng</Typography>
+              </Box>
+            </Box>
+            <Badge badgeContent={items.length} color="primary">
+              <ShoppingCart sx={{ fontSize: 50, color: 'white' }} />
+            </Badge>
+          </Box>
+        </Container>
+      </Box>
 
-                {/* Bottom bar */}
-                <div className="sticky bottom-0 mt-6 bg-white border-t p-4 flex flex-col md:flex-row items-center justify-between gap-3 max-w-[1120px] mx-auto">
-                  <div className="flex items-center gap-3 text-sm">
-                    <input type="checkbox" checked={allSelected} onChange={toggleAll} className="w-4 h-4" />
-                    <span>Chọn tất cả ({items.length})</span>
-                    <button className="text-red-500 hover:underline" onClick={() => selectedIds.forEach(id => removeFromCart(id))}>Xóa</button>
-                  </div>
-                  <div className="flex items-center gap-6">
-                    <div className="text-right">
-                      <div className="text-sm text-gray-500">Tổng tiền ({selectedIds.length} sản phẩm):</div>
-                      <div className="text-2xl font-semibold text-green-700">{formatVND(total)}</div>
-                    </div>
-                    <button disabled={selectedIds.length === 0} onClick={() => navigate('/checkout')} className={`px-6 py-3 rounded-md text-white ${selectedIds.length === 0 ? 'bg-gray-300' : 'bg-green-600 hover:bg-green-700'}`}>Mua Hàng</button>
-                  </div>
-                </div>
-            </div>
-        </div>
+      {/* Progress Steps */}
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Stepper activeStep={0} sx={{ mb: 4 }}>
+          <Step>
+            <StepLabel>Giỏ hàng</StepLabel>
+          </Step>
+          <Step>
+            <StepLabel>Thông tin</StepLabel>
+          </Step>
+          <Step>
+            <StepLabel>Thanh toán</StepLabel>
+          </Step>
+          <Step>
+            <StepLabel>Hoàn thành</StepLabel>
+          </Step>
+        </Stepper>
+      </Container>
 
-        {/* Shipping modal */}
-        <ShippingModal
-          open={openShip}
-          onClose={() => setOpenShip(false)}
-          onSaved={() => {
-            if (pendingSellerId) {
-              const params = new URLSearchParams({ groupSellerId: pendingSellerId });
-              navigate(`/checkout?${params.toString()}`);
-            }
-          }}
-        />
+      {/* Cart Content */}
+      <Container maxWidth="lg" sx={{ pb: 8 }}>
+        <Grid container spacing={4}>
+          <Grid item xs={12} lg={8}>
+            {/* Cart Items */}
+            <Card sx={{ borderRadius: 3, boxShadow: 2, mb: 3 }}>
+              <CardContent sx={{ p: 0 }}>
+                {/* Header */}
+                <Box sx={{ p: 3, borderBottom: '1px solid #e5e7eb', bgcolor: '#f9fafb' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                      <input 
+                        type="checkbox" 
+                        checked={allSelected} 
+                        onChange={toggleAll}
+                        style={{ width: 18, height: 18 }}
+                      />
+                      <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                        Sản phẩm ({items.length})
+                      </Typography>
+                    </Box>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      color="error"
+                      startIcon={<Delete />}
+                      onClick={() => clearCart()}
+                    >
+                      Xóa tất cả
+                    </Button>
+                  </Box>
+                </Box>
 
-    </>
+                {/* Items by Seller */}
+                {Object.entries(grouped).map(([sellerId, sellerItems]) => {
+                  const sellerName = sellerItems[0]?.sellerName || `Nhà cung cấp ${sellerId.substring(0, 6)}`;
+                  const sellerSubtotal = sellerItems.reduce((s, i) => s + i.price * i.quantity, 0);
+                  
+                  return (
+                    <Box key={sellerId} sx={{ borderBottom: '1px solid #e5e7eb' }}>
+                      {/* Seller Header */}
+                      <Box sx={{ p: 3, bgcolor: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                          <Store sx={{ color: '#16a34a' }} />
+                          <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                            {sellerName}
+                          </Typography>
+                        </Box>
+                        <Chip 
+                          label={`Tạm tính: ${formatVND(sellerSubtotal)}`}
+                          color="primary"
+                          variant="outlined"
+                        />
+                      </Box>
+
+                      {/* Seller Items */}
+                      {sellerItems.map((item, index) => (
+                        <Box key={item.id} sx={{ p: 3, borderBottom: index < sellerItems.length - 1 ? '1px solid #f3f4f6' : 'none' }}>
+                          <Grid container spacing={3} alignItems="center">
+                            <Grid item xs={12} md={6}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                <input 
+                                  type="checkbox" 
+                                  checked={selectedIds.includes(item.id)} 
+                                  onChange={() => toggleOne(item.id)}
+                                  style={{ width: 18, height: 18 }}
+                                />
+                                <Avatar
+                                  src={item.image}
+                                  variant="rounded"
+                                  sx={{ width: 80, height: 80 }}
+                                />
+                                <Box>
+                                  <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 0.5 }}>
+                                    {item.name}
+                                  </Typography>
+                                  <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
+                                    <Chip label={item.type} size="small" color="primary" variant="outlined" />
+                                    <Chip label={`ĐVT: ${item.unit}`} size="small" />
+                                  </Box>
+                                  <Typography variant="body2" sx={{ color: '#6b7280' }}>
+                                    {item.sellerName}
+                                  </Typography>
+                                </Box>
+                              </Box>
+                            </Grid>
+                            <Grid item xs={6} md={2}>
+                              <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#16a34a' }}>
+                                {formatVND(item.price)}
+                              </Typography>
+                            </Grid>
+                            <Grid item xs={6} md={2}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <IconButton 
+                                  size="small" 
+                                  onClick={() => decreaseQuantity(item.id)}
+                                  sx={{ bgcolor: '#f3f4f6' }}
+                                >
+                                  <Remove />
+                                </IconButton>
+                                <TextField
+                                  value={item.quantity}
+                                  size="small"
+                                  sx={{ width: 60, textAlign: 'center' }}
+                                  inputProps={{ style: { textAlign: 'center' } }}
+                                />
+                                <IconButton 
+                                  size="small" 
+                                  onClick={() => increaseQuantity(item.id)}
+                                  sx={{ bgcolor: '#f3f4f6' }}
+                                >
+                                  <Add />
+                                </IconButton>
+                              </Box>
+                            </Grid>
+                            <Grid item xs={12} md={2}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#dc2626' }}>
+                                  {formatVND(item.price * item.quantity)}
+                                </Typography>
+                                <IconButton 
+                                  size="small" 
+                                  color="error"
+                                  onClick={() => removeFromCart(item.id)}
+                                >
+                                  <Delete />
+                                </IconButton>
+                              </Box>
+                            </Grid>
+                          </Grid>
+                        </Box>
+                      ))}
+
+                      {/* Seller Actions */}
+                      <Box sx={{ p: 3, bgcolor: '#f9fafb', display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+                        <Button variant="outlined" size="small">
+                          Lưu nhóm
+                        </Button>
+                        <Button
+                          variant="contained"
+                          size="small"
+                          sx={{ bgcolor: '#16a34a', '&:hover': { bgcolor: '#15803d' } }}
+                          onClick={() => {
+                            setPendingSellerId(sellerId);
+                            setOpenShip(true);
+                          }}
+                        >
+                          Thanh toán nhóm này
+                        </Button>
+                      </Box>
+                    </Box>
+                  );
+                })}
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* Order Summary */}
+          <Grid item xs={12} lg={4}>
+            <Card sx={{ borderRadius: 3, boxShadow: 2, position: 'sticky', top: 20 }}>
+              <CardContent sx={{ p: 3 }}>
+                <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 3 }}>
+                  Tóm tắt đơn hàng
+                </Typography>
+                
+                <Box sx={{ mb: 3 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                    <Typography>Tạm tính ({selectedIds.length} sản phẩm):</Typography>
+                    <Typography sx={{ fontWeight: 'bold' }}>{formatVND(selectedSubtotal)}</Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                    <Typography>Phí vận chuyển:</Typography>
+                    <Typography sx={{ color: '#16a34a', fontWeight: 'bold' }}>Miễn phí</Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                    <Typography>VAT (5%):</Typography>
+                    <Typography sx={{ fontWeight: 'bold' }}>{formatVND(vat)}</Typography>
+                  </Box>
+                  <Divider sx={{ my: 2 }} />
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>Tổng cộng:</Typography>
+                    <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#dc2626' }}>
+                      {formatVND(total)}
+                    </Typography>
+                  </Box>
+                </Box>
+
+                <Button
+                  variant="contained"
+                  fullWidth
+                  size="large"
+                  disabled={selectedIds.length === 0}
+                  sx={{
+                    bgcolor: '#16a34a',
+                    '&:hover': { bgcolor: '#15803d' },
+                    py: 1.5,
+                    borderRadius: 2,
+                    fontSize: '1.1rem',
+                    fontWeight: 'bold',
+                  }}
+                  onClick={() => navigate('/checkout')}
+                  endIcon={<ArrowForward />}
+                >
+                  Tiến hành thanh toán
+                </Button>
+
+                {/* Security Notice */}
+                <Box sx={{ mt: 3, p: 2, bgcolor: '#f0f9ff', borderRadius: 2, border: '1px solid #bae6fd' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                    <Security sx={{ fontSize: 20, color: '#0284c7' }} />
+                    <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: '#0284c7' }}>
+                      Giao dịch được bảo mật
+                    </Typography>
+                  </Box>
+                  <Typography variant="caption" sx={{ color: '#0369a1' }}>
+                    Thông tin thanh toán của bạn được mã hóa và bảo vệ 100%
+                  </Typography>
+                </Box>
+
+                {/* Continue Shopping */}
+                <Button
+                  variant="text"
+                  fullWidth
+                  sx={{ mt: 2, color: '#16a34a', fontWeight: 'bold' }}
+                  onClick={() => navigate('/fashion')}
+                >
+                  ← Tiếp tục mua sắm
+                </Button>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+      </Container>
+
+      {/* Shipping Modal */}
+      <ShippingModal
+        open={openShip}
+        onClose={() => setOpenShip(false)}
+        onSaved={() => {
+          if (pendingSellerId) {
+            const params = new URLSearchParams({ groupSellerId: pendingSellerId });
+            navigate(`/checkout?${params.toString()}`);
+          }
+        }}
+      />
+    </Box>
   )
 }

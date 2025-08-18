@@ -37,6 +37,24 @@ public class CartController : ControllerBase
 		return Ok(ApiResult<CartDto>.Succeed(cart));
 	}
 
+	[HttpPut("materials")]
+	public async Task<IActionResult> UpsertMaterialItem([FromBody] UpsertMaterialCartItemRequest request)
+	{
+		if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int userId))
+			return Unauthorized(ApiResult<object>.Fail("Không thể xác định người dùng."));
+		var cart = await _cartService.UpsertMaterialItemAsync(userId, request);
+		return Ok(ApiResult<CartDto>.Succeed(cart));
+	}
+
+	[HttpPut("products")]
+	public async Task<IActionResult> UpsertProductItem([FromBody] UpsertProductCartItemRequest request)
+	{
+		if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int userId))
+			return Unauthorized(ApiResult<object>.Fail("Không thể xác định người dùng."));
+		var cart = await _cartService.UpsertProductItemAsync(userId, request);
+		return Ok(ApiResult<CartDto>.Succeed(cart));
+	}
+
 	[HttpPatch("items/{cartItemId}")]
 	public async Task<IActionResult> UpdateQuantity(int cartItemId, [FromBody] UpdateCartItemQuantityRequest request)
 	{

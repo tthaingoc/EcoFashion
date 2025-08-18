@@ -31,6 +31,8 @@ import {
 } from "@mui/icons-material";
 import { grey } from "@mui/material/colors";
 import type { Design } from "../../services/api/designService";
+import { useCartStore } from "../../store/cartStore";
+import { toast } from "react-toastify";
 //example
 import ao_linen from "../../assets/pictures/example/ao-linen.webp";
 import { products } from "../../data/productsData";
@@ -50,6 +52,8 @@ const FashionCard: React.FC<FashionCardProps> = ({
   // onToggleFavorite,
 }) => {
   const navigate = useNavigate();
+  const addProductToCart = useCartStore((s) => s.addProductToCart);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
   const getCategoryColor = (category?: string): string => {
     if (!category) return "#9e9e9e"; // default grey
     const colors: Record<string, string> = {
@@ -84,6 +88,27 @@ const FashionCard: React.FC<FashionCardProps> = ({
       style: "currency",
       currency: "VND",
     }).format(price);
+  };
+
+  const handleAddToCart = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    
+    if (product.productCount <= 0) {
+      toast.warning("Sản phẩm này hiện tại đã hết hàng");
+      return;
+    }
+
+    setIsAddingToCart(true);
+    try {
+      await addProductToCart({ productId: product.designId, quantity: 1 });
+      toast.success(`Đã thêm ${product.name} vào giỏ hàng!`);
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+      toast.error("Không thể thêm sản phẩm vào giỏ hàng");
+    } finally {
+      setIsAddingToCart(false);
+    }
   };
 
   return (
@@ -431,20 +456,22 @@ const FashionCard: React.FC<FashionCardProps> = ({
           </Box>
 
           {/* Add To Cart */}
-          {/* <Button
+          <Button
             variant="contained"
             fullWidth
+            disabled={product.productCount <= 0 || isAddingToCart}
             sx={{
-              backgroundColor: "rgba(22, 163, 74, 1)",
+              backgroundColor: product.productCount <= 0 ? "#ccc" : "rgba(22, 163, 74, 1)",
+              "&:hover": {
+                backgroundColor: product.productCount <= 0 ? "#ccc" : "rgba(20, 140, 65, 1)",
+              },
+              pointerEvents: "auto",
             }}
-            onClick={(e) => {
-              e.stopPropagation(); // prevent navigation
-              e.preventDefault(); // prevent Link
-            }}
+            onClick={handleAddToCart}
           >
             <AddToCart />
-            Thêm vào Cart
-          </Button> */}
+            {isAddingToCart ? "Đang thêm..." : product.productCount <= 0 ? "Hết hàng" : "Thêm vào giỏ"}
+          </Button>
         </Box>
       </CardContent>
     </Card>

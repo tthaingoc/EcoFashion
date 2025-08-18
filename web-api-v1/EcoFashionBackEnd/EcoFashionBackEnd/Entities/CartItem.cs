@@ -14,10 +14,20 @@ namespace EcoFashionBackEnd.Entities
 		public int CartId { get; set; }
 		public virtual Cart Cart { get; set; } = null!;
 
-		// Hiện tại chỉ hỗ trợ Supplier bán Material
-		// Đặt tên tường minh để tránh nhầm lẫn
-		// Có thể mở rộng sau này cho Designer/Product?
-		public int MaterialId { get; set; }
+		// Type of item: "material" or "product"
+		[Required]
+		[MaxLength(20)]
+		public string ItemType { get; set; } = "material";
+
+		// For Material items
+		public int? MaterialId { get; set; }
+		[ForeignKey("MaterialId")]
+		public virtual Material? Material { get; set; }
+
+		// For Product items  
+		public int? ProductId { get; set; }
+		[ForeignKey("ProductId")]
+		public virtual Product? Product { get; set; }
 
 		public int Quantity { get; set; }
 		[Column(TypeName = "decimal(18,2)")]
