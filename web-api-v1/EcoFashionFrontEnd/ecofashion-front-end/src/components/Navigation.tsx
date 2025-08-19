@@ -6,7 +6,7 @@ import { useAuthStore } from "../store/authStore";
 import { useUIStore } from "../store/uiStore";
 import { useCartStore } from "../store/cartStore";
 // ...existing code...
-import { HeartIcon as HeartOutlineIcon } from "@heroicons/react/24/outline";
+import { WalletIcon } from "@heroicons/react/24/outline";
 import Avatar from "./common/Avatar";
 
 // Icons
@@ -42,7 +42,7 @@ const SearchIcon = () => (
   </svg>
 );
 
-// HeartIcon => Heroicons outline
+// WalletIcon => Heroicons outline
 
 const ChevronDownIcon = () => (
   <svg
@@ -351,6 +351,11 @@ const Navigation: React.FC = () => {
             icon: <DashboardIcon />,
           },
           {
+            label: "Quản lý Vận chuyển",
+            path: "/shipment",
+            icon: <DashboardIcon />,
+          },
+          {
             label: "Quản Lý Đơn Đăng Ký",
             path: "/admin/applications",
             icon: <DashboardIcon />,
@@ -368,6 +373,11 @@ const Navigation: React.FC = () => {
           {
             label: "Bảng Điều Khiển",
             path: "/supplier/dashboard",
+            icon: <DashboardIcon />,
+          },
+          {
+            label: "Quản lý Vận chuyển",
+            path: "/shipment",
             icon: <DashboardIcon />,
           }
         );
@@ -625,11 +635,12 @@ const Navigation: React.FC = () => {
             {/* Icons */}
             <CartWithPopup />
             <button
+              onClick={() => navigate('/wallet')}
               className={`p-2 rounded-lg hover:bg-gray-100 transition-colors ${
                 scrolled || !isHome ? "text-gray-700" : "text-white"
               }`}
             >
-              <HeartOutlineIcon className="w-6 h-6 text-inherit hover:text-pink-500 transition duration-200" />
+              <WalletIcon className="w-6 h-6 text-inherit hover:text-green-500 transition duration-200" />
             </button>
 
             {/* User Section */}

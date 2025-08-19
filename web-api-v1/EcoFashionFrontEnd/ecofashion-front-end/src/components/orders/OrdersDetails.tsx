@@ -3,6 +3,8 @@ import { useParams, Link } from 'react-router-dom';
 import { ordersService } from '../../services/api/ordersService';
 import { formatViDateTime } from '../../utils/date';
 import { paymentsService } from '../../services/api/paymentsService';
+import { Button, Box, Chip } from '@mui/material';
+import { LocalShipping, Visibility } from '@mui/icons-material';
 
 export default function OrdersDetails() {
   const [payLoading, setPayLoading] = useState(false);
@@ -84,7 +86,23 @@ export default function OrdersDetails() {
         </div>
         <div>
           <div className="text-sm text-gray-500">Trạng thái vận chuyển</div>
-          <div className="font-medium">{data.fulfillmentStatus ? String(data.fulfillmentStatus) : 'Chưa cập nhật'}</div>
+          <div className="font-medium flex items-center gap-2">
+            {data.fulfillmentStatus ? String(data.fulfillmentStatus) : 'Chưa cập nhật'}
+            {(data.paymentStatus === 'Paid' || data.paymentStatus === 'paid') && (
+              <Chip
+                label="Theo dõi vận chuyển"
+                size="small"
+                icon={<LocalShipping />}
+                onClick={() => window.open(`/shipment/track/${data.orderId}`, '_blank')}
+                sx={{ 
+                  bgcolor: '#dcfce7', 
+                  color: '#16a34a',
+                  cursor: 'pointer',
+                  '&:hover': { bgcolor: '#bbf7d0' }
+                }}
+              />
+            )}
+          </div>
         </div>
         <div>
           <div className="text-sm text-gray-500">Ngày đặt</div>

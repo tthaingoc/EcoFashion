@@ -35,7 +35,7 @@ namespace EcoFashionBackEnd.Controllers
 
         // Tạo session trực tiếp từ cart hiện tại của user
         [HttpPost("create-session-from-cart")]
-        public async Task<IActionResult> CreateSessionFromCart()
+        public async Task<IActionResult> CreateSessionFromCart([FromBody] CreateSessionFromCartRequest? request = null)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
@@ -50,7 +50,7 @@ namespace EcoFashionBackEnd.Controllers
                 return BadRequest(new { message = "Giỏ hàng trống." });
             }
 
-            var request = new CreateSessionRequest
+            var sessionRequest = new CreateSessionRequest
             {
                 Items = cart.Items.Select(i => new CartItemDto
                 {
@@ -61,12 +61,17 @@ namespace EcoFashionBackEnd.Controllers
                     SellerType = "Supplier",
                     SellerId = i.SupplierId
                 }).ToList(),
-                ShippingAddress = "Địa chỉ giao hàng"
+                ShippingAddress = request?.ShippingAddress ?? "Địa chỉ giao hàng"
             };
 
-            var result = await _checkoutService.CreateSessionAsync(userId, request);
+            var result = await _checkoutService.CreateSessionAsync(userId, sessionRequest);
             return Ok(result);
         }
+    }
+
+    public class CreateSessionFromCartRequest
+    {
+        public string? ShippingAddress { get; set; }
     }
 }
 

@@ -78,6 +78,7 @@ public static class ServicesExtensions
 
         services.AddScoped<UserService>();
         services.AddScoped<UserRoleService>();
+        services.AddScoped<UserAddressService>();
         services.AddScoped<DesignerService>();
         services.AddScoped<SupplierService>();
         services.AddScoped<ApplicationService>();

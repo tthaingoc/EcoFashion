@@ -52,6 +52,9 @@ import CheckoutResultPage from "./pages/checkout/result";
 import OrdersPage from "./pages/shop/OrdersPage";
 import OrdersDetails from "./components/orders/OrdersDetails";
 import OrdersList from "./components/orders/OrdersList";
+import ShipmentDashboard from "./pages/shipment/ShipmentDashboard";
+import ShipmentTrackingPage from "./pages/shipment/ShipmentTrackingPage";
+import WalletPage from "./pages/wallet/WalletPage";
 import { useAuthStore } from "./store/authStore";
 import { useCartStore } from "./store/cartStore";
 
@@ -127,6 +130,31 @@ function App() {
           <Route index element={<OrdersList />} />
           <Route path=":orderId" element={<OrdersDetails />} />
         </Route>
+
+        {/* ===== SHIPMENT ROUTES ===== */}
+        <Route
+          path="/shipment"
+          element={
+            <ProtectedRoute allowedRoles={["admin", "supplier", "designer"]}>
+              <ShipmentDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/shipment/track/:orderId"
+          element={<ShipmentTrackingPage />}
+        />
+
+        {/* ===== WALLET ROUTES ===== */}
+        <Route
+          path="/wallet"
+          element={
+            <ProtectedRoute allowedRoles={["customer", "supplier", "designer", "admin"]}>
+              <WalletPage />
+            </ProtectedRoute>
+          }
+        />
+
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/verify-otp" element={<VerifyOTP />} />

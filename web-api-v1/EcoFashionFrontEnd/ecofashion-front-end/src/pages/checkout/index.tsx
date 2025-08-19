@@ -45,6 +45,8 @@ import {
 //---------
 import { useCheckoutInfoStore } from '../../store/checkoutInfoStore';
 import PaymentMethodModal from '../../components/checkout/PaymentMethodModal';
+import AddressSelector from '../../components/checkout/AddressSelector';
+import { UserAddress } from '../../services/api/userAddressService';
 import bg from '../../assets/img/images/grid-image/fabric.png';
 
 const formatVND = (n: number) => n.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
@@ -63,6 +65,8 @@ export default function CheckoutPage() {
   const [searchParams] = useSearchParams();
   const [openPayment, setOpenPayment] = useState(false);
   const [preferredBank, setPreferredBank] = useState<string | undefined>(undefined);
+  const [selectedAddress, setSelectedAddress] = useState<UserAddress | null>(null);
+  const [showAddressSelector, setShowAddressSelector] = useState(false);
 
   // Payload không còn cần trên FE nếu dùng create-session-from-cart
 
@@ -72,9 +76,19 @@ export default function CheckoutPage() {
         navigate('/cart');
         return;
       }
+      
+      // Show address selector first if no address is selected
+      if (!selectedAddress) {
+        setShowAddressSelector(true);
+        return;
+      }
+
       try {
         setLoading(true);
-        const resp = await checkoutService.createSessionFromCart();
+        const formattedAddress = selectedAddress 
+          ? `${selectedAddress.addressLine}, ${selectedAddress.district}, ${selectedAddress.city}${selectedAddress.zipCode ? ', ' + selectedAddress.zipCode : ''}${selectedAddress.country ? ', ' + selectedAddress.country : ''}`
+          : '';
+        const resp = await checkoutService.createSessionFromCart(formattedAddress);
         wizard.start(resp);
       } catch (e: any) {
         setError(e?.message || 'Không tạo được session');
@@ -86,9 +100,14 @@ export default function CheckoutPage() {
       bootstrap();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [selectedAddress]);
 
   const currentOrder = wizard.orders[wizard.currentIndex];
+
+  const handleAddressSelect = (address: UserAddress) => {
+    setSelectedAddress(address);
+    setShowAddressSelector(false);
+  };
 
   const handlePay = async () => {
     if (!currentOrder) return;
@@ -106,7 +125,7 @@ export default function CheckoutPage() {
         amount,
         createdDate: new Date().toISOString(),
         bankCode: preferredBank || undefined,
-        fullName: shipping?.fullName || 'Khach hang',
+        fullName: shipping?.fullName || selectedAddress?.addressLine || 'Khach hang',
         description: `Thanh toan don hang: ${currentOrder.orderId}`,
       });
       window.location.href = redirectUrl;
@@ -129,7 +148,7 @@ export default function CheckoutPage() {
         amount,
         createdDate: new Date().toISOString(),
         bankCode: preferredBank || undefined,
-        fullName: shipping?.fullName || 'Khach hang',
+        fullName: shipping?.fullName || selectedAddress?.addressLine || 'Khach hang',
         description: `Thanh toan don hang: ${order.orderId}`,
       });
       window.location.href = redirectUrl;
@@ -147,6 +166,37 @@ export default function CheckoutPage() {
       clearCart();
     }
   };
+
+  // Show address selector if needed
+  if (showAddressSelector) {
+    return (
+      <Box sx={{ minHeight: '100vh', bgcolor: '#f8fafc' }}>
+        <Box
+          sx={{
+            height: 250,
+            backgroundImage: `linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.35)), url(${bg})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Container maxWidth="lg">
+            <Typography variant="h3" sx={{ color: 'white', fontWeight: 'bold', textAlign: 'center' }}>
+              Chọn địa chỉ giao hàng
+            </Typography>
+          </Container>
+        </Box>
+        <Container maxWidth="md" sx={{ py: 4 }}>
+          <AddressSelector
+            onAddressSelect={handleAddressSelect}
+            showTitle={false}
+          />
+        </Container>
+      </Box>
+    );
+  }
 
   if (loading && !wizard.orders.length) {
     return (
@@ -263,6 +313,37 @@ export default function CheckoutPage() {
             <StepLabel>Hoàn thành</StepLabel>
           </Step>
         </Stepper>
+      </Container>
+
+      {/* Selected Address Display */}
+      <Container maxWidth="lg" sx={{ pb: 2 }}>
+        {selectedAddress && (
+          <Card sx={{ mb: 3, borderRadius: 3, boxShadow: 2 }}>
+            <CardContent sx={{ p: 3 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box>
+                  <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <LocalShipping sx={{ color: '#16a34a' }} />
+                    Giao đến
+                  </Typography>
+                  <Typography variant="body1" sx={{ color: '#374151' }}>
+                    {selectedAddress.addressLine}, {selectedAddress.district}, {selectedAddress.city}
+                    {selectedAddress.zipCode && `, ${selectedAddress.zipCode}`}
+                    {selectedAddress.country && `, ${selectedAddress.country}`}
+                  </Typography>
+                </Box>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={() => setShowAddressSelector(true)}
+                  sx={{ color: '#16a34a', borderColor: '#16a34a' }}
+                >
+                  Thay đổi
+                </Button>
+              </Box>
+            </CardContent>
+          </Card>
+        )}
       </Container>
 
       {/* Main Content */}

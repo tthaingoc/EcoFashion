@@ -13,6 +13,7 @@ namespace EcoFashionBackEnd.Entities
 
         public DbSet<UserRole> UserRoles { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<UserAddress> UserAddresses { get; set; }
         public DbSet<Wallet> Wallets { get; set; }
         public DbSet<WalletTransaction> WalletTransactions { get; set; }
 
@@ -124,6 +125,19 @@ namespace EcoFashionBackEnd.Entities
             modelBuilder.Entity<Application>()
                 .Property(a => a.Status)
                 .HasConversion<string>();
+
+            // UserAddress relationships
+            modelBuilder.Entity<UserAddress>()
+                .HasOne(ua => ua.User)
+                .WithMany()
+                .HasForeignKey(ua => ua.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Ensure only one default address per user
+            modelBuilder.Entity<UserAddress>()
+                .HasIndex(ua => new { ua.UserId, ua.IsDefault })
+                .HasFilter("[IsDefault] = 1")
+                .IsUnique();
             #endregion
             #region wallet
             modelBuilder.Entity<User>()

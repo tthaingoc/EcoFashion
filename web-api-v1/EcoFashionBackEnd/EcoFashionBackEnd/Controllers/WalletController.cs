@@ -23,6 +23,21 @@
             _walletService = walletService;
         }
 
+        // Get user's wallet information
+        [HttpGet]
+        public async Task<IActionResult> GetWallet()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+                return Unauthorized("Không thể xác định người dùng.");
+
+            var wallet = await _walletService.GetWalletByUserIdAsync(userId);
+            if (wallet == null)
+                return NotFound("Không tìm thấy ví của người dùng.");
+
+            return Ok(wallet);
+        }
+
         //  Lấy số dư ví
         [HttpGet("balance")]
         public async Task<IActionResult> GetBalance()
@@ -32,21 +47,48 @@
                 return Unauthorized("Không thể xác định người dùng.");
 
             var balance = await _walletService.GetBalanceAsync(userId);
-            return Ok(new { UserId = userId, Balance = balance });
+            return Ok(new { balance = balance });
+        }
+
+        // Get wallet summary with recent transactions and stats
+        [HttpGet("summary")]
+        public async Task<IActionResult> GetWalletSummary()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+                return Unauthorized("Không thể xác định người dùng.");
+
+            var summary = await _walletService.GetWalletSummaryAsync(userId);
+            return Ok(summary);
         }
 
         
         //  Lấy lịch sử giao dịch ví
        
         [HttpGet("transactions")]
-        public async Task<IActionResult> GetTransactions()
+        public async Task<IActionResult> GetTransactions([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
                 return Unauthorized("Không thể xác định người dùng.");
 
-            var transactions = await _walletService.GetTransactionsAsync(userId);
+            var transactions = await _walletService.GetTransactionsPaginatedAsync(userId, page, pageSize);
             return Ok(transactions);
+        }
+
+        // Get specific transaction by ID
+        [HttpGet("transaction/{transactionId}")]
+        public async Task<IActionResult> GetTransaction(int transactionId)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+                return Unauthorized("Không thể xác định người dùng.");
+
+            var transaction = await _walletService.GetTransactionByIdAsync(transactionId, userId);
+            if (transaction == null)
+                return NotFound("Không tìm thấy giao dịch.");
+
+            return Ok(transaction);
         }
 
 

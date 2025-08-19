@@ -230,7 +230,75 @@ namespace EcoFashionBackEnd.Services
             return response;
         }
 
+        public async Task<Wallet> GetWalletByUserIdAsync(int userId)
+        {
+            return await _walletRepository.GetAll().FirstOrDefaultAsync(w => w.UserId == userId);
+        }
 
+        public async Task<object> GetWalletSummaryAsync(int userId)
+        {
+            var wallet = await _walletRepository.GetAll().FirstOrDefaultAsync(w => w.UserId == userId);
+            if (wallet == null) return null;
+
+            // Get recent transactions (last 10)
+            var recentTransactions = await _walletTransactionRepository.GetAll()
+                .Where(t => t.WalletId == wallet.WalletId)
+                .OrderByDescending(t => t.CreatedAt)
+                .Take(10)
+                .Select(t => new WalletTransactionDto
+                {
+                    WalletTransactionId = t.Id,
+                    WalletId = t.WalletId,
+                    TransactionType = t.Type.ToString(),
+                    Amount = (decimal)t.Amount,
+                    BalanceBefore = (decimal)(t.Amount > 0 ? wallet.Balance - t.Amount : wallet.Balance + Math.Abs(t.Amount)),
+                    BalanceAfter = (decimal)wallet.Balance,
+                    Description = GetTransactionDescription(t.Type),
+                    CreatedAt = t.CreatedAt,
+                    Status = t.Status.ToString()
+                })
+                .ToListAsync();
+
+            // Get total transaction count
+            var totalTransactions = await _walletTransactionRepository.GetAll()
+                .Where(t => t.WalletId == wallet.WalletId)
+                .CountAsync();
+
+            // Get monthly stats (current month)
+            var currentMonth = DateTime.Now.Month;
+            var currentYear = DateTime.Now.Year;
+            var monthlyTransactions = await _walletTransactionRepository.GetAll()
+                .Where(t => t.WalletId == wallet.WalletId && 
+                           t.CreatedAt.Month == currentMonth && 
+                           t.CreatedAt.Year == currentYear)
+                .ToListAsync();
+
+            var deposited = monthlyTransactions.Where(t => t.Type == TransactionType.Deposit || t.Type == TransactionType.Refund)
+                                              .Sum(t => t.Amount);
+            var spent = monthlyTransactions.Where(t => t.Type == TransactionType.Payment || t.Type == TransactionType.Withdrawal)
+                                          .Sum(t => t.Amount);
+
+            return new
+            {
+                wallet = new
+                {
+                    walletId = wallet.WalletId,
+                    userId = wallet.UserId,
+                    balance = (decimal)wallet.Balance,
+                    status = wallet.Status.ToString(),
+                    createdAt = wallet.CreatedAt,
+                    lastModified = wallet.LastModified
+                },
+                recentTransactions = recentTransactions,
+                totalTransactions = totalTransactions,
+                monthlyStats = new
+                {
+                    deposited = (decimal)deposited,
+                    spent = (decimal)spent,
+                    net = (decimal)(deposited - spent)
+                }
+            };
+        }
 
         public async Task<decimal> GetBalanceAsync(int userId)
         {
@@ -262,6 +330,83 @@ namespace EcoFashionBackEnd.Services
             }).ToList();
         }
 
+        public async Task<object> GetTransactionsPaginatedAsync(int userId, int page = 1, int pageSize = 20)
+        {
+            var wallet = await _walletRepository.GetAll().FirstOrDefaultAsync(w => w.UserId == userId);
+            if (wallet == null) 
+                return new { transactions = new List<object>(), totalCount = 0, currentPage = page, totalPages = 0 };
+
+            var totalCount = await _walletTransactionRepository.GetAll()
+                .Where(t => t.WalletId == wallet.WalletId)
+                .CountAsync();
+
+            var transactions = await _walletTransactionRepository.GetAll()
+                .Where(t => t.WalletId == wallet.WalletId)
+                .OrderByDescending(t => t.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(t => new WalletTransactionDto
+                {
+                    WalletTransactionId = t.Id,
+                    WalletId = t.WalletId,
+                    TransactionType = t.Type.ToString(),
+                    Amount = (decimal)t.Amount,
+                    BalanceBefore = (decimal)(t.Amount > 0 ? wallet.Balance - t.Amount : wallet.Balance + Math.Abs(t.Amount)),
+                    BalanceAfter = (decimal)wallet.Balance,
+                    Description = GetTransactionDescription(t.Type),
+                    CreatedAt = t.CreatedAt,
+                    Status = t.Status.ToString()
+                })
+                .ToListAsync();
+
+            var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+
+            return new
+            {
+                transactions = transactions,
+                totalCount = totalCount,
+                currentPage = page,
+                totalPages = totalPages
+            };
+        }
+
+        public async Task<WalletTransactionDto> GetTransactionByIdAsync(int transactionId, int userId)
+        {
+            var wallet = await _walletRepository.GetAll().FirstOrDefaultAsync(w => w.UserId == userId);
+            if (wallet == null) return null;
+
+            var transaction = await _walletTransactionRepository.GetAll()
+                .Where(t => t.Id == transactionId && t.WalletId == wallet.WalletId)
+                .FirstOrDefaultAsync();
+
+            if (transaction == null) return null;
+
+            return new WalletTransactionDto
+            {
+                WalletTransactionId = transaction.Id,
+                WalletId = transaction.WalletId,
+                TransactionType = transaction.Type.ToString(),
+                Amount = (decimal)transaction.Amount,
+                BalanceBefore = (decimal)(transaction.Amount > 0 ? wallet.Balance - transaction.Amount : wallet.Balance + Math.Abs(transaction.Amount)),
+                BalanceAfter = (decimal)wallet.Balance,
+                Description = GetTransactionDescription(transaction.Type),
+                CreatedAt = transaction.CreatedAt,
+                Status = transaction.Status.ToString()
+            };
+        }
+
+        private string GetTransactionDescription(TransactionType type)
+        {
+            return type switch
+            {
+                TransactionType.Deposit => "Nạp tiền vào ví",
+                TransactionType.Withdrawal => "Rút tiền từ ví",
+                TransactionType.Payment => "Thanh toán đơn hàng",
+                TransactionType.Refund => "Hoàn tiền",
+                TransactionType.Transfer => "Chuyển tiền",
+                _ => "Giao dịch"
+            };
+        }
 
         private string GetMessageFromResponseCode(string code)
         {
