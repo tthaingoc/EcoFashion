@@ -254,6 +254,20 @@ namespace EcoFashionBackEnd.Services
             return result != null;
         }
 
+        public async Task<bool> UpdateFulfillmentStatusAsync(int orderId, string fulfillmentStatus)
+        {
+            var order = await _dbContext.Orders.FindAsync(orderId);
+            if (order == null) return false;
+
+            if (Enum.TryParse<FulfillmentStatus>(fulfillmentStatus, out var status))
+            {
+                order.FulfillmentStatus = status;
+                await _dbContext.SaveChangesAsync();
+                return true;
+            }
+
+            return false;
+        }
 
     }
 }

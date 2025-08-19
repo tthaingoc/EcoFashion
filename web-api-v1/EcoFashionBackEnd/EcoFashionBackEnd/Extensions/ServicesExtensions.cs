@@ -114,6 +114,8 @@ public static class ServicesExtensions
         services.AddScoped<ReviewService>();
         services.AddScoped<InventoryTransactionService>();
         services.AddScoped<WalletService>();
+        services.AddScoped<OrderPaymentService>();
+        services.AddScoped<SettlementService>();
 
 
 

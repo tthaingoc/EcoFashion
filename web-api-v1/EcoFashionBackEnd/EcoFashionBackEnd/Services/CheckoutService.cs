@@ -12,13 +12,15 @@ namespace EcoFashionBackEnd.Services
         private readonly IRepository<OrderGroup, Guid> _orderGroupRepository;
         private readonly IRepository<Material, int> _materialRepository;
         private readonly AppDbContext _dbContext;
+        private readonly UserAddressService _userAddressService;
 
         public CheckoutService(
             IRepository<Order, int> orderRepository,
             IRepository<OrderDetail, int> orderDetailRepository,
             IRepository<OrderGroup, Guid> orderGroupRepository,
             IRepository<Material, int> materialRepository,
-            AppDbContext dbContext
+            AppDbContext dbContext,
+            UserAddressService userAddressService
         )
         {
             _orderRepository = orderRepository;
@@ -26,6 +28,7 @@ namespace EcoFashionBackEnd.Services
             _orderGroupRepository = orderGroupRepository;
             _materialRepository = materialRepository;
             _dbContext = dbContext;
+            _userAddressService = userAddressService;
         }
 
         // Tạo OrderGroup + nhiều Order theo Seller, kèm OrderDetail
@@ -211,6 +214,79 @@ namespace EcoFashionBackEnd.Services
             };
 
             return await CreateSessionAsync(userId, request);
+        }
+
+        public async Task<bool> UpdateOrderAddressAsync(int orderId, int userId, int addressId)
+        {
+            try
+            {
+                var order = await _dbContext.Orders
+                    .FirstOrDefaultAsync(o => o.OrderId == orderId && o.UserId == userId && o.PaymentStatus == PaymentStatus.Pending);
+                
+                if (order == null) return false;
+
+                var formattedAddress = await _userAddressService.GetFormattedAddressAsync(addressId, userId);
+                if (string.IsNullOrEmpty(formattedAddress)) return false;
+
+                order.ShippingAddress = formattedAddress;
+                _orderRepository.Update(order);
+                await _orderRepository.Commit();
+
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> UpdateOrderGroupAddressAsync(Guid orderGroupId, int userId, int addressId)
+        {
+            try
+            {
+                var orders = await _dbContext.Orders
+                    .Where(o => o.OrderGroupId == orderGroupId && o.UserId == userId && o.PaymentStatus == PaymentStatus.Pending)
+                    .ToListAsync();
+
+                if (!orders.Any()) return false;
+
+                var formattedAddress = await _userAddressService.GetFormattedAddressAsync(addressId, userId);
+                if (string.IsNullOrEmpty(formattedAddress)) return false;
+
+                foreach (var order in orders)
+                {
+                    order.ShippingAddress = formattedAddress;
+                    _orderRepository.Update(order);
+                }
+
+                await _orderRepository.Commit();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> UpdateOrderAddressDirectAsync(int orderId, int userId, string shippingAddress)
+        {
+            try
+            {
+                var order = await _dbContext.Orders
+                    .FirstOrDefaultAsync(o => o.OrderId == orderId && o.UserId == userId && o.PaymentStatus == PaymentStatus.Pending);
+                
+                if (order == null) return false;
+
+                order.ShippingAddress = shippingAddress;
+                _orderRepository.Update(order);
+                await _orderRepository.Commit();
+
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
     }
 }

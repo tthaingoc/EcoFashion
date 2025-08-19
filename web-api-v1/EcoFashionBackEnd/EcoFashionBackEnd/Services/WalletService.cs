@@ -425,6 +425,56 @@ namespace EcoFashionBackEnd.Services
                 _ => "Giao dịch thất bại"
             };
         }
+
+        public async Task<Wallet?> GetWalletByUserIdAsync(int userId)
+        {
+            var wallet = await _walletRepository.GetAll()
+                .FirstOrDefaultAsync(w => w.UserId == userId);
+                
+            if (wallet == null)
+            {
+                wallet = new Wallet
+                {
+                    UserId = userId,
+                    Balance = 0,
+                    CreatedAt = DateTime.UtcNow,
+                    LastUpdatedAt = DateTime.UtcNow
+                };
+                await _walletRepository.AddAsync(wallet);
+                await _walletRepository.Commit();
+            }
+            
+            return wallet;
+        }
+
+        public async Task CreateTransactionAsync(int walletId, TransactionType type, double amount, 
+            int? orderId = null, Guid? settlementId = null)
+        {
+            var wallet = await _walletRepository.GetByIdAsync(walletId);
+            if (wallet == null) throw new Exception($"Wallet with ID {walletId} not found");
+
+            var balanceBefore = wallet.Balance;
+            wallet.Balance += amount;
+            wallet.LastUpdatedAt = DateTime.UtcNow;
+
+            var transaction = new WalletTransaction
+            {
+                WalletId = walletId,
+                Amount = amount,
+                BalanceBefore = balanceBefore,
+                BalanceAfter = wallet.Balance,
+                Type = type,
+                Status = Entities.TransactionStatus.Success,
+                Description = GetTransactionDescription(type),
+                CreatedAt = DateTime.UtcNow,
+                OrderId = orderId,
+                SettlementId = settlementId
+            };
+
+            _walletRepository.Update(wallet);
+            await _walletTransactionRepository.AddAsync(transaction);
+            await _walletRepository.Commit();
+        }
     }
 }
 
