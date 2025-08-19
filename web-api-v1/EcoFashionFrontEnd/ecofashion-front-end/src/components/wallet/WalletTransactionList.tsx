@@ -29,7 +29,7 @@ interface Props {
   onViewAll?: () => void;
 }
 
-const getTransactionIcon = (type: WalletTransaction['transactionType']) => {
+const getTransactionIcon = (type: WalletTransaction['type']) => {
   switch (type) {
     case 'Deposit':
       return <TrendingUp sx={{ color: '#16a34a' }} />;
@@ -46,7 +46,7 @@ const getTransactionIcon = (type: WalletTransaction['transactionType']) => {
   }
 };
 
-const getAmountColor = (type: WalletTransaction['transactionType']) => {
+const getAmountColor = (type: WalletTransaction['type']) => {
   switch (type) {
     case 'Deposit':
     case 'Refund':
@@ -61,7 +61,7 @@ const getAmountColor = (type: WalletTransaction['transactionType']) => {
   }
 };
 
-const formatAmount = (amount: number, type: WalletTransaction['transactionType']) => {
+const formatAmount = (amount: number, type: WalletTransaction['type']) => {
   const formattedAmount = walletService.formatVND(amount);
   
   switch (type) {
@@ -97,11 +97,11 @@ export default function WalletTransactionList({ transactions, showViewAll = fals
     <Box>
       <List sx={{ p: 0 }}>
         {transactions.map((transaction, index) => (
-          <React.Fragment key={transaction.walletTransactionId}>
+          <React.Fragment key={transaction.id}>
             <ListItem sx={{ px: 3, py: 2 }}>
               <ListItemIcon>
                 <Avatar sx={{ bgcolor: '#f3f4f6', color: '#374151' }}>
-                  {getTransactionIcon(transaction.transactionType)}
+                  {getTransactionIcon(transaction.type)}
                 </Avatar>
               </ListItemIcon>
               
@@ -110,7 +110,7 @@ export default function WalletTransactionList({ transactions, showViewAll = fals
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <Box>
                       <Typography variant="body1" sx={{ fontWeight: 'bold', mb: 0.5 }}>
-                        {walletService.getTransactionTypeLabel(transaction.transactionType)}
+                        {walletService.getTransactionTypeLabel(transaction.type)}
                       </Typography>
                       {transaction.description && (
                         <Typography variant="body2" sx={{ color: '#6b7280' }}>
@@ -123,11 +123,11 @@ export default function WalletTransactionList({ transactions, showViewAll = fals
                         variant="body1" 
                         sx={{ 
                           fontWeight: 'bold', 
-                          color: getAmountColor(transaction.transactionType),
+                          color: getAmountColor(transaction.type),
                           mb: 0.5
                         }}
                       >
-                        {formatAmount(transaction.amount, transaction.transactionType)}
+                        {formatAmount(transaction.amount, transaction.type)}
                       </Typography>
                       <Chip
                         label={walletService.getTransactionStatusLabel(transaction.status)}

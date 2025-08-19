@@ -6,22 +6,18 @@ export interface Wallet {
   balance: number;
   status: 'Active' | 'Locked' | 'Inactive';
   createdAt: string;
-  lastModified: string;
+  lastUpdatedAt?: string;
 }
 
 export interface WalletTransaction {
-  walletTransactionId: number;
-  walletId: number;
-  transactionType: 'Deposit' | 'Withdrawal' | 'Payment' | 'Refund' | 'Transfer';
+  id: number;
   amount: number;
   balanceBefore: number;
   balanceAfter: number;
   description?: string;
-  referenceId?: string;
-  referenceType?: string;
   createdAt: string;
-  status: 'Pending' | 'Success' | 'Failed' | 'Cancelled';
-  paymentTransactionId?: number;
+  type: 'Deposit' | 'Withdrawal' | 'Payment' | 'Refund' | 'Transfer';
+  status: 'Pending' | 'Success' | 'Fail';
 }
 
 export interface DepositRequest {
@@ -76,12 +72,9 @@ export const walletService = {
   },
 
   // Initiate deposit via VNPay
-  initiateDeposit: async (request: DepositRequest): Promise<{
-    redirectUrl: string;
-    transactionId: number;
-  }> => {
+  initiateDeposit: async (request: DepositRequest): Promise<{ paymentUrl: string }> => {
     const { data } = await apiClient.post('/wallet/deposit', request);
-    return data?.result || data;
+    return data?.result || data; // backend returns { paymentUrl }
   },
 
   // Check deposit status
@@ -92,7 +85,7 @@ export const walletService = {
 
   // Request withdrawal
   requestWithdraw: async (request: WithdrawRequest): Promise<WalletTransaction> => {
-    const { data } = await apiClient.post('/wallet/withdraw', request);
+    const { data } = await apiClient.post('/wallet/withdrawal/request', request);
     return data?.result || data;
   },
 
@@ -120,7 +113,7 @@ export const walletService = {
     }).format(amount);
   },
 
-  getTransactionTypeLabel: (type: WalletTransaction['transactionType']): string => {
+  getTransactionTypeLabel: (type: WalletTransaction['type']): string => {
     switch (type) {
       case 'Deposit': return 'Nạp tiền';
       case 'Withdrawal': return 'Rút tiền';
@@ -135,8 +128,7 @@ export const walletService = {
     switch (status) {
       case 'Pending': return 'Đang xử lý';
       case 'Success': return 'Thành công';
-      case 'Failed': return 'Thất bại';
-      case 'Cancelled': return 'Đã hủy';
+      case 'Fail': return 'Thất bại';
       default: return status;
     }
   },
@@ -144,8 +136,7 @@ export const walletService = {
   getTransactionStatusColor: (status: WalletTransaction['status']): string => {
     switch (status) {
       case 'Success': return '#16a34a';
-      case 'Failed': return '#dc2626';
-      case 'Cancelled': return '#6b7280';
+      case 'Fail': return '#dc2626';
       case 'Pending': return '#f59e0b';
       default: return '#6b7280';
     }

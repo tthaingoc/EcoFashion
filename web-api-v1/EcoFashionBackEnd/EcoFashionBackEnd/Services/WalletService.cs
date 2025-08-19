@@ -31,13 +31,34 @@ namespace EcoFashionBackEnd.Services
         }
         public async Task<ApiResult<object>> CreateDepositAsync(int userId, double amount, HttpContext httpContext)
         {
-            // 1. Tạo transaction pending trong DB
+            // Đảm bảo ví tồn tại cho người dùng
+            var wallet = await _walletRepository
+                .GetAll()
+                .FirstOrDefaultAsync(w => w.UserId == userId);
+
+            if (wallet == null)
+            {
+                wallet = new Wallet
+                {
+                    UserId = userId,
+                    Balance = 0,
+                    CreatedAt = DateTime.UtcNow,
+                    LastUpdatedAt = DateTime.UtcNow
+                };
+                await _walletRepository.AddAsync(wallet);
+                await _walletRepository.Commit();
+            }
+
+            // 1. Tạo transaction pending trong DB, liên kết đúng WalletId
             var transaction = new WalletTransaction
             {
-                WalletId = userId,
+                WalletId = wallet.WalletId,
                 Amount = amount,
+                BalanceBefore = wallet.Balance,
+                BalanceAfter = wallet.Balance,
                 Type = TransactionType.Deposit,
                 Status = Entities.TransactionStatus.Pending,
+                Description = $"Yêu cầu nạp {amount:N0} VND",
                 CreatedAt = DateTime.Now
             };
 
@@ -90,10 +111,12 @@ namespace EcoFashionBackEnd.Services
                 // Thành công -> cộng tiền vào ví
                 walletTransaction.Status = Entities.TransactionStatus.Success;
                 walletTransaction.BalanceBefore = wallet.Balance;
-                walletTransaction.BalanceAfter = wallet.Balance + walletTransaction.Amount;
-
                 wallet.Balance += walletTransaction.Amount;
+                wallet.LastUpdatedAt = DateTime.Now;
+                walletTransaction.BalanceAfter = wallet.Balance;
+
                 await _walletRepository.UpdateAsync(wallet);
+                await _walletRepository.Commit();
             }
             else
             {
@@ -154,37 +177,17 @@ namespace EcoFashionBackEnd.Services
             if (withdrawalRequest == null)
                 return ApiResult<object>.Fail("Không tìm thấy yêu cầu rút tiền");
 
-            if (withdrawalRequest.Type != withdrawalRequest.Type)
+            if (withdrawalRequest.Type != TransactionType.Withdrawal)
                 return ApiResult<object>.Fail("TransactionId không phải yêu cầu rút tiền");
 
             if (withdrawalRequest.Status != Entities.TransactionStatus.Pending)
                 return ApiResult<object>.Fail("Yêu cầu này đã được xử lý rồi");
 
-            withdrawalRequest.Status = Entities.TransactionStatus.Success;
-            await _walletTransactionRepository.UpdateAsync(withdrawalRequest);
-            await _walletTransactionRepository.Commit();
-            var wallet = await _walletRepository.GetByIdAsync(withdrawalRequest.WalletId);
-            if (wallet == null)
-                return ApiResult<object>.Fail("Không tìm thấy ví của người dùng");
-
-            var withdrawalTxn = new WalletTransaction
-            {
-                WalletId = withdrawalRequest.WalletId,
-                BalanceBefore = wallet.Balance,          // Trước khi trừ
-                BalanceAfter = wallet.Balance - withdrawalRequest.Amount, // Sau khi trừ
-                Amount = withdrawalRequest.Amount,
-                Type = TransactionType.Withdrawal,
-                Status = Entities.TransactionStatus.Pending,
-                CreatedAt = DateTime.Now
-            };
-
-            await _walletTransactionRepository.AddAsync(withdrawalTxn);
-            await _walletTransactionRepository.Commit();
-
+            // Không thay đổi trạng thái/ số dư cho đến khi VNPay callback
             var vnPayModel = new VnPaymentRequestModel
             {
-                OrderId = withdrawalTxn.Id,
-                Amount = withdrawalTxn.Amount,
+                OrderId = withdrawalRequest.Id,
+                Amount = withdrawalRequest.Amount,
                 CreatedDate = DateTime.Now
             };
 
@@ -217,8 +220,12 @@ namespace EcoFashionBackEnd.Services
             if (response.VnPayResponseCode == "00")
             {
                 withdrawalTxn.Status = Entities.TransactionStatus.Success;
+                withdrawalTxn.BalanceBefore = wallet.Balance;
                 wallet.Balance -= withdrawalTxn.Amount;
-
+                wallet.LastUpdatedAt = DateTime.Now;
+                withdrawalTxn.BalanceAfter = wallet.Balance;
+                await _walletRepository.UpdateAsync(wallet);
+                await _walletRepository.Commit();
             }
             else
             {
@@ -247,15 +254,14 @@ namespace EcoFashionBackEnd.Services
                 .Take(10)
                 .Select(t => new WalletTransactionDto
                 {
-                    WalletTransactionId = t.Id,
-                    WalletId = t.WalletId,
-                    TransactionType = t.Type.ToString(),
-                    Amount = (decimal)t.Amount,
-                    BalanceBefore = (decimal)(t.Amount > 0 ? wallet.Balance - t.Amount : wallet.Balance + Math.Abs(t.Amount)),
-                    BalanceAfter = (decimal)wallet.Balance,
-                    Description = GetTransactionDescription(t.Type),
-                    CreatedAt = t.CreatedAt,
-                    Status = t.Status.ToString()
+                    Id = t.Id,
+                    Amount = t.Amount,
+                    BalanceBefore = t.BalanceBefore,
+                    BalanceAfter = t.BalanceAfter,
+                    Type = t.Type,
+                    Status = t.Status,
+                    Description = t.Description,
+                    CreatedAt = t.CreatedAt
                 })
                 .ToListAsync();
 
@@ -284,18 +290,18 @@ namespace EcoFashionBackEnd.Services
                 {
                     walletId = wallet.WalletId,
                     userId = wallet.UserId,
-                    balance = (decimal)wallet.Balance,
+                    balance = wallet.Balance,
                     status = wallet.Status.ToString(),
                     createdAt = wallet.CreatedAt,
-                    lastModified = wallet.LastModified
+                    lastUpdatedAt = wallet.LastUpdatedAt
                 },
                 recentTransactions = recentTransactions,
                 totalTransactions = totalTransactions,
                 monthlyStats = new
                 {
-                    deposited = (decimal)deposited,
-                    spent = (decimal)spent,
-                    net = (decimal)(deposited - spent)
+                    deposited = deposited,
+                    spent = spent,
+                    net = deposited - spent
                 }
             };
         }
@@ -334,7 +340,7 @@ namespace EcoFashionBackEnd.Services
         {
             var wallet = await _walletRepository.GetAll().FirstOrDefaultAsync(w => w.UserId == userId);
             if (wallet == null) 
-                return new { transactions = new List<object>(), totalCount = 0, currentPage = page, totalPages = 0 };
+                return new { transactions = new List<WalletTransactionDto>(), totalCount = 0, currentPage = page, totalPages = 0 };
 
             var totalCount = await _walletTransactionRepository.GetAll()
                 .Where(t => t.WalletId == wallet.WalletId)
@@ -347,15 +353,14 @@ namespace EcoFashionBackEnd.Services
                 .Take(pageSize)
                 .Select(t => new WalletTransactionDto
                 {
-                    WalletTransactionId = t.Id,
-                    WalletId = t.WalletId,
-                    TransactionType = t.Type.ToString(),
-                    Amount = (decimal)t.Amount,
-                    BalanceBefore = (decimal)(t.Amount > 0 ? wallet.Balance - t.Amount : wallet.Balance + Math.Abs(t.Amount)),
-                    BalanceAfter = (decimal)wallet.Balance,
-                    Description = GetTransactionDescription(t.Type),
-                    CreatedAt = t.CreatedAt,
-                    Status = t.Status.ToString()
+                    Id = t.Id,
+                    Amount = t.Amount,
+                    BalanceBefore = t.BalanceBefore,
+                    BalanceAfter = t.BalanceAfter,
+                    Type = t.Type,
+                    Status = t.Status,
+                    Description = t.Description,
+                    CreatedAt = t.CreatedAt
                 })
                 .ToListAsync();
 
@@ -383,15 +388,14 @@ namespace EcoFashionBackEnd.Services
 
             return new WalletTransactionDto
             {
-                WalletTransactionId = transaction.Id,
-                WalletId = transaction.WalletId,
-                TransactionType = transaction.Type.ToString(),
-                Amount = (decimal)transaction.Amount,
-                BalanceBefore = (decimal)(transaction.Amount > 0 ? wallet.Balance - transaction.Amount : wallet.Balance + Math.Abs(transaction.Amount)),
-                BalanceAfter = (decimal)wallet.Balance,
-                Description = GetTransactionDescription(transaction.Type),
-                CreatedAt = transaction.CreatedAt,
-                Status = transaction.Status.ToString()
+                Id = transaction.Id,
+                Amount = transaction.Amount,
+                BalanceBefore = transaction.BalanceBefore,
+                BalanceAfter = transaction.BalanceAfter,
+                Type = transaction.Type,
+                Status = transaction.Status,
+                Description = transaction.Description ?? GetTransactionDescription(transaction.Type),
+                CreatedAt = transaction.CreatedAt
             };
         }
 

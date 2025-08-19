@@ -2,6 +2,7 @@ using EcoFashionBackEnd.Common;
 using EcoFashionBackEnd.Entities;
 using EcoFashionBackEnd.Repositories;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
 
 namespace EcoFashionBackEnd.Services
 {
@@ -253,9 +254,9 @@ namespace EcoFashionBackEnd.Services
             try
             {
                 var result = await GetDefaultAddressAsync(userId);
-                if (result.Success && result.Data != null)
+                if (result.Success && result.Result != null)
                 {
-                    return FormatAddress(result.Data);
+                    return FormatAddress(result.Result);
                 }
                 return string.Empty;
             }

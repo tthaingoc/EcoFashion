@@ -42,6 +42,7 @@ namespace EcoFashionBackEnd.Entities
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderDetail> OrderDetails { get; set; }
         public DbSet<OrderGroup> OrderGroups { get; set; }
+        public DbSet<OrderSellerSettlement> OrderSellerSettlements { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<PaymentTransaction> PaymentTransactions { get; set; }
         public DbSet<Cart> Carts { get; set; }
@@ -148,6 +149,9 @@ namespace EcoFashionBackEnd.Entities
                 .HasMany(w => w.WalletTransactions)
                 .WithOne(wt => wt.Wallet)
                 .HasForeignKey(wt => wt.WalletId);
+            // WalletTransaction optional references
+            modelBuilder.Entity<WalletTransaction>()
+                .HasIndex(wt => new { wt.OrderId, wt.SettlementId });
             #endregion
             #region DESIGN
             // ------------------ SIZE & VARIANT ------------------
@@ -600,6 +604,28 @@ namespace EcoFashionBackEnd.Entities
             modelBuilder.Entity<OrderDetail>()
                 .Property(od => od.Status)
                 .HasConversion<string>();
+
+            // OrderSellerSettlement
+            modelBuilder.Entity<OrderSellerSettlement>()
+                .HasOne(oss => oss.Order)
+                .WithMany()
+                .HasForeignKey(oss => oss.OrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<OrderSellerSettlement>()
+                .Property(oss => oss.GrossAmount)
+                .HasPrecision(18, 2);
+            modelBuilder.Entity<OrderSellerSettlement>()
+                .Property(oss => oss.CommissionRate)
+                .HasPrecision(5, 4);
+            modelBuilder.Entity<OrderSellerSettlement>()
+                .Property(oss => oss.CommissionAmount)
+                .HasPrecision(18, 2);
+            modelBuilder.Entity<OrderSellerSettlement>()
+                .Property(oss => oss.NetAmount)
+                .HasPrecision(18, 2);
+            modelBuilder.Entity<OrderSellerSettlement>()
+                .HasIndex(oss => new { oss.OrderId, oss.SellerUserId })
+                .IsUnique();
             #endregion Order
 
             // ------------------ CART ------------------

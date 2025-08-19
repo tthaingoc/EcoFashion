@@ -119,9 +119,12 @@ export default function WalletDashboard() {
       };
 
       const response = await walletService.initiateDeposit(request);
-      
-      // Redirect to VNPay
-      window.location.href = response.redirectUrl;
+      // Backend returns { paymentUrl }
+      const redirectUrl = (response as any).paymentUrl || (response as any).PaymentUrl;
+      if (!redirectUrl) {
+        throw new Error('Thiếu paymentUrl từ API nạp tiền');
+      }
+      window.location.href = redirectUrl;
     } catch (err: any) {
       setDepositErrors([err?.message || 'Có lỗi xảy ra khi nạp tiền']);
     } finally {

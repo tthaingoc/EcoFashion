@@ -36,6 +36,11 @@ namespace EcoFashionBackEnd.Entities
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+        // Optional references for auditability
+        public int? OrderId { get; set; }
+
+        public Guid? SettlementId { get; set; }
+
         // Optional: Liên kết với PaymentTransaction nếu có
         public Guid? PaymentTransactionId { get; set; }
 

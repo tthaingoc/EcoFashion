@@ -99,7 +99,7 @@ namespace EcoFashionBackEnd.Controllers
             var result = await _userAddressService.CreateAddressAsync(userId.Value, address);
             
             if (result.Success)
-                return CreatedAtAction(nameof(GetAddress), new { addressId = result.Data.AddressId }, result);
+                return CreatedAtAction(nameof(GetAddress), new { addressId = result.Result?.AddressId }, result);
             
             return BadRequest(result);
         }
