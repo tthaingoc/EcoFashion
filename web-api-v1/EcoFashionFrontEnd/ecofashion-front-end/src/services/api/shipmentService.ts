@@ -46,6 +46,12 @@ export const shipmentService = {
     return data?.result || data;
   },
 
+  // Get orders for specific seller
+  getSellerOrders: async (sellerId: string): Promise<OrderShipmentInfo[]> => {
+    const { data } = await apiClient.get(`/shipment/orders/seller/${sellerId}`);
+    return data?.result || data;
+  },
+
   // Get specific order shipment details
   getOrderShipment: async (orderId: number): Promise<OrderShipmentInfo> => {
     const { data } = await apiClient.get(`/shipment/orders/${orderId}`);
@@ -101,6 +107,24 @@ export const shipmentService = {
     cancelled: number;
   }> => {
     const { data } = await apiClient.get('/shipment/statistics');
+    return data?.result || data;
+  },
+
+  // Ship order (mark as shipped)
+  shipOrder: async (orderId: number, shipData: { trackingNumber?: string; carrier?: string; notes?: string }): Promise<void> => {
+    const { data } = await apiClient.post(`/shipment/${orderId}/ship`, shipData);
+    return data?.result || data;
+  },
+
+  // Deliver order (mark as delivered and trigger settlement)
+  deliverOrder: async (orderId: number): Promise<void> => {
+    const { data } = await apiClient.post(`/shipment/${orderId}/deliver`);
+    return data?.result || data;
+  },
+
+  // Demo: Complete order for testing
+  completeOrder: async (orderId: number): Promise<void> => {
+    const { data } = await apiClient.post(`/shipment/${orderId}/complete`);
     return data?.result || data;
   }
 };

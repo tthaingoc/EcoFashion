@@ -11,14 +11,14 @@ const QUERY_KEYS = {
 export const useUserAddresses = () => {
   return useQuery({
     queryKey: QUERY_KEYS.addresses,
-    queryFn: userAddressService.getUserAddresses,
+    queryFn: userAddressService.getAll,
   });
 };
 
 export const useDefaultAddress = () => {
   return useQuery({
     queryKey: QUERY_KEYS.defaultAddress,
-    queryFn: userAddressService.getDefaultAddress,
+    queryFn: userAddressService.getDefault,
   });
 };
 
@@ -26,7 +26,7 @@ export const useCreateAddress = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: userAddressService.createAddress,
+    mutationFn: userAddressService.create,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.addresses });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.defaultAddress });
@@ -43,7 +43,7 @@ export const useUpdateAddress = () => {
   
   return useMutation({
     mutationFn: ({ addressId, data }: { addressId: number; data: any }) => 
-      userAddressService.updateAddress(addressId, data),
+      userAddressService.update(addressId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.addresses });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.defaultAddress });
@@ -59,7 +59,7 @@ export const useDeleteAddress = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (addressId: number) => userAddressService.deleteAddress(addressId),
+    mutationFn: (addressId: number) => userAddressService.delete(addressId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.addresses });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.defaultAddress });
@@ -75,7 +75,7 @@ export const useSetDefaultAddress = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (addressId: number) => userAddressService.setDefaultAddress(addressId),
+    mutationFn: (addressId: number) => userAddressService.setDefault(addressId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.addresses });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.defaultAddress });

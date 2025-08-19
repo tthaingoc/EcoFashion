@@ -13,9 +13,8 @@ export default function OrdersDetails() {
     setPayLoading(true);
     setPayError(null);
     try {
-      // Nếu là vật liệu thì x1000 khi gửi payment
-      const isMaterial = details[0]?.type === 'material';
-      const amount = isMaterial ? total : total; // total đã x1000 ở trên
+      // No more x1000 multiplier since backend has correct VND prices
+      const amount = total;
       const { redirectUrl } = await paymentsService.createVnpay({
         orderId: data.orderId,
         amount,
@@ -58,12 +57,11 @@ export default function OrdersDetails() {
   if (loading) return <div className="max-w-[1120px] mx-auto p-6">Đang tải chi tiết đơn...</div>;
   if (error) return <div className="max-w-[1120px] mx-auto p-6 text-red-600">{error}</div>;
   if (!data) return null;
-  // Nếu có vật liệu thì x1000 cho các giá trị liên quan
-  const isMaterial = details[0]?.type === 'material';
-  const subtotal = details.reduce((s, d) => s + (d.type === 'material' ? Number(d.unitPrice || 0) * 1000 : Number(d.unitPrice || 0)) * Number(d.quantity || 0), 0);
-  const shipping = isMaterial ? Number((data as any).shippingFee ?? 0) * 1000 : Number((data as any).shippingFee ?? 0);
-  const discount = isMaterial ? Number((data as any).discount ?? 0) * 1000 : Number((data as any).discount ?? 0);
-  const total = isMaterial ? Number((data as any).totalPrice ?? (subtotal + shipping - discount)) * 1000 : Number((data as any).totalPrice ?? (subtotal + shipping - discount));
+  // No more x1000 multiplier since backend has correct VND prices
+  const subtotal = details.reduce((s, d) => s + Number(d.unitPrice || 0) * Number(d.quantity || 0), 0);
+  const shipping = Number((data as any).shippingFee ?? 0);
+  const discount = Number((data as any).discount ?? 0);
+  const total = Number((data as any).totalPrice ?? (subtotal + shipping - discount));
 
   return (
     <div className="max-w-[1120px] mx-auto px-4 py-6 space-y-4">
@@ -82,7 +80,7 @@ export default function OrdersDetails() {
         </div>
         <div>
           <div className="text-sm text-gray-500">Tổng tiền</div>
-          <div className="font-semibold text-green-700">{isMaterial ? (Number(data.totalPrice || 0) * 1000).toLocaleString('vi-VN') : Number(data.totalPrice || 0).toLocaleString('vi-VN')} ₫</div>
+          <div className="font-semibold text-green-700">{Number(data.totalPrice || 0).toLocaleString('vi-VN')} ₫</div>
         </div>
         <div>
           <div className="text-sm text-gray-500">Trạng thái vận chuyển</div>
@@ -126,9 +124,9 @@ export default function OrdersDetails() {
                 <div className="font-medium">{d.itemName}</div>
                 <div className="text-sm text-gray-500">{d.type} • NCC/NTK: {d.providerName}</div>
               </div>
-              <div className="col-span-2 text-gray-700">{(d.type === 'material' ? Number(d.unitPrice || 0) * 1000 : Number(d.unitPrice || 0)).toLocaleString('vi-VN')} ₫</div>
+              <div className="col-span-2 text-gray-700">{Number(d.unitPrice || 0).toLocaleString('vi-VN')} ₫</div>
               <div className="col-span-2 text-gray-700">x {d.quantity}</div>
-              <div className="col-span-2 font-semibold text-green-700">{(d.type === 'material' ? Number(d.unitPrice || 0) * 1000 * Number(d.quantity || 0) : Number(d.unitPrice || 0) * Number(d.quantity || 0)).toLocaleString('vi-VN')} ₫</div>
+              <div className="col-span-2 font-semibold text-green-700">{(Number(d.unitPrice || 0) * Number(d.quantity || 0)).toLocaleString('vi-VN')} ₫</div>
             </div>
           ))}
           {details.length === 0 && (

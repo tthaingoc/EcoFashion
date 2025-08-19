@@ -686,7 +686,7 @@ const AddMaterial: React.FC = () => {
 
                       {/* Price Per Unit */}
                       <div className="form-group">
-                        <label className="form-label font-semibold text-gray-800">Giá (x1000 VNĐ/mét) <span className="text-red-500">*</span></label>
+                        <label className="form-label font-semibold text-gray-800">Giá (VNĐ/mét) <span className="text-red-500">*</span></label>
                         <div className="relative">
                           <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">₫</span>
                           <input

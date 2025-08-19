@@ -50,7 +50,7 @@ const mapServerCartToItems = (cart: ServerCartDto): CartItem[] => {
         id: String(i.cartItemId),
         name: i.materialName || `Material #${i.materialId}`,
         image: i.imageUrl || '',
-        price: (i.currentPrice || i.unitPriceSnapshot) * 1000,
+        price: (i.currentPrice || i.unitPriceSnapshot),
         quantity: i.quantity,
         unit: i.unitLabel || 'mét',
         type: 'material',

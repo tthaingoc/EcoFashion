@@ -46,8 +46,7 @@ import {
 } from "../../utils/themeColors";
 import type { MaterialDetailResponse, MaterialDetailDto, MaterialSustainabilityReport } from "../../schemas/materialSchema";
 
-// Constants
-const PRICE_MULTIPLIER = 1000; // Convert from backend unit to VND
+// Constants - Removed price multiplier since backend already has correct VND prices
 
 // Component để hiển thị chi tiết chứng nhận
 const CertificationDetails = ({
@@ -560,7 +559,7 @@ const MaterialDetailPage: React.FC = () => {
                 sx={{ mb: 1 }}
               >
                 {(
-                  (material.pricePerUnit || 0) * PRICE_MULTIPLIER
+                  (material.pricePerUnit || 0)
                 )?.toLocaleString("vi-VN")}{" "}
                 ₫/mét
               </Typography>
@@ -736,7 +735,7 @@ const MaterialDetailPage: React.FC = () => {
                     <ListItemText
                       primary="Giá trên đơn vị"
                       secondary={`${(
-                        (material.pricePerUnit || 0) * PRICE_MULTIPLIER
+                        (material.pricePerUnit || 0)
                       )?.toLocaleString("vi-VN")} ₫/mét`}
                     />
                   </ListItem>
@@ -745,8 +744,7 @@ const MaterialDetailPage: React.FC = () => {
                       primary="Tổng giá trị kho"
                       secondary={`${(
                         (material.quantityAvailable || 0) *
-                        (material.pricePerUnit || 0) *
-                        PRICE_MULTIPLIER
+                        (material.pricePerUnit || 0)
                       ).toLocaleString("vi-VN")} ₫`}
                     />
                   </ListItem>
@@ -1315,7 +1313,7 @@ const MaterialDetailPage: React.FC = () => {
                         fontWeight="bold"
                       >
                         {(
-                          (relatedMaterial.pricePerUnit || 0) * PRICE_MULTIPLIER
+                          (relatedMaterial.pricePerUnit || 0)
                         )?.toLocaleString("vi-VN")}{" "}
                         ₫/mét
                       </Typography>

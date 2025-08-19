@@ -4,8 +4,8 @@ import { ordersService, type OrderModel } from '../../services/api/ordersService
 import { formatViDateTime } from '../../utils/date';
 
 const formatVND = (n: number) => n.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
-// Helper: x1000 nếu là vật liệu
-const formatMaterialVND = (n: number, type?: string) => type === 'material' ? formatVND(n * 1000) : formatVND(n);
+// Helper: No more x1000 multiplier since backend has correct VND prices
+const formatMaterialVND = (n: number, type?: string) => formatVND(n);
 
 const getFulfillmentStatusColor = (status?: string, paymentStatus?: string) => {
   // Auto-fix: nếu đã paid nhưng fulfillment = none, hiển thị màu xanh
@@ -24,14 +24,14 @@ const getFulfillmentStatusColor = (status?: string, paymentStatus?: string) => {
 };
 
 const getFulfillmentStatusLabel = (status?: string, paymentStatus?: string) => {
-  // Auto-fix: nếu đã paid nhưng fulfillment = none, hiển thị hoàn thành
+  // If paid but no fulfillment status set, show as processing
   if (paymentStatus?.toLowerCase() === 'paid' && (!status || status.toLowerCase() === 'none')) {
-    return '✅ Hoàn thành';
+    return '📦 Đang xử lý';
   }
   
   switch (status?.toLowerCase()) {
-    case 'delivered': return '✅ Hoàn thành';
-    case 'shipped': return '🚚 Đang giao';
+    case 'delivered': return '✅ Đã giao hàng';
+    case 'shipped': return '🚚 Đang vận chuyển';
     case 'processing': return '📦 Đang xử lý';
     case 'canceled': return '❌ Đã hủy';
     case 'none':
@@ -74,16 +74,35 @@ export default function OrdersList() {
     { value: 'all', label: 'Tất cả' },
     { value: 'pending', label: 'Chờ xử lý' },
     { value: 'processing', label: 'Đang xử lý' },
-    { value: 'shipped', label: 'Đang giao' },
-    { value: 'delivered', label: 'Đã giao' },
+    { value: 'shipped', label: 'Đang vận chuyển' },
+    { value: 'delivered', label: 'Đã giao hàng' },
     { value: 'returned', label: 'Đã trả hàng' },
   ];
+
+  const handleRefresh = async () => {
+    try {
+      setLoading(true);
+      const data = await ordersService.getAll();
+      setOrders(data);
+    } catch (e: any) {
+      setError(e?.message || 'Không tải được danh sách đơn');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="bg-white border rounded-md">
       <div className="flex items-center justify-between px-4 py-3 border-b">
-        <div className="text-sm text-gray-600 font-semibold">Danh sách đơn hàng</div>
-        <div>
+        <div className="text-sm text-gray-600 font-semibold">Danh sách đơn hàng ({filteredOrders.length})</div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleRefresh}
+            disabled={loading}
+            className="px-3 py-1 text-sm bg-blue-50 text-blue-600 border border-blue-200 rounded hover:bg-blue-100 disabled:opacity-50"
+          >
+            {loading ? '🔄' : '↻'} Làm mới
+          </button>
           <select
             className="border rounded px-2 py-1 text-sm"
             value={statusFilter}

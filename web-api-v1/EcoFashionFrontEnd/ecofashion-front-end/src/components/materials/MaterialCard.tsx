@@ -476,7 +476,7 @@ const MaterialCard: React.FC<MaterialCardProps> = ({
                   mb: 1,
                 }}
               >
-                {(material.pricePerUnit * 1000)?.toLocaleString('vi-VN')} ₫/mét
+                {material.pricePerUnit?.toLocaleString('vi-VN')} ₫/mét
               </Typography>
               {/* Sustainability Score - Sử dụng component compact cho card */}
               <Box sx={{ mb: 1 }}>

@@ -8,50 +8,10 @@ import {
   EyeIcon,
   ChevronRightIcon,
 } from '@heroicons/react/24/outline';
-import { useDemoCompleteOrder, useGetPendingSettlements } from '../../hooks/useSettlement';
-import { useQuery } from '@tanstack/react-query';
-import { ordersService } from '../../services/api/ordersService';
+import { useGetPendingSettlements } from '../../hooks/useSettlement';
+import { useShipmentOrders, useShipmentStatistics, useCompleteOrder } from '../../hooks/useShipmentManagement';
 
-// Mock data for demo - replace with real API calls
-const mockOrders = [
-  {
-    orderId: 1,
-    orderDate: '2024-01-15',
-    totalPrice: 850000,
-    paymentStatus: 'Paid',
-    fulfillmentStatus: 'Processing',
-    customerName: 'Nguyễn Văn A',
-    shippingAddress: '123 Lê Lợi, Q1, TP.HCM',
-    items: [
-      { name: 'Premium Organic Cotton Fabric', quantity: 10, unit: 'mét' }
-    ]
-  },
-  {
-    orderId: 2,
-    orderDate: '2024-01-14',
-    totalPrice: 1200000,
-    paymentStatus: 'Paid',
-    fulfillmentStatus: 'Shipped',
-    customerName: 'Trần Thị B',
-    shippingAddress: '456 Nguyễn Huệ, Q1, TP.HCM',
-    items: [
-      { name: 'Eco-Friendly Linen', quantity: 8, unit: 'mét' },
-      { name: 'Recycled Polyester', quantity: 5, unit: 'mét' }
-    ]
-  },
-  {
-    orderId: 3,
-    orderDate: '2024-01-13',
-    totalPrice: 750000,
-    paymentStatus: 'Paid',
-    fulfillmentStatus: 'Delivered',
-    customerName: 'Lê Văn C',
-    shippingAddress: '789 Điện Biên Phủ, Q3, TP.HCM',
-    items: [
-      { name: 'Bamboo Fiber Fabric', quantity: 6, unit: 'mét' }
-    ]
-  }
-];
+// No more mock data - using real API calls
 
 const OrderStatusBadge: React.FC<{ status: string }> = ({ status }) => {
   const getStatusConfig = (status: string) => {
@@ -197,7 +157,9 @@ const ShipmentDashboardTailwind: React.FC = () => {
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<'orders' | 'settlements'>('orders');
 
-  const { mutateAsync: completeOrder, isPending: isCompleting } = useDemoCompleteOrder();
+  const { data: orders = [], isLoading: ordersLoading } = useShipmentOrders();
+  const { data: statistics } = useShipmentStatistics();
+  const { mutateAsync: completeOrder, isPending: isCompleting } = useCompleteOrder();
   const { data: pendingSettlements = [] } = useGetPendingSettlements();
 
   const handleCompleteOrder = async (orderId: number) => {
@@ -213,11 +175,13 @@ const ShipmentDashboardTailwind: React.FC = () => {
     setSelectedOrder(order);
   };
 
-  const stats = {
-    totalOrders: mockOrders.length,
-    processingOrders: mockOrders.filter(o => o.fulfillmentStatus === 'Processing').length,
-    shippedOrders: mockOrders.filter(o => o.fulfillmentStatus === 'Shipped').length,
-    deliveredOrders: mockOrders.filter(o => o.fulfillmentStatus === 'Delivered').length,
+  const stats = statistics || {
+    total: orders.length,
+    pending: orders.filter((o: any) => o.fulfillmentStatus === 'None' || o.fulfillmentStatus === 'Processing').length,
+    processing: orders.filter((o: any) => o.fulfillmentStatus === 'Processing').length,
+    shipped: orders.filter((o: any) => o.fulfillmentStatus === 'Shipped').length,
+    delivered: orders.filter((o: any) => o.fulfillmentStatus === 'Delivered').length,
+    cancelled: orders.filter((o: any) => o.fulfillmentStatus === 'Canceled').length,
     pendingSettlements: pendingSettlements.length,
   };
 
@@ -236,7 +200,7 @@ const ShipmentDashboardTailwind: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Tổng đơn hàng</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalOrders}</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
               </div>
               <TruckIcon className="w-8 h-8 text-blue-600" />
             </div>
@@ -246,7 +210,7 @@ const ShipmentDashboardTailwind: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Đang xử lý</p>
-                <p className="text-2xl font-bold text-yellow-600">{stats.processingOrders}</p>
+                <p className="text-2xl font-bold text-yellow-600">{stats.processing}</p>
               </div>
               <ClockIcon className="w-8 h-8 text-yellow-600" />
             </div>
@@ -256,7 +220,7 @@ const ShipmentDashboardTailwind: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Đang vận chuyển</p>
-                <p className="text-2xl font-bold text-blue-600">{stats.shippedOrders}</p>
+                <p className="text-2xl font-bold text-blue-600">{stats.shipped}</p>
               </div>
               <TruckIcon className="w-8 h-8 text-blue-600" />
             </div>
@@ -266,7 +230,7 @@ const ShipmentDashboardTailwind: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Đã giao</p>
-                <p className="text-2xl font-bold text-green-600">{stats.deliveredOrders}</p>
+                <p className="text-2xl font-bold text-green-600">{stats.delivered}</p>
               </div>
               <CheckCircleIcon className="w-8 h-8 text-green-600" />
             </div>
@@ -314,15 +278,34 @@ const ShipmentDashboardTailwind: React.FC = () => {
         {/* Content */}
         {activeTab === 'orders' ? (
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            {mockOrders.map((order) => (
-              <OrderCard
-                key={order.orderId}
-                order={order}
-                onViewDetails={handleViewDetails}
-                onCompleteOrder={handleCompleteOrder}
-                isCompletingOrder={isCompleting}
-              />
-            ))}
+            {ordersLoading ? (
+              <div className="col-span-full flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                <span className="ml-3 text-gray-600">Đang tải đơn hàng...</span>
+              </div>
+            ) : orders.length === 0 ? (
+              <div className="col-span-full text-center py-12">
+                <TruckIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Không có đơn hàng nào</h3>
+                <p className="text-gray-600">Các đơn hàng cần vận chuyển sẽ xuất hiện ở đây</p>
+              </div>
+            ) : (
+              orders.map((order: any) => (
+                <OrderCard
+                  key={order.orderId}
+                  order={{
+                    ...order,
+                    orderDate: order.orderDate,
+                    customerName: order.userName,
+                    fulfillmentStatus: order.fulfillmentStatus,
+                    items: [{ name: 'Sản phẩm trong đơn hàng', quantity: 1, unit: 'đơn vị' }] // Simplified for demo
+                  }}
+                  onViewDetails={handleViewDetails}
+                  onCompleteOrder={handleCompleteOrder}
+                  isCompletingOrder={isCompleting}
+                />
+              ))
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

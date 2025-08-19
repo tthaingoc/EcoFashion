@@ -60,7 +60,7 @@ const SupplierInventory: React.FC = () => {
                     <p className="text-gray-600">Tồn kho: <span className="text-gray-900 font-medium">{s.quantityOnHand} {s.unit || 'mét'}</span></p>
                     <p className="text-gray-600">Tối thiểu: <span className="text-gray-900 font-medium">{s.minThreshold} {s.unit || 'mét'}</span></p>
                     <p className="text-gray-600">Danh mục hiện có: <span className="text-gray-900 font-medium">{s.quantityAvailable} {s.unit || 'mét'}</span></p>
-                    <p className="text-gray-600">Đơn giá: <span className="text-gray-900 font-medium">{(s.pricePerUnit * 1000).toLocaleString()}đ/m</span></p>
+                    <p className="text-gray-600">Đơn giá: <span className="text-gray-900 font-medium">{s.pricePerUnit.toLocaleString()}đ/m</span></p>
                   </div>
                   <div className="mt-3">
                     <button className="w-full h-10 border rounded-lg flex items-center justify-center gap-2 hover:bg-gray-50"

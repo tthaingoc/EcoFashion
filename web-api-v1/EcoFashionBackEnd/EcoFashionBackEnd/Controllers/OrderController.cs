@@ -92,6 +92,50 @@ public class OrderController : ControllerBase
 
         return Ok(statuses);
     }
+
+    // Get orders by seller for shipment management
+    [HttpGet("by-seller/{sellerId}")]
+    public async Task<IActionResult> GetOrdersBySeller(Guid sellerId)
+    {
+        var orders = await _orderService.GetOrdersBySellerIdAsync(sellerId);
+        return Ok(ApiResult<IEnumerable<OrderModel>>.Succeed(orders));
+    }
+
+    // Update fulfillment status
+    [HttpPatch("{orderId}/fulfillment-status")]
+    public async Task<IActionResult> UpdateFulfillmentStatus(int orderId, [FromBody] UpdateFulfillmentStatusRequest request)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        var success = await _orderService.UpdateFulfillmentStatusAsync(orderId, request.FulfillmentStatus);
+        if (!success)
+            return NotFound(ApiResult<object>.Fail("Không tìm thấy đơn hàng hoặc không thể cập nhật"));
+
+        return Ok(ApiResult<object>.Succeed("Cập nhật trạng thái giao hàng thành công"));
+    }
+
+    // Mark order as shipped
+    [HttpPost("{orderId}/ship")]
+    public async Task<IActionResult> MarkOrderShipped(int orderId, [FromBody] ShipOrderRequest request)
+    {
+        var success = await _orderService.MarkOrderShippedAsync(orderId, request);
+        if (!success)
+            return NotFound(ApiResult<object>.Fail("Không tìm thấy đơn hàng hoặc không thể cập nhật"));
+
+        return Ok(ApiResult<object>.Succeed("Đã cập nhật đơn hàng thành trạng thái đang vận chuyển"));
+    }
+
+    // Mark order as delivered and trigger settlement
+    [HttpPost("{orderId}/deliver")]
+    public async Task<IActionResult> MarkOrderDelivered(int orderId)
+    {
+        var success = await _orderService.MarkOrderDeliveredAsync(orderId);
+        if (!success)
+            return NotFound(ApiResult<object>.Fail("Không tìm thấy đơn hàng hoặc không thể cập nhật"));
+
+        return Ok(ApiResult<object>.Succeed("Đã hoàn thành đơn hàng và xử lý thanh toán"));
+    }
     
 
 }

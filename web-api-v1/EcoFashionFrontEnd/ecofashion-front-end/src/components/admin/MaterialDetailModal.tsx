@@ -158,7 +158,7 @@ const MaterialDetailModal: React.FC<Props> = ({ open, materialId, onClose }) => 
             <p className="text-sm text-gray-600 dark:text-gray-300">{data?.description}</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
               <div><span className="text-gray-500">Nhà cung cấp:</span> <span className="ml-2 text-gray-900 dark:text-white">{data?.supplier?.supplierName || data?.supplier?.supplierId || '—'}</span></div>
-              <div><span className="text-gray-500">Giá:</span> <span className="ml-2 text-gray-900 dark:text-white">{data?.pricePerUnit ? (data.pricePerUnit * 1000).toLocaleString() : '—'}đ/m</span></div>
+              <div><span className="text-gray-500">Giá:</span> <span className="ml-2 text-gray-900 dark:text-white">{data?.pricePerUnit ? data.pricePerUnit.toLocaleString() : '—'}đ/m</span></div>
               <div><span className="text-gray-500">Quốc gia:</span> <span className="ml-2 text-gray-900 dark:text-white">{data?.productionCountry || '—'}</span></div>
               <div><span className="text-gray-500">Loại:</span> <span className="ml-2 text-gray-900 dark:text-white">{data?.materialTypeName || '—'}</span></div>
               <div><span className="text-gray-500">Chứng chỉ bền vững:</span> <span className="ml-2 text-gray-900 dark:text-white">{data?.certificationDetails || '—'}</span></div>

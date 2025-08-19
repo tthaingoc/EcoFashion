@@ -254,19 +254,165 @@ namespace EcoFashionBackEnd.Services
             return result != null;
         }
 
-        public async Task<bool> UpdateFulfillmentStatusAsync(int orderId, string fulfillmentStatus)
+        public async Task<bool> UpdateFulfillmentStatusAsync(int orderId, FulfillmentStatus fulfillmentStatus)
         {
             var order = await _dbContext.Orders.FindAsync(orderId);
             if (order == null) return false;
 
-            if (Enum.TryParse<FulfillmentStatus>(fulfillmentStatus, out var status))
+            order.FulfillmentStatus = fulfillmentStatus;
+            
+            // Update main status based on fulfillment status
+            switch (fulfillmentStatus)
             {
-                order.FulfillmentStatus = status;
-                await _dbContext.SaveChangesAsync();
-                return true;
+                case FulfillmentStatus.Processing:
+                    order.Status = OrderStatus.processing;
+                    break;
+                case FulfillmentStatus.Shipped:
+                    order.Status = OrderStatus.shipped;
+                    break;
+                case FulfillmentStatus.Delivered:
+                    order.Status = OrderStatus.delivered;
+                    // Trigger settlement when delivered
+                    await ProcessSettlementAsync(order);
+                    break;
+                case FulfillmentStatus.Canceled:
+                    order.Status = OrderStatus.returned;
+                    break;
             }
 
-            return false;
+            await _dbContext.SaveChangesAsync();
+            return true;
+        }
+
+        // Get orders by seller ID for shipment management
+        public async Task<IEnumerable<OrderModel>> GetOrdersBySellerIdAsync(Guid sellerId)
+        {
+            var orders = await _dbContext.Orders
+                .Where(o => o.SellerId == sellerId && o.PaymentStatus == PaymentStatus.Paid)
+                .Include(o => o.User)
+                .OrderByDescending(o => o.OrderDate)
+                .ToListAsync();
+
+            return orders.Select(order => 
+            {
+                var supplier = _dbContext.Suppliers
+                    .Where(s => s.SupplierId == sellerId)
+                    .Select(s => new { s.SupplierName, s.AvatarUrl })
+                    .FirstOrDefault();
+                var designer = _dbContext.Designers
+                    .Where(d => d.DesignerId == sellerId)
+                    .Select(d => new { d.DesignerName, d.AvatarUrl })
+                    .FirstOrDefault();
+
+                return new OrderModel
+                {
+                    OrderId = order.OrderId,
+                    UserId = order.UserId,
+                    UserName = order.User.FullName,
+                    ShippingAddress = order.ShippingAddress,
+                    TotalPrice = order.TotalPrice,
+                    OrderDate = order.OrderDate,
+                    Status = order.Status.ToString(),
+                    PaymentStatus = order.PaymentStatus.ToString(),
+                    FulfillmentStatus = order.FulfillmentStatus.ToString(),
+                    SellerType = order.SellerType,
+                    SellerName = supplier?.SupplierName ?? designer?.DesignerName,
+                    SellerAvatarUrl = supplier?.AvatarUrl ?? designer?.AvatarUrl,
+                };
+            });
+        }
+
+        // Mark order as shipped
+        public async Task<bool> MarkOrderShippedAsync(int orderId, ShipOrderRequest request)
+        {
+            var order = await _dbContext.Orders.FindAsync(orderId);
+            if (order == null || order.PaymentStatus != PaymentStatus.Paid) return false;
+
+            order.FulfillmentStatus = FulfillmentStatus.Shipped;
+            order.Status = OrderStatus.shipped;
+            
+            // TODO: Save tracking info to a separate tracking table if needed
+            // For now, we'll just update the status
+            
+            await _dbContext.SaveChangesAsync();
+            return true;
+        }
+
+        // Mark order as delivered and trigger settlement
+        public async Task<bool> MarkOrderDeliveredAsync(int orderId)
+        {
+            var order = await _dbContext.Orders.FindAsync(orderId);
+            if (order == null || order.PaymentStatus != PaymentStatus.Paid) return false;
+
+            order.FulfillmentStatus = FulfillmentStatus.Delivered;
+            order.Status = OrderStatus.delivered;
+            
+            // Process settlement (90% to seller, 10% platform commission)
+            await ProcessSettlementAsync(order);
+            
+            await _dbContext.SaveChangesAsync();
+            return true;
+        }
+
+        // Process settlement when order is delivered
+        private async Task ProcessSettlementAsync(Order order)
+        {
+            // Calculate commission (10%) and net amount (90%)
+            var commissionRate = 0.10m;
+            var commissionAmount = order.TotalPrice * commissionRate;
+            var netAmount = order.TotalPrice - commissionAmount;
+
+            // Update order with settlement info
+            order.CommissionRate = commissionRate;
+            order.CommissionAmount = commissionAmount;
+            order.NetAmount = netAmount;
+
+            // Find seller wallet and transfer money
+            if (order.SellerId.HasValue)
+            {
+                var sellerWallet = await _dbContext.Wallets
+                    .FirstOrDefaultAsync(w => w.UserId.ToString() == order.SellerId.ToString());
+
+                if (sellerWallet != null)
+                {
+                    // Transfer money from admin wallet to seller wallet
+                    var adminWallet = await _dbContext.Wallets
+                        .FirstOrDefaultAsync(w => w.IsSystemWallet == true);
+
+                    if (adminWallet != null && adminWallet.Balance >= netAmount)
+                    {
+                        // Deduct from admin wallet
+                        adminWallet.Balance -= netAmount;
+                        
+                        // Add to seller wallet
+                        sellerWallet.Balance += netAmount;
+
+                        // Create wallet transactions
+                        var adminTransaction = new WalletTransaction
+                        {
+                            WalletId = adminWallet.WalletId,
+                            Amount = -netAmount,
+                            TransactionType = "OrderSettlement",
+                            Description = $"Settlement for order #{order.OrderId}",
+                            TransactionDate = DateTime.UtcNow,
+                            Status = "Completed"
+                        };
+
+                        var sellerTransaction = new WalletTransaction
+                        {
+                            WalletId = sellerWallet.WalletId,
+                            Amount = netAmount,
+                            TransactionType = "OrderSettlement",
+                            Description = $"Payment received for order #{order.OrderId}",
+                            TransactionDate = DateTime.UtcNow,
+                            Status = "Completed"
+                        };
+
+                        _dbContext.WalletTransactions.Add(adminTransaction);
+                        _dbContext.WalletTransactions.Add(sellerTransaction);
+                    }
+                }
+            }
         }
 
     }

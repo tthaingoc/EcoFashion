@@ -394,7 +394,7 @@ export default function AddDesignDraft() {
         ...item,
         totalArea: area,
         needMaterial: needMaterialForThis,
-        price: needMaterialForThis * item.material.pricePerUnit * 1000,
+        price: needMaterialForThis * item.material.pricePerUnit,
 
         totalCarbon: carbonForThis,
         totalWater: waterForThis,
@@ -406,7 +406,7 @@ export default function AddDesignDraft() {
       acc[key].totalArea += area;
       acc[key].needMaterial = calcNeedMaterial(acc[key].totalArea);
       acc[key].price =
-        acc[key].needMaterial * acc[key].material.pricePerUnit * 1000;
+        acc[key].needMaterial * acc[key].material.pricePerUnit;
       acc[key].allDraftNames.push(item.draftName);
     }
 
