@@ -47,14 +47,13 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import { ToastContainer } from "react-toastify";
 import BusinessInfor from "./pages/BusinessInfor";
 import Cart from "./pages/shop/cart";
-import CheckoutPage from "./pages/checkout";
-import CheckoutResultPage from "./pages/checkout/result";
+import CheckoutTailwind from "./pages/checkout/CheckoutTailwind";
+import CheckoutResultPageTailwind from "./pages/checkout/CheckoutResultTailwind";
 import OrdersPage from "./pages/shop/OrdersPage";
 import OrdersDetails from "./components/orders/OrdersDetails";
 import OrdersList from "./components/orders/OrdersList";
-import ShipmentDashboard from "./pages/shipment/ShipmentDashboard";
-import ShipmentTrackingPage from "./pages/shipment/ShipmentTrackingPage";
-import WalletPage from "./pages/wallet/WalletPage";
+import ShipmentDashboardTailwind from "./pages/shipment/ShipmentDashboardTailwind";
+import WalletPageTailwind from "./pages/wallet/WalletPageTailwind";
 import { useAuthStore } from "./store/authStore";
 import { useCartStore } from "./store/cartStore";
 
@@ -107,7 +106,7 @@ function App() {
           path="/checkout"
           element={
             <ProtectedRoute allowedRoles={["customer", "supplier", "designer"]}>
-              <CheckoutPage />
+              <CheckoutTailwind />
             </ProtectedRoute>
           }
         />
@@ -115,7 +114,7 @@ function App() {
           path="/checkout/result"
           element={
             <ProtectedRoute allowedRoles={["customer", "supplier", "designer"]}>
-              <CheckoutResultPage />
+              <CheckoutResultPageTailwind />
             </ProtectedRoute>
           }
         />
@@ -136,21 +135,18 @@ function App() {
           path="/shipment"
           element={
             <ProtectedRoute allowedRoles={["admin", "supplier", "designer"]}>
-              <ShipmentDashboard />
+              <ShipmentDashboardTailwind />
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/shipment/track/:orderId"
-          element={<ShipmentTrackingPage />}
-        />
+        {/* Removed standalone tracking page; tracking handled within Tailwind dashboard */}
 
         {/* ===== WALLET ROUTES ===== */}
         <Route
           path="/wallet"
           element={
             <ProtectedRoute allowedRoles={["customer", "supplier", "designer", "admin"]}>
-              <WalletPage />
+              <WalletPageTailwind />
             </ProtectedRoute>
           }
         />

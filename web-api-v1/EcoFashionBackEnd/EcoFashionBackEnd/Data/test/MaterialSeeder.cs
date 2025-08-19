@@ -26,7 +26,7 @@ namespace EcoFashionBackEnd.Data.test
                     Description = "High-quality organic cotton fabric suitable for sustainable fashion. GOTS certified with excellent breathability and softness.",
                     RecycledPercentage = 0m, // Organic cotton typically 0% recycled (Source: GOTS standard)
                     QuantityAvailable = 500,
-                    PricePerUnit = 85m, // 85.000 VNĐ/mét (đơn vị: nghìn VNĐ)
+                    PricePerUnit = 85000m, // 85.000 VNĐ/mét (đơn vị: nghìn VNĐ)
                     DocumentationUrl = "https://example.com/certificates/organic-cotton-gots.pdf",
                     CarbonFootprint = 0.8m, // kg CO2e/mét (tốt hơn benchmark 1.2)
                     CarbonFootprintUnit = "kg CO2e/mét",
@@ -56,7 +56,7 @@ namespace EcoFashionBackEnd.Data.test
                     Description = "Sustainable recycled cotton fabric made from post-consumer waste. Reduces landfill waste and water consumption.",
                     RecycledPercentage = 85m, // GRS minimum standard (Source: GRS Standard)
                     QuantityAvailable = 300,
-                    PricePerUnit = 72m, // 72.000 VNĐ/mét (đơn vị: nghìn VNĐ)
+                    PricePerUnit = 72000m, // 72.000 VNĐ/mét (đơn vị: nghìn VNĐ)
                     DocumentationUrl = "https://example.com/certificates/recycled-cotton-grs.pdf",
                     CarbonFootprint = 0.7m, // kg CO2e/mét (tốt hơn benchmark 1.0)
                     CarbonFootprintUnit = "kg CO2e/mét",
@@ -86,7 +86,7 @@ namespace EcoFashionBackEnd.Data.test
                     Description = "Durable and sustainable hemp fabric with excellent strength and breathability. Naturally pest-resistant and low water usage.",
                     RecycledPercentage = 0m, // Hemp typically 0% recycled (Source: Textile Exchange)
                     QuantityAvailable = 200,
-                    PricePerUnit = 95m, // 95.000 VNĐ/mét (đơn vị: nghìn VNĐ)
+                    PricePerUnit = 95000m, // 95.000 VNĐ/mét (đơn vị: nghìn VNĐ)
                     DocumentationUrl = "https://example.com/certificates/hemp-natural.pdf",
                     CarbonFootprint = 1.1m, // Much better than benchmark 2.2
                     CarbonFootprintUnit = "kg CO2e/mét",
@@ -116,7 +116,7 @@ namespace EcoFashionBackEnd.Data.test
                     Description = "High-performance recycled polyester made from PET bottles. Excellent durability and moisture-wicking properties.",
                     RecycledPercentage = 90m, // GRS minimum standard (Source: GRS Standard)
                     QuantityAvailable = 400,
-                    PricePerUnit = 65m, // 65.000 VNĐ/mét (đơn vị: nghìn VNĐ)
+                    PricePerUnit = 65000m, // 65.000 VNĐ/mét (đơn vị: nghìn VNĐ)
                     DocumentationUrl = "https://example.com/certificates/recycled-polyester-grs.pdf",
                     CarbonFootprint = 1.4m, // Better than benchmark 1.6
                     CarbonFootprintUnit = "kg CO2e/mét",
@@ -146,7 +146,7 @@ namespace EcoFashionBackEnd.Data.test
                     Description = "Soft and silky bamboo viscose fabric with excellent moisture absorption and antibacterial properties.",
                     RecycledPercentage = 0m, // Bamboo typically 0% recycled (Source: EU Ecolabel)
                     QuantityAvailable = 250,
-                    PricePerUnit = 78m, // 78.000 VNĐ/mét (đơn vị: nghìn VNĐ)
+                    PricePerUnit = 78000m, // 78.000 VNĐ/mét (đơn vị: nghìn VNĐ)
                     DocumentationUrl = "https://example.com/certificates/bamboo-viscose-oeko.pdf",
                     CarbonFootprint = 1.7m, // Much better than benchmark 2.8
                     CarbonFootprintUnit = "kg CO2e/mét",
@@ -176,7 +176,7 @@ namespace EcoFashionBackEnd.Data.test
                     Description = "Eco-friendly Tencel fabric made from sustainably sourced wood pulp. Excellent drape and moisture management.",
                     RecycledPercentage = 0m, // Tencel typically 0% recycled (Source: EU Ecolabel)
                     QuantityAvailable = 180,
-                    PricePerUnit = 120m, // 120.000 VNĐ/mét (đơn vị: nghìn VNĐ)
+                    PricePerUnit = 120000m, // 120.000 VNĐ/mét (đơn vị: nghìn VNĐ)
                     DocumentationUrl = "https://example.com/certificates/tencel-lyocell-oeko.pdf",
                     CarbonFootprint = 1.9m, // Better than benchmark 2.1
                     CarbonFootprintUnit = "kg CO2e/mét",
@@ -206,7 +206,7 @@ namespace EcoFashionBackEnd.Data.test
                     Description = "Warm and durable recycled wool fabric made from post-consumer wool garments. Excellent insulation properties.",
                     RecycledPercentage = 88m, // RWS minimum standard (Source: RWS Standard)
                     QuantityAvailable = 120,
-                    PricePerUnit = 150m, // 150.000 VNĐ/mét (đơn vị: nghìn VNĐ)
+                    PricePerUnit = 150000m, // 150.000 VNĐ/mét (đơn vị: nghìn VNĐ)
                     DocumentationUrl = "https://example.com/certificates/recycled-wool-rws.pdf",
                     CarbonFootprint = 1.7m, // Better than benchmark 1.9
                     CarbonFootprintUnit = "kg CO2e/mét",
@@ -236,7 +236,7 @@ namespace EcoFashionBackEnd.Data.test
                     Description = "Luxurious organic silk fabric with natural sheen and softness. Ethically produced without harming silkworms.",
                     RecycledPercentage = 0m, // Organic silk typically 0% recycled (Source: GOTS Standard)
                     QuantityAvailable = 80,
-                    PricePerUnit = 250m, // 250.000 VNĐ/mét (đơn vị: nghìn VNĐ)
+                    PricePerUnit = 250000m, // 250.000 VNĐ/mét (đơn vị: nghìn VNĐ)
                     DocumentationUrl = "https://example.com/certificates/organic-silk-gots.pdf",
                     CarbonFootprint = 2.2m, // Better than benchmark 2.4
                     CarbonFootprintUnit = "kg CO2e/mét",
@@ -266,7 +266,7 @@ namespace EcoFashionBackEnd.Data.test
                     Description = "High-performance recycled nylon fabric made from fishing nets and industrial waste. Excellent durability and stretch.",
                     RecycledPercentage = 80m, // GRS minimum standard (Source: GRS Standard)
                     QuantityAvailable = 150,
-                    PricePerUnit = 95m, // 95.000 VNĐ/mét (đơn vị: nghìn VNĐ)
+                    PricePerUnit = 95000m, // 95.000 VNĐ/mét (đơn vị: nghìn VNĐ)
                     DocumentationUrl = "https://example.com/certificates/recycled-nylon-grs.pdf",
                     CarbonFootprint = 1.2m, // Better than benchmark 1.4
                     CarbonFootprintUnit = "kg CO2e/mét",
@@ -296,7 +296,7 @@ namespace EcoFashionBackEnd.Data.test
                     Description = "Natural organic linen fabric with excellent breathability and moisture absorption. Perfect for summer clothing.",
                     RecycledPercentage = 0m, // Organic linen typically 0% recycled (Source: GOTS Standard)
                     QuantityAvailable = 100,
-                    PricePerUnit = 180m, // 180.000 VNĐ/mét (đơn vị: nghìn VNĐ)
+                    PricePerUnit = 180000m, // 180.000 VNĐ/mét (đơn vị: nghìn VNĐ)
                     DocumentationUrl = "https://example.com/certificates/organic-linen-gots.pdf",
                     CarbonFootprint = 2.5m, // Better than benchmark 2.8
                     CarbonFootprintUnit = "kg CO2e/mét",
@@ -326,7 +326,7 @@ namespace EcoFashionBackEnd.Data.test
                     Description = "Sustainable recycled denim fabric made from post-consumer jeans. Reduces water and energy consumption significantly.",
                     RecycledPercentage = 85m, // GRS minimum standard (Source: GRS Standard)
                     QuantityAvailable = 200,
-                    PricePerUnit = 85m, // 85.000 VNĐ/mét (đơn vị: nghìn VNĐ)
+                    PricePerUnit = 85000m, // 85.000 VNĐ/mét (đơn vị: nghìn VNĐ)
                     DocumentationUrl = "https://example.com/certificates/recycled-denim-grs.pdf",
                     CarbonFootprint = 1.1m, // Better than benchmark 1.3
                     CarbonFootprintUnit = "kg CO2e/mét",
@@ -356,7 +356,7 @@ namespace EcoFashionBackEnd.Data.test
                     Description = "Luxurious organic alpaca wool fabric with exceptional softness and warmth. Ethically sourced from free-range alpacas.",
                     RecycledPercentage = 0m, // Organic alpaca typically 0% recycled (Source: RWS Standard)
                     QuantityAvailable = 60,
-                    PricePerUnit = 350m, // 350.000 VNĐ/mét (đơn vị: nghìn VNĐ)
+                    PricePerUnit = 350000m, // 350.000 VNĐ/mét (đơn vị: nghìn VNĐ)
                     DocumentationUrl = "https://example.com/certificates/organic-alpaca-rws.pdf",
                     CarbonFootprint = 1.9m, // Better than benchmark 2.1
                     CarbonFootprintUnit = "kg CO2e/mét",

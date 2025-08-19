@@ -15,7 +15,7 @@ export const useWalletTransactions = (page = 1, pageSize = 20) => {
   return useQuery({
     queryKey: QUERY_KEYS.walletTransactions(page, pageSize),
     queryFn: () => walletService.getTransactions(page, pageSize),
-    keepPreviousData: true,
+    placeholderData: (prev) => prev, // React Query v5 replacement for keepPreviousData
   });
 };
 
@@ -36,8 +36,8 @@ export const useWalletBalance = () => {
   return useQuery({
     queryKey: [...QUERY_KEYS.walletSummary, 'balance'],
     queryFn: async () => {
-      const summary = await walletService.getWalletSummary();
-      return summary?.balance || 0;
+      const summary: any = await walletService.getWalletSummary();
+      return summary?.balance ?? summary?.wallet?.balance ?? 0;
     },
     staleTime: 10_000, // 10 seconds
   });

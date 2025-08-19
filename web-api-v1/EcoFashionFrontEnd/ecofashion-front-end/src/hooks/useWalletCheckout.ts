@@ -45,7 +45,8 @@ export const useCheckWalletBalance = () => {
   return useMutation({
     mutationFn: async (requiredAmount: number) => {
       const summary = await apiClient.get('/wallet/summary');
-      const balance = summary.data?.result?.balance || 0;
+      const payload = summary.data?.result ?? summary.data ?? {};
+      const balance = (payload?.balance ?? payload?.wallet?.balance ?? 0) as number;
       return {
         balance,
         sufficient: balance >= requiredAmount,

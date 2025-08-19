@@ -182,9 +182,11 @@ const WalletDashboardTailwind: React.FC = () => {
     );
   }
 
-  const balance = walletData?.balance || 0;
-  const monthlyStats = walletData?.monthlyStats || { totalIncome: 0, totalExpense: 0 };
-  const recentTransactions = walletData?.recentTransactions || [];
+  const balance = (walletData as any)?.balance ?? (walletData as any)?.wallet?.balance ?? 0;
+  const monthlyRaw = (walletData as any)?.monthlyStats ?? {};
+  const income = (monthlyRaw as any)?.totalIncome ?? (monthlyRaw as any)?.deposited ?? 0;
+  const expense = (monthlyRaw as any)?.totalExpense ?? (monthlyRaw as any)?.spent ?? 0;
+  const recentTransactions = (walletData as any)?.recentTransactions ?? [];
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
@@ -233,7 +235,7 @@ const WalletDashboardTailwind: React.FC = () => {
             <div>
               <p className="text-sm text-green-600 font-medium">Thu nhập tháng này</p>
               <p className="text-xl font-bold text-green-700">
-                +{monthlyStats.totalIncome.toLocaleString('vi-VN')} VND
+                +{(income as number).toLocaleString('vi-VN')} VND
               </p>
             </div>
           </div>
@@ -245,7 +247,7 @@ const WalletDashboardTailwind: React.FC = () => {
             <div>
               <p className="text-sm text-red-600 font-medium">Chi tiêu tháng này</p>
               <p className="text-xl font-bold text-red-700">
-                -{monthlyStats.totalExpense.toLocaleString('vi-VN')} VND
+                -{(expense as number).toLocaleString('vi-VN')} VND
               </p>
             </div>
           </div>
@@ -257,7 +259,7 @@ const WalletDashboardTailwind: React.FC = () => {
             <div>
               <p className="text-sm text-blue-600 font-medium">Chênh lệch</p>
               <p className="text-xl font-bold text-blue-700">
-                {(monthlyStats.totalIncome - monthlyStats.totalExpense).toLocaleString('vi-VN')} VND
+                {((income as number) - (expense as number)).toLocaleString('vi-VN')} VND
               </p>
             </div>
           </div>

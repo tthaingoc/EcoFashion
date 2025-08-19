@@ -32,16 +32,13 @@ import {
   Store
 } from "@mui/icons-material";
 //----------------
-import ShippingModal from "../../components/checkout/ShippingModal";
-import { useState as useReactState } from 'react';
+// Removed address popup; navigate straight to checkout to change/select address
 import bg from '../../assets/img/images/grid-image/fabric.png'
 
 const formatVND = (n: number) => n.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
 
 export default function Cart() {
   const navigate = useNavigate();
-  const [openShip, setOpenShip] = useReactState(false);
-  const [pendingSellerId, setPendingSellerId] = useReactState<string | null>(null);
   const items = useCartStore((s) => s.items);
   const syncFromServer = useCartStore((s) => s.syncFromServer);
   const grouped = useMemo(() => {
@@ -190,7 +187,7 @@ export default function Cart() {
       {/* Cart Content */}
       <Container maxWidth="lg" sx={{ pb: 8 }}>
         <Grid container spacing={4}>
-          <Grid item xs={12} lg={8}>
+          <Grid >
             {/* Cart Items */}
             <Card sx={{ borderRadius: 3, boxShadow: 2, mb: 3 }}>
               <CardContent sx={{ p: 0 }}>
@@ -246,7 +243,7 @@ export default function Cart() {
                       {sellerItems.map((item, index) => (
                         <Box key={item.id} sx={{ p: 3, borderBottom: index < sellerItems.length - 1 ? '1px solid #f3f4f6' : 'none' }}>
                           <Grid container spacing={3} alignItems="center">
-                            <Grid item xs={12} md={6}>
+                            <Grid >
                               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                                 <input 
                                   type="checkbox" 
@@ -273,12 +270,12 @@ export default function Cart() {
                                 </Box>
                               </Box>
                             </Grid>
-                            <Grid item xs={6} md={2}>
+                            <Grid >
                               <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#16a34a' }}>
                                 {formatVND(item.price)}
                               </Typography>
                             </Grid>
-                            <Grid item xs={6} md={2}>
+                            <Grid >
                               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                 <IconButton 
                                   size="small" 
@@ -302,7 +299,7 @@ export default function Cart() {
                                 </IconButton>
                               </Box>
                             </Grid>
-                            <Grid item xs={12} md={2}>
+                            <Grid >
                               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                 <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#dc2626' }}>
                                   {formatVND(item.price * item.quantity)}
@@ -329,10 +326,7 @@ export default function Cart() {
                           variant="contained"
                           size="small"
                           sx={{ bgcolor: '#16a34a', '&:hover': { bgcolor: '#15803d' } }}
-                          onClick={() => {
-                            setPendingSellerId(sellerId);
-                            setOpenShip(true);
-                          }}
+                          onClick={() => navigate(`/checkout?groupSellerId=${sellerId}`)}
                         >
                           Thanh toán nhóm này
                         </Button>
@@ -345,7 +339,7 @@ export default function Cart() {
           </Grid>
 
           {/* Order Summary */}
-          <Grid item xs={12} lg={4}>
+          <Grid >
             <Card sx={{ borderRadius: 3, boxShadow: 2, position: 'sticky', top: 20 }}>
               <CardContent sx={{ p: 3 }}>
                 <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 3 }}>
@@ -421,17 +415,7 @@ export default function Cart() {
         </Grid>
       </Container>
 
-      {/* Shipping Modal */}
-      <ShippingModal
-        open={openShip}
-        onClose={() => setOpenShip(false)}
-        onSaved={() => {
-          if (pendingSellerId) {
-            const params = new URLSearchParams({ groupSellerId: pendingSellerId });
-            navigate(`/checkout?${params.toString()}`);
-          }
-        }}
-      />
+      {/* Removed ShippingModal - address selection handled on Checkout page */}
     </Box>
   )
 }

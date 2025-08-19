@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   CreditCardIcon,
   BanknotesIcon,
@@ -8,10 +8,11 @@ import {
   CheckCircleIcon,
   ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
-import { useCheckoutWizardStore } from '../../store/checkoutWizardStore';
+import { useCheckoutWizard } from '../../store/checkoutWizardStore';
 import { useWalletBalance } from '../../hooks/useWalletQueries';
 import { usePayOrderWithWallet, usePayGroupWithWallet, useCheckWalletBalance } from '../../hooks/useWalletCheckout';
 import { paymentsService } from '../../services/api/paymentsService';
+import { checkoutService } from '../../services/api/checkoutService';
 import AddressSelectorTailwind from '../../components/checkout/AddressSelectorTailwind';
 import { toast } from 'react-toastify';
 
@@ -25,6 +26,7 @@ interface PaymentMethod {
 
 const CheckoutTailwind: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'wallet' | 'vnpay'>('vnpay');
   const [selectedAddress, setSelectedAddress] = useState<any>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -33,14 +35,15 @@ const CheckoutTailwind: React.FC = () => {
     shortfall: number;
   } | null>(null);
 
-  const { wizard, currentOrder, nextOrder } = useCheckoutWizardStore();
+  const wizard = useCheckoutWizard();
+  const currentOrder = wizard.orders[wizard.currentIndex];
   const { data: walletBalance = 0 } = useWalletBalance();
   const { mutateAsync: payWithWallet } = usePayOrderWithWallet();
   const { mutateAsync: payGroupWithWallet } = usePayGroupWithWallet();
   const { mutateAsync: checkBalance } = useCheckWalletBalance();
 
-  const orderTotal = currentOrder?.totalPrice || 0;
-  const groupTotal = wizard.orders.reduce((sum, order) => sum + order.totalPrice, 0);
+  const orderTotal = (currentOrder as any)?.totalAmount ?? (currentOrder as any)?.totalPrice ?? 0;
+  const groupTotal = wizard.orders.reduce((sum, order: any) => sum + (order.totalAmount ?? order.totalPrice ?? 0), 0);
 
   const paymentMethods: PaymentMethod[] = [
     {
@@ -64,6 +67,37 @@ const CheckoutTailwind: React.FC = () => {
       checkWalletBalance();
     }
   }, [currentOrder]);
+
+  // Bootstrap: create checkout session from cart using default address on backend
+  useEffect(() => {
+    const bootstrap = async () => {
+      try {
+        setIsProcessing(true);
+        // Let backend use default UserAddress if available
+        const resp = await checkoutService.createSessionFromCart();
+        wizard.start(resp);
+
+        // If a seller group is specified, jump to the corresponding order
+        const groupSellerId = searchParams.get('groupSellerId');
+        if (groupSellerId) {
+          const matched = resp.orders.find((o: any) => String(o.sellerId || '').toLowerCase() === groupSellerId.toLowerCase());
+          if (matched) {
+            wizard.goToOrder(matched.orderId);
+          }
+        }
+      } catch (e) {
+        // Fail silently; UI will show not found/empty state
+        console.warn('createSessionFromCart failed:', e);
+      } finally {
+        setIsProcessing(false);
+      }
+    };
+
+    if (!wizard.orderGroupId) {
+      bootstrap();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const checkWalletBalance = async () => {
     try {
@@ -125,6 +159,7 @@ const CheckoutTailwind: React.FC = () => {
         orderId: currentOrder!.orderId,
         amount: currentOrder!.totalPrice,
         description: `Thanh toán đơn hàng #${currentOrder!.orderId}`,
+        createdDate: new Date().toISOString(),
       });
 
       if (result.redirectUrl) {
@@ -186,7 +221,7 @@ const CheckoutTailwind: React.FC = () => {
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Thanh toán</h1>
           <p className="text-gray-600">
-            Đơn hàng #{currentOrder.orderId} - {wizard.currentOrderIndex + 1}/{wizard.orders.length}
+            Đơn hàng #{currentOrder.orderId} - {wizard.currentIndex + 1}/{wizard.orders.length}
           </p>
         </div>
 
@@ -239,7 +274,7 @@ const CheckoutTailwind: React.FC = () => {
                   <div>
                     <h4 className="font-medium text-yellow-800">Số dư ví không đủ</h4>
                     <p className="text-sm text-yellow-700 mt-1">
-                      Bạn cần nạp thêm {walletBalanceCheck.shortfall.toLocaleString('vi-VN')} VND để thanh toán
+                      Bạn cần nạp thêm {(walletBalanceCheck.shortfall as number).toLocaleString('vi-VN')} VND để thanh toán
                     </p>
                     <button
                       onClick={() => navigate('/wallet')}
@@ -261,18 +296,18 @@ const CheckoutTailwind: React.FC = () => {
               <div className="space-y-3 mb-4">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Tạm tính:</span>
-                  <span className="text-gray-900">{currentOrder.subtotal.toLocaleString('vi-VN')} VND</span>
+                  <span className="text-gray-900">{(((currentOrder as any).subtotal ?? 0) as number).toLocaleString('vi-VN')} VND</span>
                 </div>
                 
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Phí vận chuyển:</span>
-                  <span className="text-gray-900">{currentOrder.shippingFee.toLocaleString('vi-VN')} VND</span>
+                  <span className="text-gray-900">{(((currentOrder as any).shippingFee ?? 0) as number).toLocaleString('vi-VN')} VND</span>
                 </div>
                 
-                {currentOrder.discount > 0 && (
+                {(((currentOrder as any).discount ?? 0) as number) > 0 && (
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Giảm giá:</span>
-                    <span className="text-red-600">-{currentOrder.discount.toLocaleString('vi-VN')} VND</span>
+                    <span className="text-red-600">-{(((currentOrder as any).discount ?? 0) as number).toLocaleString('vi-VN')} VND</span>
                   </div>
                 )}
                 
