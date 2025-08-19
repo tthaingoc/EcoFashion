@@ -316,7 +316,7 @@ namespace EcoFashionBackEnd.Controllers
 
     public class PayGroupWithWalletRequest
     {
-        public int OrderGroupId { get; set; }
+        public Guid OrderGroupId { get; set; }
     }
 
     public class UpdateOrderAddressRequest

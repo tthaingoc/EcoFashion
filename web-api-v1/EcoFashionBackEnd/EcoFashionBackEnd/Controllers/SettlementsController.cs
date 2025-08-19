@@ -20,7 +20,7 @@ namespace EcoFashionBackEnd.Controllers
 
         [HttpPost("release")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> ReleasePayouts([FromQuery] int? orderId, [FromQuery] int? orderGroupId)
+        public async Task<IActionResult> ReleasePayouts([FromQuery] int? orderId, [FromQuery] Guid? orderGroupId)
         {
             try
             {

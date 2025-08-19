@@ -237,9 +237,26 @@ namespace EcoFashionBackEnd.Services
             return response;
         }
 
+        // Unified: ensure wallet exists, then return it
         public async Task<Wallet> GetWalletByUserIdAsync(int userId)
         {
-            return await _walletRepository.GetAll().FirstOrDefaultAsync(w => w.UserId == userId);
+            var wallet = await _walletRepository.GetAll()
+                .FirstOrDefaultAsync(w => w.UserId == userId);
+            
+            if (wallet == null)
+            {
+                wallet = new Wallet
+                {
+                    UserId = userId,
+                    Balance = 0,
+                    CreatedAt = DateTime.UtcNow,
+                    LastUpdatedAt = DateTime.UtcNow
+                };
+                await _walletRepository.AddAsync(wallet);
+                await _walletRepository.Commit();
+            }
+            
+            return wallet;
         }
 
         public async Task<object> GetWalletSummaryAsync(int userId)
@@ -426,26 +443,7 @@ namespace EcoFashionBackEnd.Services
             };
         }
 
-        public async Task<Wallet?> GetWalletByUserIdAsync(int userId)
-        {
-            var wallet = await _walletRepository.GetAll()
-                .FirstOrDefaultAsync(w => w.UserId == userId);
-                
-            if (wallet == null)
-            {
-                wallet = new Wallet
-                {
-                    UserId = userId,
-                    Balance = 0,
-                    CreatedAt = DateTime.UtcNow,
-                    LastUpdatedAt = DateTime.UtcNow
-                };
-                await _walletRepository.AddAsync(wallet);
-                await _walletRepository.Commit();
-            }
-            
-            return wallet;
-        }
+        
 
         public async Task CreateTransactionAsync(int walletId, TransactionType type, double amount, 
             int? orderId = null, Guid? settlementId = null)
