@@ -55,6 +55,7 @@ import OrdersDetails from "./components/orders/OrdersDetails";
 import OrdersList from "./components/orders/OrdersList";
 import ShipmentDashboardTailwind from "./pages/shipment/ShipmentDashboardTailwind";
 import WalletPageTailwind from "./pages/wallet/WalletPageTailwind";
+import VNPaySuccess from "./pages/payment/VNPaySuccess";
 import { useAuthStore } from "./store/authStore";
 import { useCartStore } from "./store/cartStore";
 
@@ -156,6 +157,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={["customer", "supplier", "designer", "admin"]}>
               <WalletPageTailwind />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/payment/vnpay-success"
+          element={
+            <ProtectedRoute allowedRoles={["customer", "supplier", "designer", "admin"]}>
+              <VNPaySuccess />
             </ProtectedRoute>
           }
         />

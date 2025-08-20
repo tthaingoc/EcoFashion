@@ -3,6 +3,7 @@ using EcoFashionBackEnd.Entities;
 using EcoFashionBackEnd.Repositories;
 using Microsoft.EntityFrameworkCore;
 
+
 namespace EcoFashionBackEnd.Services
 {
     public class FlexibleCheckoutService
@@ -14,6 +15,7 @@ namespace EcoFashionBackEnd.Services
         private readonly IRepository<OrderGroup, Guid> _orderGroupRepository;
         private readonly AppDbContext _dbContext;
         private readonly UserAddressService _userAddressService;
+
 
         public FlexibleCheckoutService(
             IRepository<CheckoutSession, Guid> checkoutSessionRepository,
@@ -33,9 +35,11 @@ namespace EcoFashionBackEnd.Services
             _userAddressService = userAddressService;
         }
 
+
         public async Task<CheckoutSessionDto> CreateCheckoutSessionAsync(int userId, CreateCheckoutSessionRequest request)
         {
             var expiresAt = DateTime.UtcNow.AddMinutes(request.HoldMinutes <= 0 ? 30 : request.HoldMinutes);
+
 
             var checkoutSession = new CheckoutSession
             {
@@ -48,8 +52,10 @@ namespace EcoFashionBackEnd.Services
                 ExpiresAt = expiresAt
             };
 
+
             await _checkoutSessionRepository.AddAsync(checkoutSession);
             await _checkoutSessionRepository.Commit();
+
 
             // Process each item request
             foreach (var itemRequest in request.Items)
@@ -57,11 +63,14 @@ namespace EcoFashionBackEnd.Services
                 await AddItemToSessionAsync(checkoutSession.CheckoutSessionId, itemRequest);
             }
 
+
             // Update session summary
             await UpdateSessionSummaryAsync(checkoutSession.CheckoutSessionId);
 
+
             return await GetCheckoutSessionAsync(checkoutSession.CheckoutSessionId);
         }
+
 
         public async Task<CheckoutSessionDto> CreateCheckoutSessionFromCartAsync(int userId, string? shippingAddress = null, int? addressId = null)
         {
@@ -69,8 +78,10 @@ namespace EcoFashionBackEnd.Services
                 .Include(c => c.Items)
                 .FirstOrDefaultAsync(c => c.UserId == userId && c.IsActive);
 
+
             if (activeCart == null || !activeCart.Items.Any())
                 throw new ArgumentException("Cart is empty or not found");
+
 
             var request = new CreateCheckoutSessionRequest
             {
@@ -80,17 +91,19 @@ namespace EcoFashionBackEnd.Services
                 {
                     MaterialId = item.MaterialId,
                     ProductId = item.ProductId,
-                    DesignId = item.DesignId,
                     Quantity = item.Quantity
                 }).ToList()
             };
 
+
             return await CreateCheckoutSessionAsync(userId, request);
         }
+
 
         private async Task AddItemToSessionAsync(Guid checkoutSessionId, CheckoutSessionItemRequest itemRequest)
         {
             CheckoutSessionItem sessionItem;
+
 
             if (itemRequest.MaterialId.HasValue)
             {
@@ -99,7 +112,9 @@ namespace EcoFashionBackEnd.Services
                     .Include(m => m.MaterialImages).ThenInclude(mi => mi.Image)
                     .FirstOrDefaultAsync(m => m.MaterialId == itemRequest.MaterialId.Value);
 
+
                 if (material == null) throw new ArgumentException($"Material not found: {itemRequest.MaterialId}");
+
 
                 sessionItem = new CheckoutSessionItem
                 {
@@ -118,10 +133,12 @@ namespace EcoFashionBackEnd.Services
             else if (itemRequest.ProductId.HasValue)
             {
                 var product = await _dbContext.Products
-                    .Include(p => p.Design).ThenInclude(d => d.Designer)
+                    .Include(p => p.Design).ThenInclude(d => d.DesignerProfile)
                     .FirstOrDefaultAsync(p => p.ProductId == itemRequest.ProductId.Value);
 
+
                 if (product == null) throw new ArgumentException($"Product not found: {itemRequest.ProductId}");
+
 
                 sessionItem = new CheckoutSessionItem
                 {
@@ -131,29 +148,7 @@ namespace EcoFashionBackEnd.Services
                     Quantity = itemRequest.Quantity,
                     UnitPrice = itemRequest.UnitPrice ?? product.Price,
                     DesignerId = product.Design?.DesignerId,
-                    ProviderName = product.Design?.Designer?.DesignerName ?? "Unknown Designer",
-                    ProviderType = "Designer",
-                    IsSelected = true,
-                    CreatedAt = DateTime.UtcNow
-                };
-            }
-            else if (itemRequest.DesignId.HasValue)
-            {
-                var design = await _dbContext.Designs
-                    .Include(d => d.Designer)
-                    .FirstOrDefaultAsync(d => d.DesignId == itemRequest.DesignId.Value);
-
-                if (design == null) throw new ArgumentException($"Design not found: {itemRequest.DesignId}");
-
-                sessionItem = new CheckoutSessionItem
-                {
-                    CheckoutSessionId = checkoutSessionId,
-                    DesignId = design.DesignId,
-                    Type = OrderDetailType.design,
-                    Quantity = itemRequest.Quantity,
-                    UnitPrice = itemRequest.UnitPrice ?? design.Price,
-                    DesignerId = design.DesignerId,
-                    ProviderName = design.Designer?.DesignerName ?? "Unknown Designer",
+                    ProviderName = product.Design?.DesignerProfile?.DesignerName ?? "Unknown Designer",
                     ProviderType = "Designer",
                     IsSelected = true,
                     CreatedAt = DateTime.UtcNow
@@ -161,12 +156,14 @@ namespace EcoFashionBackEnd.Services
             }
             else
             {
-                throw new ArgumentException("Must specify MaterialId, ProductId, or DesignId");
+                throw new ArgumentException("Must specify MaterialId or ProductId");
             }
+
 
             await _checkoutSessionItemRepository.AddAsync(sessionItem);
             await _checkoutSessionItemRepository.Commit();
         }
+
 
         public async Task<CheckoutSessionDto> GetCheckoutSessionAsync(Guid checkoutSessionId)
         {
@@ -174,16 +171,14 @@ namespace EcoFashionBackEnd.Services
                 .Include(cs => cs.Items)
                     .ThenInclude(csi => csi.Material).ThenInclude(m => m.MaterialImages).ThenInclude(mi => mi.Image)
                 .Include(cs => cs.Items)
-                    .ThenInclude(csi => csi.Product)
-                .Include(cs => cs.Items)
-                    .ThenInclude(csi => csi.Design)
+                    .ThenInclude(csi => csi.Product).ThenInclude(p => p.Design).ThenInclude(d => d.DesignImages).ThenInclude(di => di.Image)
                 .Include(cs => cs.Items)
                     .ThenInclude(csi => csi.Supplier)
-                .Include(cs => cs.Items)
-                    .ThenInclude(csi => csi.Designer)
                 .FirstOrDefaultAsync(cs => cs.CheckoutSessionId == checkoutSessionId);
 
+
             if (session == null) throw new ArgumentException("Checkout session not found");
+
 
             var items = session.Items.Select(item => new CheckoutSessionItemDto
             {
@@ -191,7 +186,6 @@ namespace EcoFashionBackEnd.Services
                 CheckoutSessionId = item.CheckoutSessionId,
                 MaterialId = item.MaterialId,
                 ProductId = item.ProductId,
-                DesignId = item.DesignId,
                 ItemName = GetItemName(item),
                 ItemImageUrl = GetItemImageUrl(item),
                 Type = item.Type.ToString(),
@@ -207,6 +201,7 @@ namespace EcoFashionBackEnd.Services
                 CreatedAt = item.CreatedAt
             }).ToList();
 
+
             // Group items by provider
             var providerGroups = items
                 .GroupBy(item => new { item.SupplierId, item.DesignerId, item.ProviderType })
@@ -221,6 +216,7 @@ namespace EcoFashionBackEnd.Services
                     GroupItemCount = group.Sum(item => item.Quantity),
                     CanCheckoutSeparately = true
                 }).ToList();
+
 
             return new CheckoutSessionDto
             {
@@ -239,11 +235,13 @@ namespace EcoFashionBackEnd.Services
             };
         }
 
+
         public async Task<bool> UpdateSelectionAsync(Guid checkoutSessionId, UpdateCheckoutSelectionRequest request)
         {
             var sessionItems = await _dbContext.CheckoutSessionItems
                 .Where(csi => csi.CheckoutSessionId == checkoutSessionId)
                 .ToListAsync();
+
 
             // First, deselect all items
             foreach (var item in sessionItems)
@@ -251,10 +249,12 @@ namespace EcoFashionBackEnd.Services
                 item.IsSelected = false;
             }
 
+
             // Then select the requested items
             var itemsToSelect = sessionItems
                 .Where(item => request.SelectedItemIds.Contains(item.CheckoutSessionItemId))
                 .ToList();
+
 
             // Apply provider filter if specified
             if (request.ProviderIdFilter.HasValue)
@@ -264,6 +264,7 @@ namespace EcoFashionBackEnd.Services
                     .ToList();
             }
 
+
             if (!string.IsNullOrEmpty(request.ProviderTypeFilter))
             {
                 itemsToSelect = itemsToSelect
@@ -271,16 +272,20 @@ namespace EcoFashionBackEnd.Services
                     .ToList();
             }
 
+
             foreach (var item in itemsToSelect)
             {
                 item.IsSelected = true;
             }
 
+
             await _dbContext.SaveChangesAsync();
             await UpdateSessionSummaryAsync(checkoutSessionId);
 
+
             return true;
         }
+
 
         public async Task<CreateSessionResponse> ProcessFlexibleCheckoutAsync(int userId, FlexibleCheckoutRequest request)
         {
@@ -288,10 +293,13 @@ namespace EcoFashionBackEnd.Services
                 .Include(cs => cs.Items)
                 .FirstOrDefaultAsync(cs => cs.CheckoutSessionId == request.CheckoutSessionId && cs.UserId == userId);
 
+
             if (session == null) throw new ArgumentException("Checkout session not found");
+
 
             // Get items to checkout based on mode
             List<CheckoutSessionItem> itemsToCheckout;
+
 
             switch (request.CheckoutMode.ToLower())
             {
@@ -301,6 +309,7 @@ namespace EcoFashionBackEnd.Services
                         .ToList();
                     break;
 
+
                 case "byprovider":
                     if (!request.ProviderIdFilter.HasValue) throw new ArgumentException("ProviderIdFilter required for ByProvider mode");
                     itemsToCheckout = session.Items
@@ -308,20 +317,25 @@ namespace EcoFashionBackEnd.Services
                         .ToList();
                     break;
 
+
                 case "all":
                     itemsToCheckout = session.Items.ToList();
                     break;
+
 
                 default:
                     throw new ArgumentException($"Unknown checkout mode: {request.CheckoutMode}");
             }
 
+
             if (!itemsToCheckout.Any()) throw new ArgumentException("No items selected for checkout");
+
 
             // Group items by provider to create separate orders
             var providerGroups = itemsToCheckout
                 .GroupBy(item => new { SupplierId = item.SupplierId, DesignerId = item.DesignerId, ProviderType = item.ProviderType })
                 .ToList();
+
 
             // Create OrderGroup
             var orderGroup = new OrderGroup
@@ -333,8 +347,10 @@ namespace EcoFashionBackEnd.Services
                 ExpiresAt = DateTime.UtcNow.AddMinutes(30)
             };
 
+
             await _orderGroupRepository.AddAsync(orderGroup);
             await _orderGroupRepository.Commit();
+
 
             var response = new CreateSessionResponse
             {
@@ -343,6 +359,7 @@ namespace EcoFashionBackEnd.Services
                 Orders = new List<CheckoutOrderDto>()
             };
 
+
             // Determine shipping address
             string shippingAddress = request.ShippingAddress ?? session.ShippingAddress ?? "Default address";
             if (request.AddressId.HasValue)
@@ -350,11 +367,13 @@ namespace EcoFashionBackEnd.Services
                 shippingAddress = await _userAddressService.GetFormattedAddressAsync(request.AddressId.Value, userId) ?? shippingAddress;
             }
 
+
             // Create one order per provider
             foreach (var providerGroup in providerGroups)
             {
                 var groupItems = providerGroup.ToList();
                 var subtotal = groupItems.Sum(item => item.UnitPrice * item.Quantity);
+
 
                 var order = new Order
                 {
@@ -378,8 +397,10 @@ namespace EcoFashionBackEnd.Services
                     CreateAt = DateTime.UtcNow
                 };
 
+
                 await _orderRepository.AddAsync(order);
                 await _orderRepository.Commit();
+
 
                 // Create order details
                 foreach (var sessionItem in groupItems)
@@ -389,7 +410,6 @@ namespace EcoFashionBackEnd.Services
                         OrderId = order.OrderId,
                         MaterialId = sessionItem.MaterialId,
                         ProductId = sessionItem.ProductId,
-                        DesignId = sessionItem.DesignId,
                         SupplierId = sessionItem.SupplierId,
                         DesignerId = sessionItem.DesignerId,
                         Quantity = sessionItem.Quantity,
@@ -398,10 +418,13 @@ namespace EcoFashionBackEnd.Services
                         Status = OrderDetailStatus.pending
                     };
 
+
                     await _orderDetailRepository.AddAsync(orderDetail);
                 }
 
+
                 await _orderDetailRepository.Commit();
+
 
                 response.Orders.Add(new CheckoutOrderDto
                 {
@@ -414,28 +437,34 @@ namespace EcoFashionBackEnd.Services
                 });
             }
 
+
             // Update OrderGroup summary
             orderGroup.TotalOrders = response.Orders.Count;
             orderGroup.CompletedOrders = 0;
             _orderGroupRepository.Update(orderGroup);
             await _orderGroupRepository.Commit();
 
+
             // Mark session as completed or update status
             session.Status = CheckoutSessionStatus.Completed;
             _checkoutSessionRepository.Update(session);
             await _checkoutSessionRepository.Commit();
 
+
             return response;
         }
+
 
         private async Task UpdateSessionSummaryAsync(Guid checkoutSessionId)
         {
             var session = await _checkoutSessionRepository.GetByIdAsync(checkoutSessionId);
             if (session == null) return;
 
+
             var items = await _dbContext.CheckoutSessionItems
                 .Where(csi => csi.CheckoutSessionId == checkoutSessionId)
                 .ToListAsync();
+
 
             session.TotalAmount = items.Sum(item => item.TotalPrice);
             session.TotalItems = items.Sum(item => item.Quantity);
@@ -443,17 +472,19 @@ namespace EcoFashionBackEnd.Services
                 .GroupBy(item => new { item.SupplierId, item.DesignerId })
                 .Count();
 
+
             _checkoutSessionRepository.Update(session);
             await _checkoutSessionRepository.Commit();
         }
 
+
         private string GetItemName(CheckoutSessionItem item)
         {
             if (item.Material != null) return item.Material.Name ?? "Material";
-            if (item.Product != null) return item.Product.Name ?? "Product";
-            if (item.Design != null) return item.Design.Name ?? "Design";
+            if (item.Product?.Design != null) return item.Product.Design.Name ?? "Product";
             return "Unknown Item";
         }
+
 
         private string? GetItemImageUrl(CheckoutSessionItem item)
         {
@@ -463,11 +494,14 @@ namespace EcoFashionBackEnd.Services
             return null;
         }
 
+
         private string? GetProviderAvatarUrl(CheckoutSessionItem item)
         {
             if (item.Supplier != null) return item.Supplier.AvatarUrl;
-            if (item.Designer != null) return item.Designer.AvatarUrl;
+            if (item.Product?.Design?.DesignerProfile != null) return item.Product.Design.DesignerProfile.AvatarUrl;
             return null;
         }
     }
 }
+
+

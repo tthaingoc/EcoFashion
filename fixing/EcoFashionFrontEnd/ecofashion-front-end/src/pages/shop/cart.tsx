@@ -69,9 +69,7 @@ export default function Cart() {
     .filter(Boolean)
     .reduce((sum, i: any) => sum + i.price * i.quantity, 0), [selectedIds, items]);
 
-  const vatRate = 0.05;
-  const vat = Math.round(selectedSubtotal * vatRate);
-  const total = selectedSubtotal + vat;
+  const total = selectedSubtotal;
   
   useEffect(() => {
     Aos.init();
@@ -354,10 +352,6 @@ export default function Cart() {
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
                     <Typography>Phí vận chuyển:</Typography>
                     <Typography sx={{ color: '#16a34a', fontWeight: 'bold' }}>Miễn phí</Typography>
-                  </Box>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                    <Typography>VAT (5%):</Typography>
-                    <Typography sx={{ fontWeight: 'bold' }}>{formatVND(vat)}</Typography>
                   </Box>
                   <Divider sx={{ my: 2 }} />
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>

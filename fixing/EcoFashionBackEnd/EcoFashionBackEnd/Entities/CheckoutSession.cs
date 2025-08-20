@@ -48,16 +48,12 @@ namespace EcoFashionBackEnd.Entities
         // Item reference
         public int? MaterialId { get; set; }
         public int? ProductId { get; set; }
-        public int? DesignId { get; set; }
 
         [ForeignKey("MaterialId")]
         public virtual Material? Material { get; set; }
 
         [ForeignKey("ProductId")]
         public virtual Product? Product { get; set; }
-
-        [ForeignKey("DesignId")]
-        public virtual Design? Design { get; set; }
 
         // Provider info (determined from item)
         public Guid? SupplierId { get; set; }

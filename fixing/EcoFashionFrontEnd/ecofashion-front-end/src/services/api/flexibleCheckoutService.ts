@@ -5,7 +5,6 @@ export interface CheckoutSessionItemDto {
   checkoutSessionId: string;
   materialId?: number;
   productId?: number;
-  designId?: number;
   itemName?: string;
   itemImageUrl?: string;
   type: string;
@@ -57,7 +56,6 @@ export interface CreateCheckoutSessionRequest {
 export interface CheckoutSessionItemRequest {
   materialId?: number;
   productId?: number;
-  designId?: number;
   quantity: number;
   unitPrice?: number;
 }

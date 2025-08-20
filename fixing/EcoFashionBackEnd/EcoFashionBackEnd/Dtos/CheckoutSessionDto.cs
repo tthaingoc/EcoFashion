@@ -24,7 +24,6 @@ namespace EcoFashionBackEnd.Dtos
         // Item info
         public int? MaterialId { get; set; }
         public int? ProductId { get; set; }
-        public int? DesignId { get; set; }
         public string? ItemName { get; set; }
         public string? ItemImageUrl { get; set; }
         public string Type { get; set; } = string.Empty;
@@ -72,7 +71,6 @@ namespace EcoFashionBackEnd.Dtos
     {
         public int? MaterialId { get; set; }
         public int? ProductId { get; set; }
-        public int? DesignId { get; set; }
         public int Quantity { get; set; }
         public decimal? UnitPrice { get; set; } // Optional, will be fetched if not provided
     }
