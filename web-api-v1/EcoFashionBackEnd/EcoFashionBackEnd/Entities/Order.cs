@@ -38,9 +38,8 @@ namespace EcoFashionBackEnd.Entities
         public decimal? CommissionRate { get; set; }
         public decimal? CommissionAmount { get; set; }
         public decimal? NetAmount { get; set; }
-        // Per-seller routing
-        public string? SellerType { get; set; } // "Supplier" or "Designer"
-        public Guid? SellerId { get; set; }
+        // Seller information will be loaded from OrderDetails through Material/Design/Product
+        
         // Expiry to release reserved stock
         public DateTime? ExpiresAt { get; set; }
         public DateTime OrderDate { get; set; }

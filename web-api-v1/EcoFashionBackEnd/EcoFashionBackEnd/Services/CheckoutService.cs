@@ -102,8 +102,7 @@ namespace EcoFashionBackEnd.Services
                     Status = OrderStatus.pending,
                     PaymentStatus = PaymentStatus.Pending,
                     FulfillmentStatus = FulfillmentStatus.None,
-                    SellerType = group.Key.SellerType,
-                    SellerId = group.Key.SellerId,
+
                     ExpiresAt = expiresAt,
                     OrderDate = DateTime.UtcNow,
                     CreateAt = DateTime.UtcNow
@@ -136,8 +135,7 @@ namespace EcoFashionBackEnd.Services
                 response.Orders.Add(new CheckoutOrderDto
                 {
                     OrderId = order.OrderId,
-                    SellerType = order.SellerType ?? string.Empty,
-                    SellerId = order.SellerId,
+
                     Subtotal = order.Subtotal,
                     ShippingFee = order.ShippingFee,
                     Discount = order.Discount,

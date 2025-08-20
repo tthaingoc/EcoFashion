@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EcoFashionBackEnd.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250819151416_v1")]
+    [Migration("20250820061139_v1")]
     partial class v1
     {
         /// <inheritdoc />
@@ -1099,12 +1099,6 @@ namespace EcoFashionBackEnd.Migrations
 
                     b.Property<string>("PaymentStatus")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid?>("SellerId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("SellerType")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ShippingAddress")

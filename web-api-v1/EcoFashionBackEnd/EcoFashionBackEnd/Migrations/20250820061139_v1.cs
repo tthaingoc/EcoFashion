@@ -565,8 +565,6 @@ namespace EcoFashionBackEnd.Migrations
                     CommissionRate = table.Column<decimal>(type: "decimal(5,4)", precision: 5, scale: 4, nullable: true),
                     CommissionAmount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: true),
                     NetAmount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: true),
-                    SellerType = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    SellerId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     ExpiresAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     OrderDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreateAt = table.Column<DateTime>(type: "datetime2", nullable: false)

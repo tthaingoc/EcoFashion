@@ -2,7 +2,7 @@ using EcoFashionBackEnd.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-
+using EcoFashionBackEnd.Entities;
 namespace EcoFashionBackEnd.Controllers
 {
     [ApiController]
@@ -28,7 +28,7 @@ namespace EcoFashionBackEnd.Controllers
                 {
                     await _settlementService.ReleasePayoutsForOrderAsync(orderId.Value);
                     
-                    await _orderService.UpdateFulfillmentStatusAsync(orderId.Value, "Delivered");
+                    await _orderService.UpdateFulfillmentStatusAsync(orderId.Value, FulfillmentStatus.Delivered);
                     
                     return Ok(new { message = "Đã chi trả thành công cho đơn hàng.", orderId = orderId.Value });
                 }
@@ -55,7 +55,7 @@ namespace EcoFashionBackEnd.Controllers
             {
                 await _settlementService.ReleasePayoutsForOrderAsync(orderId);
                 
-                await _orderService.UpdateFulfillmentStatusAsync(orderId, "Delivered");
+                await _orderService.UpdateFulfillmentStatusAsync(orderId, FulfillmentStatus.Delivered);
                 
                 return Ok(new { message = "Demo: Đơn hàng đã hoàn thành và chi trả.", orderId });
             }
