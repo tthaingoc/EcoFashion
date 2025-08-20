@@ -6,6 +6,7 @@ namespace EcoFashionBackEnd.Entities
     [Table("OrderGroups")]
     public class OrderGroup
     {
+        //Khi customer thanh toán lên check-out thì sẽ thông http://localhost:5173/checkout (customer thấy được mua 1 lần thanh toán là bao nhiêu)
         [Key]
         public Guid OrderGroupId { get; set; }
 

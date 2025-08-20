@@ -12,6 +12,7 @@ using EcoFashionBackEnd.Middlewares;
 using EcoFashionBackEnd.Mapper;
 using EcoFashionBackEnd.Helpers.Photos;
 using EcoFashionBackEnd.Data.test;
+using EcoFashionBackEnd.Extensions.NewFolder;
 
 
 namespace EcoFashionBackEnd.Extensions;

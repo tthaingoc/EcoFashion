@@ -129,7 +129,7 @@ public class OrderDetailService
         // Kiểm tra loại đơn hàng hợp lệ: Material hoặc Product
         if (request.Type == OrderDetailType.material && request.MaterialId == null)
             throw new ArgumentException("Chất liệu không được để trống khi loại là 'material'.");
-        if (request.Type == OrderDetailType.product && request.ProductId == null)
+        if (request.Type == OrderDetailType.product && request.DesignId == null)
             throw new ArgumentException("Sản phẩm không được để trống khi loại là 'product'.");
         var orderDetail = _mapper.Map<OrderDetail>(request);
         _dbContext.OrderDetails.Add(orderDetail);

@@ -6,6 +6,8 @@ namespace EcoFashionBackEnd.Entities
     [Table("Orders")]
     public class Order
     {
+        //Khi tách đơn từng người bán (supplier/designer) ở UI Orders thiếu nhóm các order detail lại (theo người bán) ở trang check-out
+        // sau đó mới lưu Order (mixed)
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int OrderId { get; set; }
@@ -65,8 +67,9 @@ namespace EcoFashionBackEnd.Entities
     public enum OrderStatus
     {
         pending,
-        processing,
-        shipped,
+        
+        processing, // Khi người bán thấy đơn nhưng chưa xác nhận (demo : người bán nhấn nút xác nhận đơn hàng -->)
+        shipped, //xác nhận đưa đơn vị vận chuyển
         delivered,
         returned,
     }
@@ -77,12 +80,14 @@ namespace EcoFashionBackEnd.Entities
         Failed,
         Expired
     }
+    
     public enum FulfillmentStatus
     {
+        //
         None,
-        Processing,
-        Shipped,
-        Delivered,// chia tiền admin trả tiền lại người bán 90% 
+        Processing, //khi người bán đã xác nhận đơn (orderstatus = shipped) chuyển qua UI đang vận chuyển sau đó giả lập đơn vị thứ 3
+        Shipping,  // bỏ qua (đang thiếu UI vận chuyển thành thành công) --> đến delivered
+        Delivered,// chia tiền admin trả tiền lại người bán 90%     
         Canceled
     }
 }
