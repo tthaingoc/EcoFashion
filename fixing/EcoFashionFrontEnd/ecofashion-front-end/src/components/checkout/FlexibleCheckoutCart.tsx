@@ -30,6 +30,8 @@ import {
   CheckoutSessionItemDto 
 } from '../../services/api/flexibleCheckoutService';
 import { useWalletBalance } from '../../hooks/useWalletQueries';
+import { useUserAddresses } from '../../hooks/useAddressManagement';
+import AddressSelectorTailwind from './AddressSelectorTailwind';
 import { toast } from 'react-toastify';
 
 interface FlexibleCheckoutCartProps {
@@ -50,8 +52,10 @@ const FlexibleCheckoutCart: React.FC<FlexibleCheckoutCartProps> = ({
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [selectedItems, setSelectedItems] = useState<Set<number>>(new Set());
   const [error, setError] = useState<string | null>(null);
+  const [selectedAddress, setSelectedAddress] = useState<any>(null);
 
   const { data: walletBalance } = useWalletBalance();
+  const { data: addresses = [] } = useUserAddresses();
 
   useEffect(() => {
     if (!checkoutSessionId) {
@@ -62,6 +66,14 @@ const FlexibleCheckoutCart: React.FC<FlexibleCheckoutCartProps> = ({
     }
   }, [checkoutSessionId]);
 
+  useEffect(() => {
+    // Set default address when addresses are loaded
+    if (addresses.length > 0 && !selectedAddress) {
+      const defaultAddr = addresses.find((addr: any) => addr.isDefault);
+      setSelectedAddress(defaultAddr || addresses[0]);
+    }
+  }, [addresses, selectedAddress]);
+
   const createSessionFromCart = async () => {
     try {
       setLoading(true);
@@ -70,16 +82,56 @@ const FlexibleCheckoutCart: React.FC<FlexibleCheckoutCartProps> = ({
       const selectedCartItemIds = sessionStorage.getItem('cartSelectedIds');
       const parsedSelectedIds = selectedCartItemIds ? JSON.parse(selectedCartItemIds) : null;
       
+      // Convert string IDs to numbers for the API
+      const numericSelectedIds = parsedSelectedIds ? parsedSelectedIds.map((id: string) => Number(id)) : null;
+      
       const response = await flexibleCheckoutService.createSessionFromCart(
         undefined, // shippingAddress
         undefined, // addressId  
-        parsedSelectedIds // selectedCartItemIds
+        numericSelectedIds // selectedCartItemIds
       );
       
       if (response.success && response.data) {
-        setSession(response.data);
-        // Select all items by default
-        const allItemIds = response.data.items.map((item: CheckoutSessionItemDto) => item.checkoutSessionItemId);
+        // Fallback: If backend didn't filter items, filter them here
+        let sessionData = response.data;
+        if (numericSelectedIds && numericSelectedIds.length > 0) {
+          // Check if the session has more items than selected (meaning backend didn't filter)
+          const totalSessionItems = response.data.items?.length || 0;
+          const selectedCount = numericSelectedIds.length;
+          
+          if (totalSessionItems > selectedCount) {
+            // Filter items to only include selected ones
+            const filteredItems = response.data.items.filter((item: CheckoutSessionItemDto) => 
+              numericSelectedIds.includes(Number(item.checkoutSessionItemId)) ||
+              numericSelectedIds.includes(Number(item.materialId)) ||
+              numericSelectedIds.includes(Number(item.productId))
+            );
+            
+            // Update session data with filtered items
+            sessionData = {
+              ...response.data,
+              items: filteredItems,
+              totalItems: filteredItems.length
+            };
+            
+            // Also update provider groups
+            const filteredProviderGroups = response.data.providerGroups.map((group: ProviderGroupDto) => ({
+              ...group,
+              items: group.items.filter((item: CheckoutSessionItemDto) => 
+                numericSelectedIds.includes(Number(item.checkoutSessionItemId)) ||
+                numericSelectedIds.includes(Number(item.materialId)) ||
+                numericSelectedIds.includes(Number(item.productId))
+              )
+            })).filter((group: ProviderGroupDto) => group.items.length > 0);
+            
+            sessionData.providerGroups = filteredProviderGroups;
+            sessionData.totalProviders = filteredProviderGroups.length;
+          }
+        }
+        
+        setSession(sessionData);
+        // Select all filtered items by default
+        const allItemIds = sessionData.items.map((item: CheckoutSessionItemDto) => item.checkoutSessionItemId);
         setSelectedItems(new Set(allItemIds));
         
         // Clear selectedIds from sessionStorage after use
@@ -172,11 +224,17 @@ const FlexibleCheckoutCart: React.FC<FlexibleCheckoutCartProps> = ({
       return;
     }
 
+    if (!selectedAddress) {
+      toast.error('Please select a shipping address');
+      return;
+    }
+
     try {
       setPaymentLoading(true);
       const response = await flexibleCheckoutService.payAllSelected(
         session.checkoutSessionId, 
-        Array.from(selectedItems)
+        Array.from(selectedItems),
+        selectedAddress.addressId
       );
       
       if (response.success) {
@@ -199,11 +257,17 @@ const FlexibleCheckoutCart: React.FC<FlexibleCheckoutCartProps> = ({
   const handlePayByProvider = async (providerId: string) => {
     if (!session) return;
 
+    if (!selectedAddress) {
+      toast.error('Please select a shipping address');
+      return;
+    }
+
     try {
       setPaymentLoading(true);
       const response = await flexibleCheckoutService.payByProvider(
         session.checkoutSessionId, 
-        providerId
+        providerId,
+        selectedAddress.addressId
       );
       
       if (response.success) {
@@ -280,12 +344,34 @@ const FlexibleCheckoutCart: React.FC<FlexibleCheckoutCartProps> = ({
         Flexible Checkout
       </Typography>
 
+      {/* Address Selection */}
+      <Card sx={{ mb: 3 }}>
+        <CardContent>
+          <AddressSelectorTailwind
+            selectedAddressId={selectedAddress?.addressId}
+            onAddressSelect={setSelectedAddress}
+            className="mb-4"
+          />
+          {!selectedAddress && (
+            <Alert severity="warning" sx={{ mt: 2 }}>
+              Please select a shipping address to continue with payment
+            </Alert>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Summary and Actions */}
       <Card sx={{ mb: 3 }}>
         <CardContent>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
             <Typography variant="h6">
               {session.totalItems} items from {session.totalProviders} providers
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                {sessionStorage.getItem('cartSelectedIds') ? 
+                  'Items selected from cart' : 
+                  'All cart items'
+                }
+              </Typography>
             </Typography>
             <Box sx={{ display: 'flex', gap: 1 }}>
               <Button 
@@ -363,7 +449,7 @@ const FlexibleCheckoutCart: React.FC<FlexibleCheckoutCartProps> = ({
                   <Button
                     size="small"
                     variant="contained"
-                    disabled={providerSubtotal === 0 || paymentLoading || !walletSufficient}
+                    disabled={providerSubtotal === 0 || paymentLoading || !walletSufficient || !selectedAddress}
                     onClick={() => handlePayByProvider(providerGroup.providerId!)}
                     sx={{ mt: 1 }}
                   >
@@ -442,7 +528,7 @@ const FlexibleCheckoutCart: React.FC<FlexibleCheckoutCartProps> = ({
                 variant="contained"
                 size="large"
                 startIcon={paymentLoading ? <Payment /> : <CheckCircle />}
-                disabled={selectedItems.size === 0 || paymentLoading || !walletSufficient}
+                disabled={selectedItems.size === 0 || paymentLoading || !walletSufficient || !selectedAddress}
                 onClick={handlePaySelected}
                 sx={{ minWidth: 200 }}
               >
