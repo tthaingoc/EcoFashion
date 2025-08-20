@@ -12,7 +12,6 @@ using EcoFashionBackEnd.Middlewares;
 using EcoFashionBackEnd.Mapper;
 using EcoFashionBackEnd.Helpers.Photos;
 using EcoFashionBackEnd.Data.test;
-using EcoFashionBackEnd.Extensions.NewFolder;
 
 
 namespace EcoFashionBackEnd.Extensions;
@@ -117,8 +116,6 @@ public static class ServicesExtensions
         services.AddScoped<ReviewService>();
         services.AddScoped<InventoryTransactionService>();
         services.AddScoped<WalletService>();
-        services.AddScoped<OrderPaymentService>();
-        services.AddScoped<SettlementService>();
 
 
 

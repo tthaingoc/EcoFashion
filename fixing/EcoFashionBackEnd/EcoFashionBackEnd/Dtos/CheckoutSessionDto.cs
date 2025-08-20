@@ -93,4 +93,21 @@ namespace EcoFashionBackEnd.Dtos
         public int? AddressId { get; set; }
         public string? ShippingAddress { get; set; }
     }
+
+    // Controller-specific DTOs
+    public class FlexibleCreateSessionFromCartRequest
+    {
+        public string? ShippingAddress { get; set; }
+        public int? AddressId { get; set; }
+    }
+
+    public class PaySelectedWithWalletRequest
+    {
+        public Guid CheckoutSessionId { get; set; }
+        public List<int> SelectedItemIds { get; set; } = new List<int>();
+        public string CheckoutMode { get; set; } = "Selected"; // "Selected", "ByProvider", "All"
+        public Guid? ProviderIdFilter { get; set; }
+        public int? AddressId { get; set; }
+        public string? ShippingAddress { get; set; }
+    }
 }

@@ -49,7 +49,7 @@ namespace EcoFashionBackEnd.Controllers
         }
 
         [HttpPost("create-session-from-cart")]
-        public async Task<IActionResult> CreateCheckoutSessionFromCart([FromBody] CreateSessionFromCartRequest? request = null)
+        public async Task<IActionResult> CreateCheckoutSessionFromCart([FromBody] FlexibleCreateSessionFromCartRequest? request = null)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
@@ -188,22 +188,5 @@ namespace EcoFashionBackEnd.Controllers
                 return StatusCode(500, new { message = "Payment processing error", error = ex.Message });
             }
         }
-    }
-
-    // Additional request DTOs
-    public class CreateSessionFromCartRequest
-    {
-        public string? ShippingAddress { get; set; }
-        public int? AddressId { get; set; }
-    }
-
-    public class PaySelectedWithWalletRequest
-    {
-        public Guid CheckoutSessionId { get; set; }
-        public List<int> SelectedItemIds { get; set; } = new List<int>();
-        public string CheckoutMode { get; set; } = "Selected"; // "Selected", "ByProvider", "All"
-        public Guid? ProviderIdFilter { get; set; }
-        public int? AddressId { get; set; }
-        public string? ShippingAddress { get; set; }
     }
 }
