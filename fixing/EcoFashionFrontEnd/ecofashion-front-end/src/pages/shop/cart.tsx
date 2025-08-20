@@ -376,7 +376,11 @@ export default function Cart() {
                     fontWeight: 'bold',
                     mb: 2
                   }}
-                  onClick={() => navigate('/checkout')}
+                  onClick={() => {
+                    // Lưu selectedIds vào sessionStorage để FlexibleCheckout sử dụng
+                    sessionStorage.setItem('cartSelectedIds', JSON.stringify(selectedIds));
+                    navigate('/checkout');
+                  }}
                   endIcon={<ArrowForward />}
                 >
                   Thanh toán

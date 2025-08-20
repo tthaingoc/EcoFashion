@@ -62,7 +62,8 @@ namespace EcoFashionBackEnd.Controllers
                 var session = await _flexibleCheckoutService.CreateCheckoutSessionFromCartAsync(
                     userId, 
                     request?.ShippingAddress, 
-                    request?.AddressId
+                    request?.AddressId,
+                    request?.SelectedCartItemIds
                 );
                 return Ok(new { success = true, data = session });
             }

@@ -72,7 +72,7 @@ namespace EcoFashionBackEnd.Services
         }
 
 
-        public async Task<CheckoutSessionDto> CreateCheckoutSessionFromCartAsync(int userId, string? shippingAddress = null, int? addressId = null)
+        public async Task<CheckoutSessionDto> CreateCheckoutSessionFromCartAsync(int userId, string? shippingAddress = null, int? addressId = null, List<int>? selectedCartItemIds = null)
         {
             var activeCart = await _dbContext.Carts
                 .Include(c => c.Items)
@@ -82,12 +82,20 @@ namespace EcoFashionBackEnd.Services
             if (activeCart == null || !activeCart.Items.Any())
                 throw new ArgumentException("Cart is empty or not found");
 
+            // Filter items if selectedCartItemIds is provided
+            var cartItems = activeCart.Items;
+            if (selectedCartItemIds?.Any() == true)
+            {
+                cartItems = activeCart.Items.Where(item => selectedCartItemIds.Contains(item.CartItemId)).ToList();
+                if (!cartItems.Any())
+                    throw new ArgumentException("No selected items found in cart");
+            }
 
             var request = new CreateCheckoutSessionRequest
             {
                 ShippingAddress = shippingAddress,
                 AddressId = addressId,
-                Items = activeCart.Items.Select(item => new CheckoutSessionItemRequest
+                Items = cartItems.Select(item => new CheckoutSessionItemRequest
                 {
                     MaterialId = item.MaterialId,
                     ProductId = item.ProductId,

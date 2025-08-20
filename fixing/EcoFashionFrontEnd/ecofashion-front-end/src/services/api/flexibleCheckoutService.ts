@@ -96,8 +96,8 @@ export const flexibleCheckoutService = {
     return data;
   },
 
-  createSessionFromCart: async (shippingAddress?: string, addressId?: number): Promise<FlexibleCheckoutResponse> => {
-    const payload = { shippingAddress, addressId };
+  createSessionFromCart: async (shippingAddress?: string, addressId?: number, selectedCartItemIds?: number[]): Promise<FlexibleCheckoutResponse> => {
+    const payload = { shippingAddress, addressId, selectedCartItemIds };
     const { data } = await apiClient.post('/flexiblecheckout/create-session-from-cart', payload);
     return data;
   },

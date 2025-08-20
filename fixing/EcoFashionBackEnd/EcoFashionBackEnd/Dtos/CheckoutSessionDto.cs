@@ -97,6 +97,7 @@ namespace EcoFashionBackEnd.Dtos
     {
         public string? ShippingAddress { get; set; }
         public int? AddressId { get; set; }
+        public List<int>? SelectedCartItemIds { get; set; } // New: filter to specific cart items
     }
 
     public class PaySelectedWithWalletRequest

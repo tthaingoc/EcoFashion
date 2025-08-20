@@ -12,6 +12,8 @@
     using System.Threading.Tasks;
     using System.Transactions;
     using System.Linq;
+    using System;
+    using System.Collections.Generic;
 
     [ApiController]
     [Route("api/[controller]")]
@@ -122,14 +124,29 @@
             if (result == null)
             {
                 // Redirect to error page if processing failed
-                var errorUrl = _config["Frontend:BaseUrl"] + "/payment/vnpay-success?error=processing_failed";
+                var frontendUrl = _config["Frontend:BaseUrl"] ?? "http://localhost:5173";
+                var errorUrl = $"{frontendUrl}/payment/vnpay-success?error=processing_failed";
                 return Redirect(errorUrl);
             }
 
-            // Build redirect URL with all VNPay parameters for the success page
-            var frontendUrl = _config["Frontend:BaseUrl"] + "/payment/vnpay-success";
-            var queryString = string.Join("&", query.Select(q => $"{q.Key}={q.Value}"));
-            var redirectUrl = $"{frontendUrl}?{queryString}";
+            // Build redirect URL with only essential VNPay parameters (avoid problematic Unicode chars)
+            var frontendUrl2 = _config["Frontend:BaseUrl"] ?? "http://localhost:5173";
+            var essentialParams = new Dictionary<string, string>
+            {
+                ["vnp_Amount"] = query["vnp_Amount"].ToString(),
+                ["vnp_BankCode"] = query["vnp_BankCode"].ToString(),
+                ["vnp_BankTranNo"] = query["vnp_BankTranNo"].ToString(),
+                ["vnp_CardType"] = query["vnp_CardType"].ToString(),
+                ["vnp_PayDate"] = query["vnp_PayDate"].ToString(),
+                ["vnp_ResponseCode"] = query["vnp_ResponseCode"].ToString(),
+                ["vnp_TransactionNo"] = query["vnp_TransactionNo"].ToString(),
+                ["vnp_TransactionStatus"] = query["vnp_TransactionStatus"].ToString(),
+                ["vnp_TxnRef"] = query["vnp_TxnRef"].ToString()
+            }.Where(kv => !string.IsNullOrEmpty(kv.Value))
+             .Select(kv => $"{kv.Key}={Uri.EscapeDataString(kv.Value)}");
+
+            var queryString = string.Join("&", essentialParams);
+            var redirectUrl = $"{frontendUrl2}/payment/vnpay-success?{queryString}";
             
             return Redirect(redirectUrl);
         }

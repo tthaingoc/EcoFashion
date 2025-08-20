@@ -65,12 +65,25 @@ const FlexibleCheckoutCart: React.FC<FlexibleCheckoutCartProps> = ({
   const createSessionFromCart = async () => {
     try {
       setLoading(true);
-      const response = await flexibleCheckoutService.createSessionFromCart();
+      
+      // Đọc selectedIds từ sessionStorage
+      const selectedCartItemIds = sessionStorage.getItem('cartSelectedIds');
+      const parsedSelectedIds = selectedCartItemIds ? JSON.parse(selectedCartItemIds) : null;
+      
+      const response = await flexibleCheckoutService.createSessionFromCart(
+        undefined, // shippingAddress
+        undefined, // addressId  
+        parsedSelectedIds // selectedCartItemIds
+      );
+      
       if (response.success && response.data) {
         setSession(response.data);
         // Select all items by default
         const allItemIds = response.data.items.map((item: CheckoutSessionItemDto) => item.checkoutSessionItemId);
         setSelectedItems(new Set(allItemIds));
+        
+        // Clear selectedIds from sessionStorage after use
+        sessionStorage.removeItem('cartSelectedIds');
       } else {
         setError(response.message || 'Failed to create checkout session');
       }
