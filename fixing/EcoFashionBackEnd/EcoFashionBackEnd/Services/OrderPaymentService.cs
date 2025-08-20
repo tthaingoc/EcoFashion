@@ -45,6 +45,7 @@ namespace EcoFashionBackEnd.Services
                     TransactionType.Deposit, (double)order.TotalPrice, orderId: orderId);
 
                 order.PaymentStatus = PaymentStatus.Paid;
+                order.Status = OrderStatus.processing;
 
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
@@ -91,6 +92,7 @@ namespace EcoFashionBackEnd.Services
                 foreach (var order in orders)
                 {
                     order.PaymentStatus = PaymentStatus.Paid;
+                    order.Status = OrderStatus.processing;
                 }
 
                 await _context.SaveChangesAsync();

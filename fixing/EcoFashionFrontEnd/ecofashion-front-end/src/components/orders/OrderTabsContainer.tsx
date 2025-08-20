@@ -35,6 +35,21 @@ const getStatusBadge = (status: string, variant: 'payment' | 'fulfillment' = 'fu
   }
 };
 
+const getPaymentStatusText = (paymentStatus?: string) => {
+  switch (paymentStatus?.toLowerCase()) {
+    case 'paid':
+      return '✅ Đã thanh toán';
+    case 'pending':
+      return '⏳ Chờ thanh toán';
+    case 'failed':
+      return '❌ Thanh toán thất bại';
+    case 'expired':
+      return '⏰ Hết hạn thanh toán';
+    default:
+      return '⏳ Chờ thanh toán';
+  }
+};
+
 const getStatusLabel = (paymentStatus?: string, fulfillmentStatus?: string, orderStatus?: string) => {
   // Priority logic based on the implementation guide
   if (paymentStatus?.toLowerCase() === 'pending') {
@@ -277,7 +292,7 @@ export default function OrderTabsContainer() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <span className={getStatusBadge(order.paymentStatus || 'pending', 'payment')}>
-                      {order.paymentStatus === 'paid' ? '✅ Đã thanh toán' : '⏳ Chờ thanh toán'}
+                      {getPaymentStatusText(order.paymentStatus)}
                     </span>
                     <span className={getStatusBadge(order.fulfillmentStatus || 'none')}>
                       {statusInfo.main}

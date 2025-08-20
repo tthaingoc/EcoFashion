@@ -99,6 +99,7 @@ public static class ServicesExtensions
         services.AddScoped<BlogService>();
         services.AddScoped<OrderService>();
         services.AddScoped<CheckoutService>();
+        services.AddScoped<FlexibleCheckoutService>();
         services.AddScoped<OrderDetailService>();
         services.AddScoped<CartService>();
         services.AddScoped<NotificationService>();

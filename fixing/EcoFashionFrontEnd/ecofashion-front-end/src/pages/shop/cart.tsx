@@ -380,11 +380,36 @@ export default function Cart() {
                     borderRadius: 2,
                     fontSize: '1.1rem',
                     fontWeight: 'bold',
+                    mb: 2
+                  }}
+                  onClick={() => navigate('/flexible-checkout')}
+                  endIcon={<ArrowForward />}
+                >
+                  Flexible Checkout
+                </Button>
+                
+                <Button
+                  variant="outlined"
+                  fullWidth
+                  size="large"
+                  disabled={selectedIds.length === 0}
+                  sx={{
+                    borderColor: '#16a34a',
+                    color: '#16a34a',
+                    '&:hover': { 
+                      borderColor: '#15803d',
+                      color: '#15803d',
+                      bgcolor: 'rgba(22, 163, 74, 0.04)'
+                    },
+                    py: 1.5,
+                    borderRadius: 2,
+                    fontSize: '1rem',
+                    fontWeight: 'medium',
                   }}
                   onClick={() => navigate('/checkout')}
                   endIcon={<ArrowForward />}
                 >
-                  Tiến hành thanh toán
+                  Standard Checkout
                 </Button>
 
                 {/* Security Notice */}

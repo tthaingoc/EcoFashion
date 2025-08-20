@@ -51,7 +51,7 @@ namespace EcoFashionBackEnd.Services
                 UserId = userId,
                 Amount = (long)model.Amount,
                 Status = "Pending",
-                OrderType = order.SellerType,
+                OrderType = "EcoFashion",
                 PaymentType = "VNPay",
                 Provider = "VNPAY",
                 CreatedAt = DateTime.UtcNow

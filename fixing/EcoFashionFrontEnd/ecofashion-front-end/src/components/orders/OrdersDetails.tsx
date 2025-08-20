@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ordersService } from '../../services/api/ordersService';
 import { formatViDateTime } from '../../utils/date';
 import { paymentsService } from '../../services/api/paymentsService';
@@ -7,29 +7,24 @@ import { Button, Box, Chip } from '@mui/material';
 import { LocalShipping, Visibility } from '@mui/icons-material';
 
 export default function OrdersDetails() {
+  const navigate = useNavigate();
   const [payLoading, setPayLoading] = useState(false);
   const [payError, setPayError] = useState<string | null>(null);
-  const handlePayAgain = async () => {
+  
+  const handlePayWithWallet = async () => {
     setPayLoading(true);
     setPayError(null);
     try {
-      // No more x1000 multiplier since backend has correct VND prices
-      const amount = total;
-      const { redirectUrl } = await paymentsService.createVnpay({
-        orderId: data.orderId,
-        amount,
-        createdDate: new Date().toISOString(),
-        fullName: data.customerName || 'Khach hang',
-        description: `Thanh toan lai don hang: ${data.orderId}`,
-      });
-      if (redirectUrl) window.location.href = redirectUrl;
-      else throw new Error('Không tạo được link thanh toán');
+      // For existing orders, navigate to checkout page
+      // The checkout wizard will handle creating new session from existing order data
+      navigate(`/checkout?orderId=${data.orderId}`);
     } catch (e: any) {
-      setPayError(e?.message || 'Không tạo được link thanh toán');
+      setPayError(e?.message || 'Không thể chuyển đến trang thanh toán');
     } finally {
       setPayLoading(false);
     }
   };
+  
   const { orderId } = useParams();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -145,10 +140,10 @@ export default function OrdersDetails() {
           {(String(data.paymentStatus).toLowerCase() !== 'paid' && String(data.paymentStatus).toLowerCase() !== 'success') && (
             <button
               className="mt-4 px-4 py-2 bg-green-600 text-white rounded font-semibold hover:bg-green-700 disabled:opacity-60"
-              onClick={handlePayAgain}
+              onClick={handlePayWithWallet}
               disabled={payLoading}
             >
-              {payLoading ? 'Đang xử lý...' : 'Thanh toán tiếp'}
+              {payLoading ? 'Đang chuyển...' : 'Thanh toán bằng ví'}
             </button>
           )}
           {payError && <div className="text-red-600 mt-2">{payError}</div>}

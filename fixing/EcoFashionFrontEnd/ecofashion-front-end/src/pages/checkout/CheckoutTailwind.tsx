@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
  CreditCardIcon,
@@ -12,6 +12,7 @@ import { useCheckoutWizard } from '../../store/checkoutWizardStore';
 import { useWalletBalance } from '../../hooks/useWalletQueries';
 import { usePayOrderWithWallet, usePayGroupWithWallet, useCheckWalletBalance } from '../../hooks/useWalletCheckout';
 import { checkoutService } from '../../services/api/checkoutService';
+import { ordersService } from '../../services/api/ordersService';
 import AddressSelectorTailwind from '../../components/checkout/AddressSelectorTailwind';
 import { toast } from 'react-toastify';
 
@@ -35,6 +36,7 @@ const CheckoutTailwind: React.FC = () => {
  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'wallet'>('wallet');
  const [selectedAddress, setSelectedAddress] = useState<any>(null);
  const [isProcessing, setIsProcessing] = useState(false);
+ const bootstrapExecuted = useRef(false);
  const [walletBalanceCheck, setWalletBalanceCheck] = useState<{
    sufficient: boolean;
    shortfall: number;
@@ -84,11 +86,38 @@ const CheckoutTailwind: React.FC = () => {
  // Bootstrap: create checkout session from cart using default address on backend
  useEffect(() => {
    const bootstrap = async () => {
+     if (bootstrapExecuted.current) return;
+     bootstrapExecuted.current = true;
+     
      try {
        setIsProcessing(true);
-       // Let backend use default UserAddress if available
-       const resp = await checkoutService.createSessionFromCart();
-       wizard.start(resp);
+       
+       // Check if we have an existing orderId to pay for
+       const existingOrderId = searchParams.get('orderId');
+       if (existingOrderId) {
+         // For existing orders, load the actual order data
+         const orderData = await ordersService.getById(parseInt(existingOrderId));
+         const order = (orderData as any)?.result || orderData;
+         
+         const resp = {
+           orderGroupId: `existing-${existingOrderId}`,
+           orders: [{
+             orderId: order.orderId,
+             subtotal: order.subtotal || 0,
+             shippingFee: order.shippingFee || 0,
+             discount: order.discount || 0,
+             totalAmount: order.totalPrice || 0,
+             paymentStatus: order.paymentStatus || 'Pending'
+           }],
+           expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString() // 30 min from now
+         };
+         wizard.start(resp);
+       } else {
+         // Normal flow: create session from cart
+         // Let backend use default UserAddress if available
+         const resp = await checkoutService.createSessionFromCart();
+         wizard.start(resp);
+       }
 
 
 

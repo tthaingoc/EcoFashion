@@ -49,6 +49,7 @@ import BusinessInfor from "./pages/BusinessInfor";
 import Cart from "./pages/shop/cart";
 import CheckoutTailwind from "./pages/checkout/CheckoutTailwind";
 import CheckoutResultPageTailwind from "./pages/checkout/CheckoutResultTailwind";
+import FlexibleCheckoutPage from "./pages/checkout/FlexibleCheckoutPage";
 import OrdersPage from "./pages/shop/OrdersPage";
 import OrdersDetails from "./components/orders/OrdersDetails";
 import OrdersList from "./components/orders/OrdersList";
@@ -107,6 +108,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={["customer", "supplier", "designer"]}>
               <CheckoutTailwind />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/flexible-checkout"
+          element={
+            <ProtectedRoute allowedRoles={["customer", "supplier", "designer"]}>
+              <FlexibleCheckoutPage />
             </ProtectedRoute>
           }
         />

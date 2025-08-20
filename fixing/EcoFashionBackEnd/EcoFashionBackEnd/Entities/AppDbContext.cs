@@ -43,6 +43,8 @@ namespace EcoFashionBackEnd.Entities
         public DbSet<OrderDetail> OrderDetails { get; set; }
         public DbSet<OrderGroup> OrderGroups { get; set; }
         public DbSet<OrderSellerSettlement> OrderSellerSettlements { get; set; }
+        public DbSet<CheckoutSession> CheckoutSessions { get; set; }
+        public DbSet<CheckoutSessionItem> CheckoutSessionItems { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<PaymentTransaction> PaymentTransactions { get; set; }
         public DbSet<Cart> Carts { get; set; }

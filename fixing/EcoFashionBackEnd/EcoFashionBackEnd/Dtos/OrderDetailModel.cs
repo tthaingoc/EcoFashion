@@ -18,5 +18,7 @@
         // From Material (when Type == material)
         public int? MaterialId { get; set; }
         public Guid? SupplierId { get; set; }
+        // From Product (when Type == product)
+        public int? ProductId { get; set; }
     }
 }
