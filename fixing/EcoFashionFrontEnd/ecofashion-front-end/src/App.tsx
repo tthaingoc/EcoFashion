@@ -47,7 +47,6 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import { ToastContainer } from "react-toastify";
 import BusinessInfor from "./pages/BusinessInfor";
 import Cart from "./pages/shop/cart";
-import CheckoutTailwind from "./pages/checkout/CheckoutTailwind";
 import CheckoutResultPageTailwind from "./pages/checkout/CheckoutResultTailwind";
 import FlexibleCheckoutPage from "./pages/checkout/FlexibleCheckoutPage";
 import OrdersPage from "./pages/shop/OrdersPage";
@@ -106,14 +105,6 @@ function App() {
         {/* ===== CHECKOUT and ORDERS ROUTES ===== */}
         <Route
           path="/checkout"
-          element={
-            <ProtectedRoute allowedRoles={["customer", "supplier", "designer"]}>
-              <CheckoutTailwind />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/flexible-checkout"
           element={
             <ProtectedRoute allowedRoles={["customer", "supplier", "designer"]}>
               <FlexibleCheckoutPage />

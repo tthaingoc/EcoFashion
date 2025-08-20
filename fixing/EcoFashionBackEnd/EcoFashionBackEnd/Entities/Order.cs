@@ -86,7 +86,7 @@ namespace EcoFashionBackEnd.Entities
         //
         None,
         Processing, //khi người bán đã xác nhận đơn (orderstatus = shipped) chuyển qua UI đang vận chuyển sau đó giả lập đơn vị thứ 3
-        Shipping,  // bỏ qua (đang thiếu UI vận chuyển thành thành công) --> đến delivered
+        Shipped,  // bỏ qua (đang thiếu UI vận chuyển thành thành công) --> đến delivered
         Delivered,// chia tiền admin trả tiền lại người bán 90%     
         Canceled
     }

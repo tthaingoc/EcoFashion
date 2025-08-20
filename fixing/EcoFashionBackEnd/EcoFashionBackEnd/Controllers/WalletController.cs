@@ -11,16 +11,19 @@
     using System.Security.Claims;
     using System.Threading.Tasks;
     using System.Transactions;
+    using System.Linq;
 
     [ApiController]
     [Route("api/[controller]")]
     public class WalletController : ControllerBase
     {
         private readonly WalletService _walletService;
+        private readonly IConfiguration _config;
 
-        public WalletController(WalletService walletService)
+        public WalletController(WalletService walletService, IConfiguration config)
         {
             _walletService = walletService;
+            _config = config;
         }
 
         // Get user's wallet information
@@ -117,14 +120,18 @@
             var result = await _walletService.HandleVNPayDepositReturnAsync(query);
 
             if (result == null)
-                return BadRequest("Xử lý nạp tiền thất bại.");
-
-            return Ok(new
             {
-                Status = result.VnPayResponseCode == "00" ? "Success" : "Fail",
-                TransactionId = result.TransactionId,
-                WalletTransaction = result.OrderId
-            });
+                // Redirect to error page if processing failed
+                var errorUrl = _config["Frontend:BaseUrl"] + "/payment/vnpay-success?error=processing_failed";
+                return Redirect(errorUrl);
+            }
+
+            // Build redirect URL with all VNPay parameters for the success page
+            var frontendUrl = _config["Frontend:BaseUrl"] + "/payment/vnpay-success";
+            var queryString = string.Join("&", query.Select(q => $"{q.Key}={q.Value}"));
+            var redirectUrl = $"{frontendUrl}?{queryString}";
+            
+            return Redirect(redirectUrl);
         }
         // taọ RequestWithdrawal
         [HttpPost("withdrawal/request")]
