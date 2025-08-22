@@ -315,21 +315,6 @@ export default function Cart() {
                         </Box>
                       ))}
 
-                      {/* Seller Actions */}
-                      <Box sx={{ p: 3, bgcolor: '#f9fafb', display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-                        <Button variant="outlined" size="small">
-                          Lưu nhóm
-                        </Button>
-                        {/* Button thanh toán theo nhóm nhà cung cấp - Standard checkout */}
-                        <Button
-                          variant="contained"
-                          size="small"
-                          sx={{ bgcolor: '#16a34a', '&:hover': { bgcolor: '#15803d' } }}
-                          onClick={() => navigate(`/checkout?groupSellerId=${sellerId}`)} // Thanh toán chuẩn cho từng nhà cung cấp
-                        >
-                          Thanh toán nhóm này
-                        </Button>
-                      </Box>
                     </Box>
                   );
                 })}
@@ -382,7 +367,12 @@ export default function Cart() {
                     fontSize: '1rem',
                     fontWeight: 'medium',
                   }}
-                  onClick={() => navigate('/checkout/confirm')} // Điều hướng đến trang xác nhận trước khi thanh toán
+                  onClick={() => {
+                    // Lưu danh sách sản phẩm đã chọn vào localStorage
+                    localStorage.setItem('selectedItemsForCheckout', JSON.stringify(selectedIds));
+                    // Điều hướng đến trang xác nhận
+                    navigate('/checkout/confirm');
+                  }}
                   endIcon={<ArrowForward />}
                 >
                   Standard Checkout

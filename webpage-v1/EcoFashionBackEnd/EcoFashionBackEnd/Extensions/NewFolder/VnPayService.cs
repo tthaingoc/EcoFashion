@@ -137,6 +137,15 @@ namespace EcoFashionBackEnd.Extensions.NewFolder
             var vnp_BankCode = vnpay.GetResponseData("vnp_BankCode");
             var vnp_SecureHash = collections.FirstOrDefault(p => p.Key == "vnp_SecureHash").Value;
             var vnp_TransactionId = Convert.ToInt64(vnpay.GetResponseData("vnp_TransactionNo"));
+            
+            // Lấy số tiền từ VNPay response (vnp_Amount được gửi với đơn vị là VNĐ x 100)
+            var vnp_Amount = vnpay.GetResponseData("vnp_Amount");
+            double amount = 0;
+            if (!string.IsNullOrEmpty(vnp_Amount) && double.TryParse(vnp_Amount, out double parsedAmount))
+            {
+                // VNPay trả về amount đã nhân 100, cần chia lại để có giá trị thực
+                amount = parsedAmount / 100;
+            }
 
             // Try parse OrderId from TxnRef formats: ORD-{orderId}-... or {orderId}_timestamp
             int vnp_orderId = 0;
@@ -176,7 +185,9 @@ namespace EcoFashionBackEnd.Extensions.NewFolder
                 TransactionId = vnp_TransactionId.ToString(),
                 Token = vnp_SecureHash,
                 BankCode = vnp_BankCode,
-                VnPayResponseCode = vnp_ResponseCode
+                VnPayResponseCode = vnp_ResponseCode,
+                // Gán số tiền thực tế đã chia 100 từ VNPay response
+                Amount = amount
             };
         }
     }

@@ -14,6 +14,9 @@
         public string BankCode  { get; set; }
 
         public string VnPayResponseCode { get; set; }
+        
+        // Số tiền giao dịch từ VNPay (vnp_Amount)
+        public double Amount { get; set; }
     }
 
     public class VnPaymentRequestModel

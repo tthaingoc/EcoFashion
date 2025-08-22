@@ -128,12 +128,9 @@
             }
             else if (result.VnPayResponseCode == "00")
             {
-                // Lấy thông tin amount từ database vì VnPaymentResponseModel không có Amount field
+                // Lấy orderId để xác định giao dịch, nhưng sử dụng amount từ VNPay response
                 var orderId = int.Parse(result.OrderId);
-                
-                // Change the second argument from null to 0 (or a valid int value if needed)
-                var walletTransaction = await _walletService.GetTransactionByIdAsync(orderId, 0);
-                var amount = walletTransaction?.Amount ?? 0;
+                var amount = result.Amount;
                 
                 // Nạp tiền thành công - redirect về success page với thông tin
                 redirectUrl = $"{frontendUrl}/wallet?success=deposit&transactionId={result.TransactionId}&amount={amount}";
@@ -211,10 +208,9 @@
             }
             else if (result.VnPayResponseCode == "00")
             {
-                // Lấy thông tin amount từ database vì VnPaymentResponseModel không có Amount field
+                // Lấy orderId để xác định giao dịch, nhưng sử dụng amount từ VNPay response
                 var orderId = int.Parse(result.OrderId);
-                var walletTransaction = await _walletService.GetTransactionByIdAsync(orderId, 0);
-                var amount = walletTransaction?.Amount ?? 0;
+                var amount = result.Amount;
                 
                 // Rút tiền thành công - redirect về success page với thông tin
                 redirectUrl = $"{frontendUrl}/wallet?success=withdrawal&transactionId={result.TransactionId}&amount={amount}";

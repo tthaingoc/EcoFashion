@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   ShoppingCartIcon, 
@@ -20,9 +20,29 @@ const CheckoutConfirmTailwind: React.FC = () => {
   const decreaseQuantity = useCartStore((s) => s.decreaseQuantity);
   
   // State quản lý các sản phẩm được chọn để checkout
-  const [selectedItems, setSelectedItems] = useState<string[]>(
-    items.map(item => item.id) // Mặc định chọn tất cả
-  );
+  const [selectedItems, setSelectedItems] = useState<string[]>(() => {
+    // Lấy danh sách sản phẩm đã chọn từ localStorage
+    const savedSelection = localStorage.getItem('selectedItemsForCheckout');
+    if (savedSelection) {
+      try {
+        const parsed = JSON.parse(savedSelection);
+        // Chỉ giữ lại những item có trong cart hiện tại
+        return Array.isArray(parsed) ? parsed.filter(id => items.some(item => item.id === id)) : items.map(item => item.id);
+      } catch {
+        return items.map(item => item.id); // Fallback nếu parse lỗi
+      }
+    }
+    return items.map(item => item.id); // Mặc định chọn tất cả nếu không có dữ liệu
+  });
+
+  // Xóa dữ liệu localStorage cũ chỉ khi component mount (không phải unmount)
+  useEffect(() => {
+    // Chỉ xóa nếu đây là lần load mới mà không có dữ liệu từ cart
+    const savedSelection = localStorage.getItem('selectedItemsForCheckout');
+    if (!savedSelection) {
+      // Nếu không có dữ liệu từ cart thì có thể là load trực tiếp, không làm gì
+    }
+  }, []);
 
   // Nhóm sản phẩm theo seller/provider
   const groupedItems = useMemo(() => {
@@ -81,8 +101,14 @@ const CheckoutConfirmTailwind: React.FC = () => {
       return;
     }
     
+    console.log('Saving selectedItems to localStorage:', selectedItems);
+    
     // Lưu danh sách sản phẩm được chọn vào localStorage hoặc store
     localStorage.setItem('selectedItemsForCheckout', JSON.stringify(selectedItems));
+    
+    // Verify the save
+    const saved = localStorage.getItem('selectedItemsForCheckout');
+    console.log('Verified localStorage save:', saved);
     
     // Chuyển đến trang checkout thực tế
     navigate('/checkout');

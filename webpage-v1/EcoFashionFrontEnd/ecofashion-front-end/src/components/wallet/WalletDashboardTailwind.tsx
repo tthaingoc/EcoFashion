@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   CreditCardIcon, 
   BanknotesIcon, 
@@ -127,7 +128,37 @@ const DepositModal: React.FC<{
   );
 };
 
+// Helper function để extract orderId từ description
+const extractOrderIdFromDescription = (description: string): string | null => {
+  if (!description) return null;
+  
+  console.log('Trying to extract from description:', description);
+  
+  // Pattern đặc biệt cho format DH + số
+  // "Thanh toán đơn hàng #DH16" hoặc "Nhận thanh toán từ đơn hàng #DH16"
+  const dhPattern = /#?DH(\d+)/i;
+  const dhMatch = description.match(dhPattern);
+  
+  if (dhMatch) {
+    console.log('DH pattern matched, orderId:', dhMatch[1]);
+    return dhMatch[1]; // Trả về "16" từ "DH16"
+  }
+  
+  // Fallback: tìm số cuối cùng trong chuỗi
+  const numberPattern = /(\d+)(?!.*\d)/;
+  const numberMatch = description.match(numberPattern);
+  
+  if (numberMatch) {
+    console.log('Number pattern matched, orderId:', numberMatch[1]);
+    return numberMatch[1];
+  }
+  
+  console.log('No pattern matched');
+  return null;
+};
+
 const WalletDashboardTailwind: React.FC = () => {
+  const navigate = useNavigate();
   const [showBalance, setShowBalance] = useState(true);
   const [showDepositModal, setShowDepositModal] = useState(false);
   
@@ -148,6 +179,18 @@ const WalletDashboardTailwind: React.FC = () => {
       console.error('Deposit error:', error);
     } finally {
       setShowDepositModal(false);
+    }
+  };
+
+  const handleTransactionClick = (orderId: string) => {
+    try {
+      console.log('Navigating to order ID:', orderId);
+      
+      // orderId đã là số thuần từ extractOrderIdFromDescription
+      navigate(`/orders/${orderId}`);
+    } catch (error) {
+      console.error('Navigation error:', error);
+      toast.error('Không thể xem chi tiết đơn hàng');
     }
   };
 
@@ -187,6 +230,7 @@ const WalletDashboardTailwind: React.FC = () => {
   const income = (monthlyRaw as any)?.totalIncome ?? (monthlyRaw as any)?.deposited ?? 0;
   const expense = (monthlyRaw as any)?.totalExpense ?? (monthlyRaw as any)?.spent ?? 0;
   const recentTransactions = (walletData as any)?.recentTransactions ?? [];
+
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
@@ -247,7 +291,7 @@ const WalletDashboardTailwind: React.FC = () => {
             <div>
               <p className="text-sm text-red-600 font-medium">Chi tiêu tháng này</p>
               <p className="text-xl font-bold text-red-700">
-                -{(expense as number).toLocaleString('vi-VN')} VND
+                {(expense as number).toLocaleString('vi-VN')} VND
               </p>
             </div>
           </div>
@@ -259,7 +303,7 @@ const WalletDashboardTailwind: React.FC = () => {
             <div>
               <p className="text-sm text-blue-600 font-medium">Chênh lệch</p>
               <p className="text-xl font-bold text-blue-700">
-                {((income as number) - (expense as number)).toLocaleString('vi-VN')} VND
+                {((income as number) + (expense as number)).toLocaleString('vi-VN')} VND
               </p>
             </div>
           </div>
@@ -282,31 +326,63 @@ const WalletDashboardTailwind: React.FC = () => {
           </div>
         ) : (
           <div className="space-y-3">
-            {recentTransactions.map((transaction: any, index: number) => (
-              <div key={index} className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors">
-                <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                    transaction.type === 'Deposit' ? 'bg-green-100' : 'bg-red-100'
-                  }`}>
-                    {transaction.type === 'Deposit' ? 
-                      <ArrowUpIcon className="w-5 h-5 text-green-600" /> : 
-                      <ArrowDownIcon className="w-5 h-5 text-red-600" />
+            {recentTransactions.map((transaction: any, index: number) => {
+              // Extract orderId từ description hoặc trực tiếp từ transaction
+              const orderId = transaction.orderId || transaction.orderNumber || extractOrderIdFromDescription(transaction.description);
+              const isOrderTransaction = !!orderId;
+              
+              // Debug: Log toàn bộ transaction để xem cấu trúc
+              if (transaction.description?.includes('đơn hàng') || transaction.description?.includes('order') || transaction.description?.includes('Thanh toán') || transaction.description?.includes('Nhận thanh toán')) {
+                console.log('Full transaction object:', transaction);
+                console.log('Available keys:', Object.keys(transaction));
+                console.log('Transaction description:', transaction.description);
+                console.log('Transaction orderId field:', transaction.orderId);
+                console.log('Transaction orderNumber field:', transaction.orderNumber);
+                console.log('Extracted orderId:', orderId);
+                console.log('Is order transaction:', isOrderTransaction);
+              }
+              
+              return (
+                <div 
+                  key={index} 
+                  className={`flex items-center justify-between p-3 rounded-lg transition-colors ${
+                    isOrderTransaction 
+                      ? 'hover:bg-blue-50 cursor-pointer border border-transparent hover:border-blue-200' 
+                      : 'hover:bg-gray-50'
+                  }`}
+                  style={isOrderTransaction ? { cursor: 'pointer' } : {}}
+                  onClick={() => {
+                    console.log('Clicked transaction, orderId:', orderId, 'isOrderTransaction:', isOrderTransaction);
+                    if (isOrderTransaction) {
+                      handleTransactionClick(orderId);
                     }
+                  }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                      transaction.amount >= 0 ? 'bg-green-100' : 'bg-red-100'
+                    }`}>
+                      {transaction.amount >= 0 ? 
+                        <ArrowUpIcon className="w-5 h-5 text-green-600" /> : 
+                        <ArrowDownIcon className="w-5 h-5 text-red-600" />
+                      }
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">{transaction.description}</p>
+                      <p className="text-sm text-gray-500">
+                        {new Date(transaction.createdAt).toLocaleDateString('vi-VN')}
+                        {isOrderTransaction && <span className="ml-2 text-blue-600">• Click để xem chi tiết</span>}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium text-gray-900">{transaction.description}</p>
-                    <p className="text-sm text-gray-500">
-                      {new Date(transaction.createdAt).toLocaleDateString('vi-VN')}
-                    </p>
-                  </div>
+                  <p className={`font-semibold ${
+                    transaction.amount >= 0 ? 'text-green-600' : 'text-red-600'
+                  }`}>
+                    {transaction.amount >= 0 ? '+' : ''}{transaction.amount.toLocaleString('vi-VN')} VND
+                  </p>
                 </div>
-                <p className={`font-semibold ${
-                  transaction.type === 'Deposit' ? 'text-green-600' : 'text-red-600'
-                }`}>
-                  {transaction.type === 'Deposit' ? '+' : '-'}{Math.abs(transaction.amount).toLocaleString('vi-VN')} VND
-                </p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

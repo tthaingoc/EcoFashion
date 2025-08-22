@@ -140,7 +140,7 @@ function App() {
         <Route
           path="/orders"
           element={
-            <ProtectedRoute allowedRoles={["customer", "supplier", "designer"]}>
+            <ProtectedRoute allowedRoles={["customer", "supplier", "designer", "admin"]}>
               <OrdersPage />
             </ProtectedRoute>
           }

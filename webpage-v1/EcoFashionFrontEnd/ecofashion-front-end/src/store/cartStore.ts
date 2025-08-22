@@ -11,6 +11,9 @@ export interface CartItem {
   type: string; // Loại sản phẩm: "material", "product", "design", etc.
   sellerId: string; // Nhà cung cấp/nhà thiết kế
   sellerName?: string;
+  // Thêm các ID thực để sử dụng cho checkout
+  materialId?: number;
+  productId?: number;
 }
 
 interface CartState {
@@ -44,6 +47,8 @@ const mapServerCartToItems = (cart: ServerCartDto): CartItem[] => {
         type: 'product',
         sellerId: i.designerId || '',
         sellerName: i.designerName,
+        // Lưu thêm productId để sử dụng cho checkout
+        productId: i.productId,
       };
     } else {
       return {
@@ -56,6 +61,8 @@ const mapServerCartToItems = (cart: ServerCartDto): CartItem[] => {
         type: 'material',
         sellerId: i.supplierId || '',
         sellerName: i.supplierName,
+        // Lưu thêm materialId để sử dụng cho checkout
+        materialId: i.materialId,
       };
     }
   });

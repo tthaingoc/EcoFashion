@@ -14,6 +14,7 @@ import { usePayOrderWithWallet, usePayGroupWithWallet, useCheckWalletBalance } f
 import { checkoutService } from '../../services/api/checkoutService';
 import { ordersService } from '../../services/api/ordersService';
 import AddressSelectorTailwind from '../../components/checkout/AddressSelectorTailwind';
+import { useCartStore } from '../../store/cartStore';
 import { toast } from 'react-toastify';
 
 
@@ -43,6 +44,8 @@ const CheckoutTailwind: React.FC = () => {
    sufficient: boolean;
    shortfall: number;
  } | null>(null);
+ const [selectedCartItems, setSelectedCartItems] = useState<any[]>([]); // Lưu sản phẩm đã chọn
+ const [totalAmount, setTotalAmount] = useState(0); // Tổng tiền đã chọn
 
 
 
@@ -53,12 +56,12 @@ const CheckoutTailwind: React.FC = () => {
  const { mutateAsync: payWithWallet } = usePayOrderWithWallet(); // Hook thanh toán đơn lẻ
  const { mutateAsync: payGroupWithWallet } = usePayGroupWithWallet(); // Hook thanh toán nhóm
  const { mutateAsync: checkBalance } = useCheckWalletBalance(); // Hook kiểm tra số dư
+ const cartItems = useCartStore((s) => s.items); // Lấy items từ cart store
 
 
 
 
- const orderTotal = (currentOrder as any)?.totalAmount ?? (currentOrder as any)?.totalPrice ?? 0;
- const groupTotal = wizard.orders.reduce((sum, order: any) => sum + (order.totalAmount ?? order.totalPrice ?? 0), 0);
+ const orderTotal = totalAmount; // Sử dụng tổng tiền từ sản phẩm đã chọn
 
 
 
@@ -117,17 +120,43 @@ const CheckoutTailwind: React.FC = () => {
        } else {
          // Flow thông thường: kiểm tra có danh sách sản phẩm đã chọn không
          const selectedItemsStr = localStorage.getItem('selectedItemsForCheckout');
+         console.log('CheckoutTailwind bootstrap - selectedItemsStr:', selectedItemsStr);
+         
          if (!selectedItemsStr) {
            // Nếu không có sản phẩm đã chọn, quay về trang xác nhận
+           console.log('No selectedItemsForCheckout found, redirecting to /checkout/confirm');
            navigate('/checkout/confirm');
            return;
          }
          
-         // Tạo session chỉ cho các sản phẩm đã chọn
-         const resp = await checkoutService.createSessionFromCart();
-         wizard.start(resp);
+         // Parse danh sách ID sản phẩm đã chọn
+         let selectedItemIds: string[] = [];
+         try {
+           selectedItemIds = JSON.parse(selectedItemsStr);
+         } catch (error) {
+           console.error('Error parsing selectedItemsForCheckout:', error);
+           navigate('/checkout/confirm');
+           return;
+         }
          
-         // Xóa danh sách đã chọn sau khi tạo session thành công
+         // Lọc các items đã chọn từ cartItems
+         const filteredCartItems = cartItems.filter(item => selectedItemIds.includes(item.id));
+         console.log('Selected cart items:', filteredCartItems);
+         
+         if (filteredCartItems.length === 0) {
+           console.log('No valid selected items found');
+           navigate('/checkout/confirm');
+           return;
+         }
+         
+         // Tính tổng tiền
+         const total = filteredCartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+         
+         // Lưu vào state để hiển thị, KHÔNG tạo order
+         setSelectedCartItems(filteredCartItems);
+         setTotalAmount(total);
+         
+         // Xóa danh sách đã chọn sau khi load xong
          localStorage.removeItem('selectedItemsForCheckout');
        }
      } catch (e) {
@@ -143,7 +172,8 @@ const CheckoutTailwind: React.FC = () => {
 
 
 
-   if (!wizard.orderGroupId && !isProcessing) {
+   // Chỉ chạy bootstrap một lần để load dữ liệu sản phẩm
+   if (!bootstrapExecuted.current && !isProcessing) {
      bootstrap();
    }
  // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -168,37 +198,83 @@ const CheckoutTailwind: React.FC = () => {
 
 
  const handlePayment = async () => {
-   if (!currentOrder) {
-     toast.error('Không tìm thấy đơn hàng');
+   if (selectedCartItems.length === 0) {
+     toast.error('Không tìm thấy sản phẩm để thanh toán');
      return;
    }
-
-
-
 
    if (!selectedAddress) {
      toast.error('Vui lòng chọn địa chỉ giao hàng');
      return;
    }
 
-
-
-
-   console.log('Selected address:', selectedAddress);
-   console.log('Wallet balance:', walletBalance);
-   console.log('Order total:', orderTotal);
-
-
-
-
    setIsProcessing(true);
 
-
-
-
    try {
-     // Only wallet payment is available now
-     await handleWalletPayment();
+     // Tạo order khi nhấn thanh toán
+     console.log('Creating order for selected items:', selectedCartItems);
+     
+     // Convert cart items thành format API
+     const cartItemsDto = selectedCartItems.map(item => {
+       console.log('Converting item:', item);
+       
+       if (item.type === 'material') {
+         if (!item.materialId) {
+           throw new Error(`Material item ${item.id} missing materialId`);
+         }
+         const dto = {
+           itemType: 'material' as const,
+           materialId: item.materialId,
+           quantity: item.quantity,
+           unitPrice: item.price
+         };
+         console.log('Material DTO:', dto);
+         return dto;
+       } else if (item.type === 'product') {
+         if (!item.productId) {
+           throw new Error(`Product item ${item.id} missing productId`);
+         }
+         const dto = {
+           itemType: 'product' as const,
+           productId: item.productId,
+           quantity: item.quantity,
+           unitPrice: item.price
+         };
+         console.log('Product DTO:', dto);
+         return dto;
+       } else {
+         // design - sử dụng productId vì design được chuyển thành product
+         if (!item.productId) {
+           throw new Error(`Design item ${item.id} missing productId`);
+         }
+         const dto = {
+           itemType: 'design' as const,
+           designId: item.productId, // Design sử dụng productId
+           quantity: item.quantity,
+           unitPrice: item.price
+         };
+         console.log('Design DTO:', dto);
+         return dto;
+       }
+     });
+     
+     // Tạo session và order
+     const sessionResp = await checkoutService.createSession({
+       items: cartItemsDto,
+       shippingAddress: 'temp', // Sẽ được cập nhật với địa chỉ thực
+     });
+     
+     // Thanh toán ngay sau khi tạo order
+     const addressId = selectedAddress?.addressId;
+     if (!addressId) throw new Error('Không có addressId');
+     
+     // Lấy order đầu tiên từ session
+     const firstOrder = sessionResp.orders[0];
+     if (!firstOrder) throw new Error('Không tìm thấy order trong session');
+     
+     await payWithWallet({ orderId: firstOrder.orderId, addressId });
+     navigate(`/checkout/result?orderId=${firstOrder.orderId}&paymentMethod=wallet&status=success`);
+     
    } catch (error) {
      console.error('Payment error:', error);
      toast.error('Lỗi trong quá trình thanh toán');
@@ -269,15 +345,15 @@ const CheckoutTailwind: React.FC = () => {
 
 
 
- if (!currentOrder) {
+ if (selectedCartItems.length === 0 && !isProcessing) {
    return (
      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
        <div className="text-center">
          <ShoppingCartIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-         <h2 className="text-xl font-semibold text-gray-900 mb-2">Không tìm thấy đơn hàng</h2>
-         <p className="text-gray-600 mb-4">Vui lòng quay lại giỏ hàng và thử lại</p>
+         <h2 className="text-xl font-semibold text-gray-900 mb-2">Không tìm thấy sản phẩm</h2>
+         <p className="text-gray-600 mb-4">Vui lòng quay lại giỏ hàng và chọn sản phẩm</p>
          <button
-           onClick={() => navigate('/shop/cart')}
+           onClick={() => navigate('/cart')}
            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
          >
            Quay về giỏ hàng
@@ -297,7 +373,7 @@ const CheckoutTailwind: React.FC = () => {
        <div className="mb-8">
          <h1 className="text-2xl font-bold text-gray-900 mb-2">Thanh toán</h1>
          <p className="text-gray-600">
-           Đơn hàng #{currentOrder.orderId} - {wizard.currentIndex + 1}/{wizard.orders.length}
+           {selectedCartItems.length} sản phẩm đã chọn - Tổng: {orderTotal.toLocaleString('vi-VN')} VND
          </p>
        </div>
 
@@ -384,20 +460,13 @@ const CheckoutTailwind: React.FC = () => {
              <div className="space-y-3 mb-4">
                <div className="flex justify-between text-sm">
                  <span className="text-gray-600">Tạm tính:</span>
-                 <span className="text-gray-900">{(((currentOrder as any).subtotal ?? 0) as number).toLocaleString('vi-VN')} VND</span>
+                 <span className="text-gray-900">{orderTotal.toLocaleString('vi-VN')} VND</span>
                </div>
              
                <div className="flex justify-between text-sm">
                  <span className="text-gray-600">Phí vận chuyển:</span>
-                 <span className="text-gray-900">{(((currentOrder as any).shippingFee ?? 0) as number).toLocaleString('vi-VN')} VND</span>
+                 <span className="text-gray-900">0 VND</span>
                </div>
-             
-               {(((currentOrder as any).discount ?? 0) as number) > 0 && (
-                 <div className="flex justify-between text-sm">
-                   <span className="text-gray-600">Giảm giá:</span>
-                   <span className="text-red-600">-{(((currentOrder as any).discount ?? 0) as number).toLocaleString('vi-VN')} VND</span>
-                 </div>
-               )}
              
                <div className="border-t pt-3">
                  <div className="flex justify-between font-semibold text-lg">
@@ -432,22 +501,6 @@ const CheckoutTailwind: React.FC = () => {
 
 
 
-             {/* Group Payment Option */}
-             {wizard.orders.length > 1 && (
-               <div className="mt-4 pt-4 border-t">
-                 <h4 className="font-medium text-gray-900 mb-2">Hoặc thanh toán tất cả</h4>
-                 <p className="text-sm text-gray-600 mb-3">
-                   Thanh toán {wizard.orders.length} đơn hàng với tổng {groupTotal.toLocaleString('vi-VN')} VND
-                 </p>
-                 <button
-                   onClick={handlePayGroup}
-                   disabled={isProcessing || !selectedAddress}
-                   className="w-full py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 disabled:opacity-50 transition-colors"
-                 >
-                   Thanh toán tất cả
-                 </button>
-               </div>
-             )}
            </div>
          </div>
        </div>
