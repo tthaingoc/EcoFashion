@@ -77,4 +77,68 @@ public class OrderDetailController : ControllerBase
             return Ok(ApiResult<string>.Succeed("Xóa chi tiết đơn hàng thành công"));
         return NotFound(ApiResult<string>.Fail("Không tìm thấy chi tiết đơn hàng"));
     }
+
+    // ===== NEW ENDPOINTS FOR PARTIAL FULFILLMENT SYSTEM =====
+
+    // Get order details with seller-specific filtering
+    [HttpGet("by-seller/{sellerId}")]
+    public async Task<IActionResult> GetOrderDetailsBySeller(Guid sellerId)
+    {
+        var orderDetails = await _orderDetailService.GetOrderDetailsBySellerAsync(sellerId);
+        return Ok(ApiResult<IEnumerable<OrderDetailModel>>.Succeed(orderDetails));
+    }
+
+    // Get order details for a specific order with seller information
+    [HttpGet("order/{orderId}/seller-view/{sellerId}")]
+    public async Task<IActionResult> GetOrderDetailsForSellerView(int orderId, Guid sellerId)
+    {
+        var result = await _orderDetailService.GetOrderSellerViewAsync(orderId, sellerId);
+        if (result == null)
+            return NotFound(ApiResult<object>.Fail("Không tìm thấy đơn hàng hoặc không có quyền truy cập"));
+
+        return Ok(ApiResult<OrderSellerViewModel>.Succeed(result));
+    }
+
+    // Update status of specific order detail (for partial fulfillment)
+    [HttpPatch("{orderDetailId}/status")]
+    public async Task<IActionResult> UpdateOrderDetailStatus(int orderDetailId, [FromBody] UpdateOrderDetailStatusRequest request)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        // Get current user info for authorization
+        if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int userId))
+            return Unauthorized(ApiResult<object>.Fail("Không thể xác định người dùng."));
+
+        var success = await _orderDetailService.UpdateOrderDetailStatusAsync(orderDetailId, request, userId);
+        if (!success)
+            return BadRequest(ApiResult<object>.Fail("Không thể cập nhật trạng thái. Kiểm tra quyền truy cập."));
+
+        return Ok(ApiResult<object>.Succeed("Cập nhật trạng thái thành công"));
+    }
+
+    // Bulk confirm all order details for a seller in an order
+    [HttpPost("order/{orderId}/confirm-seller-items/{sellerId}")]
+    public async Task<IActionResult> ConfirmAllSellerItems(int orderId, Guid sellerId, [FromBody] BulkConfirmRequest request)
+    {
+        if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int userId))
+            return Unauthorized(ApiResult<object>.Fail("Không thể xác định người dùng."));
+
+        var success = await _orderDetailService.ConfirmAllSellerItemsAsync(orderId, sellerId, request, userId);
+        if (!success)
+            return BadRequest(ApiResult<object>.Fail("Không thể xác nhận items. Kiểm tra quyền truy cập."));
+
+        return Ok(ApiResult<object>.Succeed("Đã xác nhận tất cả items của bạn trong đơn hàng"));
+    }
+
+    // Get order progress for customer view
+    [HttpGet("order/{orderId}/progress")]
+    public async Task<IActionResult> GetOrderProgress(int orderId)
+    {
+        var progress = await _orderDetailService.GetOrderProgressAsync(orderId);
+        if (progress == null)
+            return NotFound(ApiResult<object>.Fail("Không tìm thấy đơn hàng"));
+
+        return Ok(ApiResult<OrderProgressModel>.Succeed(progress));
+    }
 }
