@@ -116,16 +116,20 @@ const WalletPageTailwind: React.FC = () => {
 
     // Xử lý format redirect mới từ backend
     if (success === 'deposit') {
-      setPaymentResult({
-        status: 'success',
+      const result = {
+        status: 'success' as const,
         message: `Nạp tiền thành công! Số tiền ${amount ? new Intl.NumberFormat('vi-VN').format(parseInt(amount)) + ' VND' : ''} đã được cộng vào ví của bạn.`,
         transactionId: transactionId ? parseInt(transactionId) : undefined,
-      });
+      };
+      
+      setPaymentResult(result);
       setShowResultModal(true);
       refreshWallet();
       
-      // Xóa query params sau khi hiển thị
-      navigate('/wallet', { replace: true });
+      // Xóa query params sau khi hiển thị (delay để đảm bảo modal hiển thị)
+      setTimeout(() => {
+        navigate('/wallet', { replace: true });
+      }, 100);
       
     } else if (success === 'withdrawal') {
       setPaymentResult({
@@ -171,10 +175,14 @@ const WalletPageTailwind: React.FC = () => {
     setLoadingResult(true);
     
     try {
-      let result = {
-        status: 'failed' as const,
+      let result: {
+        status: 'success' | 'failed' | 'cancelled';
+        message: string;
+        transactionId?: number;
+      } = {
+        status: 'failed',
         message: 'Giao dịch thất bại',
-        transactionId: undefined as number | undefined,
+        transactionId: undefined,
       };
 
       if (responseCode === '00') {

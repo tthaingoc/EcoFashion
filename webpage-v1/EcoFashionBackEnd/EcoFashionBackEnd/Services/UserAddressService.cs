@@ -112,10 +112,11 @@ namespace EcoFashionBackEnd.Services
                 }
 
                 // Update properties
+                // Cập nhật các trường địa chỉ, đổi ZipCode -> PersonalPhoneNumber
                 existingAddress.AddressLine = updatedAddress.AddressLine;
                 existingAddress.City = updatedAddress.City;
                 existingAddress.District = updatedAddress.District;
-                existingAddress.ZipCode = updatedAddress.ZipCode;
+                existingAddress.PersonalPhoneNumber = updatedAddress.PersonalPhoneNumber;
                 existingAddress.Country = updatedAddress.Country;
 
                 // Handle default status change
@@ -306,9 +307,6 @@ namespace EcoFashionBackEnd.Services
 
             if (!string.IsNullOrWhiteSpace(address.City))
                 parts.Add(address.City);
-
-            if (!string.IsNullOrWhiteSpace(address.ZipCode))
-                parts.Add(address.ZipCode);
 
             if (!string.IsNullOrWhiteSpace(address.Country))
                 parts.Add(address.Country);

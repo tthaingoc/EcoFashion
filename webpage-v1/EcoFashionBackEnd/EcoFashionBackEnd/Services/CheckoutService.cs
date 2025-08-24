@@ -37,6 +37,59 @@ namespace EcoFashionBackEnd.Services
         {
             var expiresAt = DateTime.UtcNow.AddMinutes(request.HoldMinutes <= 0 ? 30 : request.HoldMinutes);
 
+            // Idempotency: nếu FE gửi IdempotencyKey, tìm Order pending hiện có để reuse
+            Guid sessionKey;
+            if (!string.IsNullOrWhiteSpace(request.IdempotencyKey) && Guid.TryParse(request.IdempotencyKey, out sessionKey))
+            {
+                // Đảm bảo tồn tại CheckoutSession tương ứng để tránh lỗi FK khi lưu vào Order.CheckoutSessionId
+                var session = await _dbContext.CheckoutSessions.FirstOrDefaultAsync(s => s.CheckoutSessionId == sessionKey && s.UserId == userId);
+                if (session == null)
+                {
+                    session = new CheckoutSession
+                    {
+                        CheckoutSessionId = sessionKey,
+                        UserId = userId,
+                        Status = CheckoutSessionStatus.Active,
+                        ShippingAddress = request.ShippingAddress,
+                        CreatedAt = DateTime.UtcNow,
+                        ExpiresAt = expiresAt
+                    };
+                    _dbContext.CheckoutSessions.Add(session);
+                    await _dbContext.SaveChangesAsync();
+                }
+
+                var existingOrder = await _dbContext.Orders
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(o => o.UserId == userId
+                        && o.PaymentStatus == PaymentStatus.Pending
+                        && o.CheckoutSessionId == sessionKey
+                        && (o.ExpiresAt == null || o.ExpiresAt > DateTime.UtcNow));
+
+                if (existingOrder != null)
+                {
+                    // Trả về response dựa trên order có sẵn (reuse)
+                    var existingGroupId = existingOrder.OrderGroupId ?? Guid.Empty;
+                    var existingResponse = new CreateSessionResponse
+                    {
+                        OrderGroupId = existingGroupId,
+                        ExpiresAt = existingOrder.ExpiresAt ?? DateTime.UtcNow.AddMinutes(30),
+                        Orders = new List<CheckoutOrderDto>
+                        {
+                            new CheckoutOrderDto
+                            {
+                                OrderId = existingOrder.OrderId,
+                                Subtotal = existingOrder.Subtotal,
+                                ShippingFee = existingOrder.ShippingFee,
+                                Discount = existingOrder.Discount,
+                                TotalAmount = existingOrder.TotalPrice,
+                                PaymentStatus = existingOrder.PaymentStatus.ToString()
+                            }
+                        }
+                    };
+                    return existingResponse;
+                }
+            }
+
             // Simplified approach: Create one order per cart session since we removed sellerId
             // All items from the cart go into a single order
             var normalizedItems = new List<(string ItemType, int? MaterialId, int? DesignId, int? ProductId, int Quantity, decimal UnitPrice)>();
@@ -92,6 +145,7 @@ namespace EcoFashionBackEnd.Services
             {
                 UserId = userId,
                 OrderGroupId = orderGroup.OrderGroupId,
+                // ShippingAddress chỉ gồm địa chỉ, KHÔNG append số điện thoại
                 ShippingAddress = request.ShippingAddress,
                 Subtotal = subtotal,
                 ShippingFee = shipping,
@@ -102,7 +156,9 @@ namespace EcoFashionBackEnd.Services
                 FulfillmentStatus = FulfillmentStatus.None,
                 ExpiresAt = expiresAt,
                 OrderDate = DateTime.UtcNow,
-                CreateAt = DateTime.UtcNow
+                CreateAt = DateTime.UtcNow,
+                // Lưu idempotency key vào CheckoutSessionId để lần sau reuse
+                CheckoutSessionId = (!string.IsNullOrWhiteSpace(request.IdempotencyKey) && Guid.TryParse(request.IdempotencyKey, out sessionKey)) ? sessionKey : null
             };
 
             await _orderRepository.AddAsync(order);

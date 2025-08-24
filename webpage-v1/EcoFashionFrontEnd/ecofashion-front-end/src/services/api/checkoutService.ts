@@ -13,6 +13,8 @@ export interface CreateSessionRequest {
   items: CartItemDto[];
   shippingAddress: string;
   holdMinutes?: number;
+  // Idempotency key để tránh tạo trùng Order trên backend
+  idempotencyKey?: string;
 }
 
 export interface CheckoutOrderDto {

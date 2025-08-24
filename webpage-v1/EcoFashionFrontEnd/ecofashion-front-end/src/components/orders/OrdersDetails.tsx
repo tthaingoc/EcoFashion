@@ -16,8 +16,8 @@ export default function OrdersDetails() {
     setPayLoading(true);
     setPayError(null);
     try {
-      // For existing orders, navigate to checkout page
-      // The checkout wizard will handle creating new session from existing order data
+      // Với logic idempotency: chuyển thẳng về trang checkout tiêu chuẩn
+      // Trang CheckoutTailwind sẽ dùng orderId để load đơn và thanh toán bằng ví
       navigate(`/checkout?orderId=${data.orderId}`);
     } catch (e: any) {
       setPayError(e?.message || 'Không thể chuyển đến trang thanh toán');

@@ -6,7 +6,8 @@ export interface UserAddress {
   addressLine?: string;
   city?: string;
   district?: string;
-  zipCode?: string;
+  // Thay zipCode bằng personalPhoneNumber: số điện thoại liên hệ giao hàng
+  personalPhoneNumber?: string;
   country?: string;
   isDefault: boolean;
 }
@@ -15,7 +16,8 @@ export interface CreateAddressRequest {
   addressLine?: string;
   city?: string;
   district?: string;
-  zipCode?: string;
+  // Số điện thoại nhận hàng (thay cho Mã bưu điện)
+  personalPhoneNumber?: string;
   country?: string;
   isDefault?: boolean;
 }
@@ -24,7 +26,8 @@ export interface UpdateAddressRequest {
   addressLine?: string;
   city?: string;
   district?: string;
-  zipCode?: string;
+  // Số điện thoại nhận hàng (thay cho Mã bưu điện)
+  personalPhoneNumber?: string;
   country?: string;
   isDefault?: boolean;
 }
@@ -33,7 +36,8 @@ export interface AddressFormData {
   addressLine: string;
   city: string;
   district: string;
-  zipCode: string;
+  // Số điện thoại liên hệ giao hàng tại địa chỉ này
+  personalPhoneNumber: string;
   country: string;
   isDefault: boolean;
 }
@@ -99,7 +103,8 @@ export const userAddressService = {
     if (address.addressLine) parts.push(address.addressLine);
     if (address.district) parts.push(address.district);
     if (address.city) parts.push(address.city);
-    if (address.zipCode) parts.push(address.zipCode);
+    // Hiển thị số điện thoại ở cuối chuỗi địa chỉ nếu có
+    if (address.personalPhoneNumber) parts.push(address.personalPhoneNumber);
     if (address.country) parts.push(address.country);
 
     return parts.join(', ');

@@ -6,7 +6,7 @@ import {
   CreditCardIcon,
   CheckCircleIcon,
   ArrowRightIcon,
-  StoreIcon,
+  BuildingStorefrontIcon,
   TrashIcon
 } from '@heroicons/react/24/outline';
 import { useCartStore } from '../../store/cartStore';
@@ -214,7 +214,7 @@ const CheckoutConfirmTailwind: React.FC = () => {
                             onChange={() => toggleSelectGroup(sellerId)}
                             className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
                           />
-                          <StoreIcon className="w-5 h-5 text-green-600 ml-3 mr-2" />
+                          <BuildingStorefrontIcon className="w-5 h-5 text-green-600 ml-3 mr-2" />
                           <span className="font-semibold text-gray-900">{sellerName}</span>
                         </div>
                         <div className="text-sm">

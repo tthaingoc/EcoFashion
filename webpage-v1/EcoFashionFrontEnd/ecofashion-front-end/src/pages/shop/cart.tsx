@@ -375,7 +375,7 @@ export default function Cart() {
                   }}
                   endIcon={<ArrowForward />}
                 >
-                  Standard Checkout
+                  Tiếp Tục Thanh Toán
                 </Button>
 
                 {/* Security Notice */}

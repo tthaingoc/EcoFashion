@@ -5,6 +5,8 @@ namespace EcoFashionBackEnd.Dtos
         public List<CartItemDto> Items { get; set; } = new();
         public string ShippingAddress { get; set; } = string.Empty;
         public int HoldMinutes { get; set; } = 30; // thời gian giữ hàng
+        // Idempotency key để reuse order khi người dùng bấm thanh toán nhiều lần
+        public string? IdempotencyKey { get; set; }
     }
 
     public class CartItemDto

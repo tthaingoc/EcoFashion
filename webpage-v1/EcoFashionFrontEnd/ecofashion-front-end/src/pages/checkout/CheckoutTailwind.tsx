@@ -47,6 +47,17 @@ const CheckoutTailwind: React.FC = () => {
  const [selectedCartItems, setSelectedCartItems] = useState<any[]>([]); // Lưu sản phẩm đã chọn
  const [totalAmount, setTotalAmount] = useState(0); // Tổng tiền đã chọn
 
+ // Sinh và lưu idempotencyKey để backend reuse order nếu người dùng bấm lại
+ const [idempotencyKey] = useState<string>(() => {
+   const existing = sessionStorage.getItem('checkoutIdempotencyKey');
+   if (existing) return existing;
+   const gen = (typeof crypto !== 'undefined' && 'randomUUID' in crypto)
+     ? (crypto as any).randomUUID()
+     : `${Date.now()}-${Math.random()}`;
+   sessionStorage.setItem('checkoutIdempotencyKey', gen);
+   return gen;
+ });
+
 
 
 
@@ -84,6 +95,17 @@ const CheckoutTailwind: React.FC = () => {
      checkWalletBalance();
    }
  }, [currentOrder]);
+
+
+
+
+ // Khi tổng tiền thay đổi, kiểm tra lại số dư ví để cập nhật cảnh báo/disable nút
+ useEffect(() => {
+   if (orderTotal > 0) {
+     checkWalletBalance();
+   }
+   // eslint-disable-next-line react-hooks/exhaustive-deps
+ }, [orderTotal]);
 
 
 
@@ -208,6 +230,13 @@ const CheckoutTailwind: React.FC = () => {
      return;
    }
 
+   // Chặn tạo Order khi số dư ví không đủ để tránh tạo order trùng lặp
+   if (walletBalance < orderTotal) {
+     toast.error('Số dư ví không đủ, vui lòng nạp tiền trước khi thanh toán');
+     navigate('/wallet');
+     return;
+   }
+
    setIsProcessing(true);
 
    try {
@@ -262,6 +291,8 @@ const CheckoutTailwind: React.FC = () => {
      const sessionResp = await checkoutService.createSession({
        items: cartItemsDto,
        shippingAddress: 'temp', // Sẽ được cập nhật với địa chỉ thực
+       // Gửi idempotencyKey để tránh tạo trùng Order nếu ví chưa đủ và user quay lại bấm lần 2
+       idempotencyKey,
      });
      
      // Thanh toán ngay sau khi tạo order
@@ -273,6 +304,8 @@ const CheckoutTailwind: React.FC = () => {
      if (!firstOrder) throw new Error('Không tìm thấy order trong session');
      
      await payWithWallet({ orderId: firstOrder.orderId, addressId });
+     // Thanh toán thành công thì clear idempotencyKey cho lần checkout kế tiếp
+     sessionStorage.removeItem('checkoutIdempotencyKey');
      navigate(`/checkout/result?orderId=${firstOrder.orderId}&paymentMethod=wallet&status=success`);
      
    } catch (error) {
@@ -482,7 +515,7 @@ const CheckoutTailwind: React.FC = () => {
              {/* Payment Button */}
              <button
                onClick={handlePayment}
-               disabled={isProcessing || !selectedAddress}
+               disabled={isProcessing || !selectedAddress || walletBalance < orderTotal}
                className="w-full py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
              >
                {isProcessing ? (

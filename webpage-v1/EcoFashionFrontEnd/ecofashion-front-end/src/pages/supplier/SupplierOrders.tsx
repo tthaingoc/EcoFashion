@@ -10,7 +10,7 @@ import {
   UserIcon,
   MapPinIcon,
   CalendarIcon,
-  PackageIcon,
+  CubeIcon,
 } from '@heroicons/react/24/outline';
 import { ordersService, OrderModel, UpdateFulfillmentStatusRequest, ShipOrderRequest } from '../../services/api/ordersService';
 import { useAuthStore } from '../../store/authStore';
@@ -26,6 +26,20 @@ interface OrderDetail {
   unitPrice: number;
   type: 'material' | 'design' | 'product';
 }
+
+// Helper: tách SĐT (PersonalPhoneNumber) được append ở cuối địa chỉ bởi BE
+const splitAddressPhone = (full: string): { address: string; phone?: string } => {
+  if (!full) return { address: '' };
+  const parts = full.split(',').map(p => p.trim()).filter(Boolean);
+  if (parts.length === 0) return { address: full };
+  const last = parts[parts.length - 1] || '';
+  const digits = (last.match(/\d/g) || []).length;
+  const hasLetters = /[A-Za-zÀ-ỹ]/.test(last);
+  if (!hasLetters && digits >= 8) {
+    return { address: parts.slice(0, -1).join(', '), phone: last };
+  }
+  return { address: full };
+};
 
 const OrderStatusBadge: React.FC<{ status: string; type?: 'order' | 'payment' | 'fulfillment' }> = ({ 
   status, 
@@ -129,6 +143,12 @@ const OrderCard: React.FC<{
             {order.shippingAddress}
           </span>
         </div>
+        {order.personalPhoneNumber && (
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-600">Số điện thoại:</span>
+            <span className="text-sm font-medium text-gray-900">{order.personalPhoneNumber}</span>
+          </div>
+        )}
 
         <div className="flex items-center justify-between">
           <span className="text-sm text-gray-600">Thanh toán:</span>
@@ -196,6 +216,8 @@ const SupplierOrders: React.FC<SupplierOrdersProps> = ({ defaultFilter = 'all' }
   const [error, setError] = useState<string | null>(null);
 
   const { supplierProfile } = useAuthStore();
+
+  // Không tách chuỗi nữa: đọc trực tiếp order.personalPhoneNumber nếu có
 
   // Fetch orders on component mount
   useEffect(() => {
@@ -319,7 +341,7 @@ const SupplierOrders: React.FC<SupplierOrdersProps> = ({ defaultFilter = 'all' }
                 <p className="text-sm text-gray-600">Tất cả đơn hàng</p>
                 <p className="text-2xl font-bold text-gray-900">{counts.all}</p>
               </div>
-              <PackageIcon className="w-8 h-8 text-blue-600" />
+              <CubeIcon className="w-8 h-8 text-blue-600" />
             </div>
           </div>
 
@@ -410,7 +432,7 @@ const SupplierOrders: React.FC<SupplierOrdersProps> = ({ defaultFilter = 'all' }
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
           {filteredOrders.length === 0 ? (
             <div className="col-span-full text-center py-12">
-              <PackageIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <CubeIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">Không có đơn hàng nào</h3>
               <p className="text-gray-600">
                 {filter === 'all' ? 'Chưa có đơn hàng nào' : `Không có đơn hàng ${filter === 'processing' ? 'đang xử lý' : filter === 'shipped' ? 'đang vận chuyển' : 'đã giao'}`}
@@ -428,7 +450,8 @@ const SupplierOrders: React.FC<SupplierOrdersProps> = ({ defaultFilter = 'all' }
               />
             ))
           )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Order Details Modal */}
@@ -467,8 +490,14 @@ const SupplierOrders: React.FC<SupplierOrdersProps> = ({ defaultFilter = 'all' }
                     <div className="flex items-start gap-2">
                       <MapPinIcon className="w-4 h-4 text-gray-400 mt-0.5" />
                       <span className="text-gray-600">Địa chỉ:</span>
-                      <span className="font-medium">{selectedOrder.shippingAddress}</span>
+                      <span className="font-medium">{splitAddressPhone(selectedOrder.shippingAddress).address}</span>
                     </div>
+                    {splitAddressPhone(selectedOrder.shippingAddress).phone && (
+                      <div className="flex items-start gap-2">
+                        <span className="text-gray-600">SĐT:</span>
+                        <span className="font-medium">{splitAddressPhone(selectedOrder.shippingAddress).phone}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 

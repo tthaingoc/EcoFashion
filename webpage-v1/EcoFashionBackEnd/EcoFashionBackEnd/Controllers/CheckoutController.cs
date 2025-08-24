@@ -94,7 +94,9 @@ namespace EcoFashionBackEnd.Controllers
                     // Let the checkout service determine sellerType and sellerId from the actual item data
                     // This removes the hardcoded "Supplier" limitation
                 }).ToList(),
-                ShippingAddress = shippingAddress
+                ShippingAddress = shippingAddress,
+                // Truyền idempotency key nếu FE gửi lên
+                IdempotencyKey = request?.IdempotencyKey
             };
 
             var result = await _checkoutService.CreateSessionAsync(userId, sessionRequest);
@@ -215,7 +217,8 @@ namespace EcoFashionBackEnd.Controllers
                     AddressLine = request.AddressLine,
                     City = request.City,
                     District = request.District,
-                    ZipCode = request.ZipCode,
+                    // Lưu SĐT nhận hàng vào cột ZipCode (map ở entity)
+                    PersonalPhoneNumber = request.PersonalPhoneNumber,
                     Country = request.Country ?? "Vietnam",
                     IsDefault = request.IsDefault
                 };
@@ -245,7 +248,8 @@ namespace EcoFashionBackEnd.Controllers
                     AddressLine = request.AddressLine,
                     City = request.City,
                     District = request.District,
-                    ZipCode = request.ZipCode,
+                    // Lưu SĐT nhận hàng vào cột ZipCode (map ở entity)
+                    PersonalPhoneNumber = request.PersonalPhoneNumber,
                     Country = request.Country ?? "Vietnam",
                     IsDefault = request.IsDefault
                 };

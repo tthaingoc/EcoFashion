@@ -12,6 +12,8 @@ import {
 } from '@heroicons/react/24/outline';
 import { OrderSellerViewModel, SellerOrderDetailModel } from '../../services/api/ordersService';
 
+// Không cần helper tách chuỗi nữa – BE sẽ trả về personalPhoneNumber riêng
+
 interface PartialOrderCardProps {
   orderData: OrderSellerViewModel;
   onViewDetails: (orderId: number) => void;
@@ -94,25 +96,9 @@ const SellerItemRow: React.FC<{
         <div className="flex items-center gap-2">
           <StatusBadge status={item.status} />
           
-          {item.canConfirm && (
-            <button
-              onClick={() => onConfirm(item.orderDetailId)}
-              disabled={isUpdating}
-              className="px-3 py-1 text-xs bg-amber-600 text-white rounded-md hover:bg-amber-700 disabled:opacity-50 transition-colors"
-            >
-              Xác nhận
-            </button>
-          )}
+          {/* Ẩn nút xác nhận từng item để chỉ giữ luồng "Xác nhận tất cả items" */}
           
-          {item.canShip && (
-            <button
-              onClick={() => onShip(item.orderDetailId)}
-              disabled={isUpdating}
-              className="px-3 py-1 text-xs bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors"
-            >
-              Gửi hàng
-            </button>
-          )}
+          {/* Ẩn nút gửi hàng từng item (ship per-item) tại trang này */}
         </div>
       </div>
     </div>
@@ -227,6 +213,12 @@ const PartialOrderCard: React.FC<PartialOrderCardProps> = ({
         <div>
           <span className="text-sm text-gray-600">Địa chỉ: </span>
           <span className="text-sm text-gray-900">{orderData.shippingAddress}</span>
+          {orderData.personalPhoneNumber && (
+            <div className="text-sm text-gray-600 mt-1">
+              <span>Số điện thoại: </span>
+              <span className="text-gray-900">{orderData.personalPhoneNumber}</span>
+            </div>
+          )}
         </div>
       </div>
 

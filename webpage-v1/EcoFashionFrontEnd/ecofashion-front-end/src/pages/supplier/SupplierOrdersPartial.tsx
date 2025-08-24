@@ -5,7 +5,7 @@ import {
   CheckCircleIcon,
   EyeIcon,
   ExclamationTriangleIcon,
-  PackageIcon,
+  CubeIcon,
 } from '@heroicons/react/24/outline';
 import { 
   ordersService, 
@@ -125,48 +125,13 @@ const SupplierOrdersPartial: React.FC<SupplierOrdersPartialProps> = ({ defaultFi
     }
   };
 
-  const handleConfirmItem = async (orderDetailId: number) => {
-    setIsUpdating(true);
-    try {
-      const request: UpdateOrderDetailStatusRequest = {
-        status: 'confirmed',
-        notes: 'Item đã được xác nhận bởi supplier'
-      };
-      
-      await ordersService.updateOrderDetailStatus(orderDetailId, request);
-      
-      // Refresh orders
-      await refreshOrders();
-      
-      alert(`Item đã được xác nhận thành công!`);
-    } catch (error: any) {
-      console.error('Error confirming item:', error);
-      alert(error.message || 'Có lỗi xảy ra khi xác nhận item');
-    } finally {
-      setIsUpdating(false);
-    }
+  // Ẩn xác nhận từng item: giữ lại luồng "Xác nhận tất cả items"
+  const handleConfirmItem = async (_orderDetailId: number) => {
+    // no-op
   };
 
-  const handleShipItem = async (orderDetailId: number) => {
-    setIsUpdating(true);
-    try {
-      const request: UpdateOrderDetailStatusRequest = {
-        status: 'shipping',
-        notes: 'Item đã được gửi đi bởi supplier'
-      };
-      
-      await ordersService.updateOrderDetailStatus(orderDetailId, request);
-      
-      // Refresh orders
-      await refreshOrders();
-      
-      alert(`Item đã được đánh dấu đang vận chuyển!`);
-    } catch (error: any) {
-      console.error('Error shipping item:', error);
-      alert(error.message || 'Có lỗi xảy ra khi cập nhật trạng thái vận chuyển');
-    } finally {
-      setIsUpdating(false);
-    }
+  const handleShipItem = async (_orderDetailId: number) => {
+    // no-op (ẩn gửi hàng từng item ở trang này)
   };
 
   const refreshOrders = async () => {
@@ -242,7 +207,7 @@ const SupplierOrdersPartial: React.FC<SupplierOrdersPartialProps> = ({ defaultFi
                 <p className="text-sm text-gray-600">Tổng đơn hàng</p>
                 <p className="text-2xl font-bold text-gray-900">{counts.all}</p>
               </div>
-              <PackageIcon className="w-8 h-8 text-blue-600" />
+              <CubeIcon className="w-8 h-8 text-blue-600" />
             </div>
           </div>
 
@@ -344,7 +309,7 @@ const SupplierOrdersPartial: React.FC<SupplierOrdersPartialProps> = ({ defaultFi
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-1 gap-6">
             {filteredOrders.length === 0 ? (
               <div className="col-span-full text-center py-12">
-                <PackageIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <CubeIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">Không có đơn hàng nào</h3>
                 <p className="text-gray-600">
                   {filter === 'all' ? 'Chưa có đơn hàng nào' : `Không có đơn hàng ${filter === 'pending' ? 'chờ xác nhận' : filter === 'confirmed' ? 'đã xác nhận' : filter === 'shipped' ? 'đang vận chuyển' : 'đã giao'}`}
@@ -432,28 +397,7 @@ const SupplierOrdersPartial: React.FC<SupplierOrdersPartialProps> = ({ defaultFi
                         }`}>
                           {item.status}
                         </span>
-                        {item.canConfirm && (
-                          <button
-                            onClick={() => {
-                              handleConfirmItem(item.orderDetailId);
-                              setSelectedOrder(null);
-                            }}
-                            className="px-3 py-1 text-xs bg-amber-600 text-white rounded hover:bg-amber-700"
-                          >
-                            Xác nhận
-                          </button>
-                        )}
-                        {item.canShip && (
-                          <button
-                            onClick={() => {
-                              handleShipItem(item.orderDetailId);
-                              setSelectedOrder(null);
-                            }}
-                            className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700"
-                          >
-                            Gửi hàng
-                          </button>
-                        )}
+                        {/* Ẩn nút xác nhận/gửi hàng từng item trong modal ở trang này */}
                       </div>
                     </div>
                   ))}

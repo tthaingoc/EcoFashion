@@ -24,8 +24,9 @@ namespace EcoFashionBackEnd.Entities
         [StringLength(100)]
         public string? District { get; set; }
 
+        // Trường số điện thoại nhận hàng được lưu trực tiếp trong cột PersonalPhoneNumber
         [StringLength(20)]
-        public string? ZipCode { get; set; }
+        public string? PersonalPhoneNumber { get; set; }
 
         [StringLength(100)]
         public string? Country { get; set; }

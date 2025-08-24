@@ -17,10 +17,12 @@
     public class WalletController : ControllerBase
     {
         private readonly WalletService _walletService;
+        private readonly IConfiguration _configuration;
 
-        public WalletController(WalletService walletService)
+        public WalletController(WalletService walletService, IConfiguration configuration)
         {
             _walletService = walletService;
+            _configuration = configuration;
         }
 
         // Get user's wallet information
@@ -118,7 +120,7 @@
             var result = await _walletService.HandleVNPayDepositReturnAsync(query);
 
             // Tạo URL redirect về frontend với thông tin kết quả
-            string frontendUrl = "http://localhost:5148"; // Port frontend
+            string frontendUrl = _configuration["Frontend:WalletUrl"] ?? "http://localhost:5173";
             string redirectUrl;
 
             if (result == null)
@@ -198,7 +200,7 @@
             var result = await _walletService.HandleVNPayWithdrawalReturnAsync(query);
 
             // 3️⃣ Tạo URL redirect về frontend với thông tin kết quả
-            string frontendUrl = "http://localhost:5148"; // Port frontend
+            string frontendUrl = _configuration["Frontend:WalletUrl"] ?? "http://localhost:5173";
             string redirectUrl;
 
             if (result == null)

@@ -90,12 +90,27 @@ namespace EcoFashionBackEnd.Services
                 sellerType = "Designer";
             }
 
+            // Lấy SĐT từ địa chỉ mặc định của user nếu có
+            string? personalPhone = null;
+            try
+            {
+                var defaultAddr = _dbContext.UserAddresses
+                    .AsNoTracking()
+                    .FirstOrDefault(ua => ua.UserId == order.UserId && ua.IsDefault);
+                if (defaultAddr != null)
+                {
+                    personalPhone = defaultAddr.PersonalPhoneNumber;
+                }
+            }
+            catch { }
+
             return new OrderModel
             {
                 OrderId = order.OrderId,
                 UserId = order.UserId,
                 UserName = order.User?.FullName ?? "Unknown User",
                 ShippingAddress = order.ShippingAddress,
+                PersonalPhoneNumber = personalPhone,
                 TotalPrice = order.TotalPrice,
                 OrderDate = order.OrderDate,
                 Status = order.Status.ToString(),

@@ -5,6 +5,8 @@ namespace EcoFashionBackEnd.Dtos
     {
         public string? ShippingAddress { get; set; }
         public int? AddressId { get; set; }
+        // Idempotency key để tránh tạo trùng Order khi ví chưa đủ
+        public string? IdempotencyKey { get; set; }
     }
 
     public class PayWithWalletRequest

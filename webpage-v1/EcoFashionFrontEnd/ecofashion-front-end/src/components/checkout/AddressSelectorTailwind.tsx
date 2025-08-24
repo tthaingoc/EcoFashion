@@ -13,37 +13,30 @@ import {
   useDeleteAddress,
   useSetDefaultAddress 
 } from '../../hooks/useAddressManagement';
+import { UserAddress } from '../../services/api/userAddressService';
 
-// Interface địa chỉ giao hàng
-interface Address {
-  addressId: number;
-  addressLine: string;
-  city: string;
-  district: string;
-  zipCode: string;
-  country: string;
-  isDefault: boolean;
-}
+// Sử dụng UserAddress từ service; đã đổi zipCode -> personalPhoneNumber
 
 // Props cho component chọn địa chỉ giao hàng trong Standard Checkout
 interface AddressSelectorProps {
   selectedAddressId?: number; // ID địa chỉ đã chọn
-  onAddressSelect: (address: Address) => void; // Callback khi chọn địa chỉ
+  onAddressSelect: (address: UserAddress) => void; // Callback khi chọn địa chỉ
   className?: string;
 }
 
 const AddressModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
-  address?: Address;
-  onSubmit: (addressData: Partial<Address>) => void;
+  address?: UserAddress;
+  onSubmit: (addressData: Partial<UserAddress>) => void;
   isLoading: boolean;
 }> = ({ isOpen, onClose, address, onSubmit, isLoading }) => {
   const [formData, setFormData] = useState({
     addressLine: address?.addressLine || '',
     city: address?.city || '',
     district: address?.district || '',
-    zipCode: address?.zipCode || '',
+    // Số điện thoại liên hệ tại địa chỉ
+    personalPhoneNumber: address?.personalPhoneNumber || '',
     country: address?.country || 'Vietnam',
     isDefault: address?.isDefault || false,
   });
@@ -123,14 +116,14 @@ const AddressModal: React.FC<{
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Mã bưu điện
+                  Số điện thoại nhận hàng
                 </label>
                 <input
-                  type="text"
-                  value={formData.zipCode}
-                  onChange={(e) => handleChange('zipCode', e.target.value)}
+                  type="tel"
+                  value={formData.personalPhoneNumber}
+                  onChange={(e) => handleChange('personalPhoneNumber', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Mã bưu điện"
+                  placeholder="VD: 0912345678"
                 />
               </div>
               
@@ -191,7 +184,7 @@ const AddressSelectorTailwind: React.FC<AddressSelectorProps> = ({
   className = '',
 }) => {
   const [showModal, setShowModal] = useState(false);
-  const [editingAddress, setEditingAddress] = useState<Address | undefined>();
+  const [editingAddress, setEditingAddress] = useState<UserAddress | undefined>();
   
   const { data: addresses = [], isLoading } = useUserAddresses();
   const { mutateAsync: createAddress, isPending: isCreating } = useCreateAddress();
@@ -204,12 +197,12 @@ const AddressSelectorTailwind: React.FC<AddressSelectorProps> = ({
     setShowModal(true);
   };
 
-  const handleEditAddress = (address: Address) => {
+  const handleEditAddress = (address: UserAddress) => {
     setEditingAddress(address);
     setShowModal(true);
   };
 
-  const handleSubmitAddress = async (addressData: Partial<Address>) => {
+  const handleSubmitAddress = async (addressData: Partial<UserAddress>) => {
     try {
       if (editingAddress) {
         await updateAddress({
@@ -271,7 +264,7 @@ const AddressSelectorTailwind: React.FC<AddressSelectorProps> = ({
             </button>
           </div>
         ) : (
-          addresses.map((address: Address) => (
+          addresses.map((address: UserAddress) => (
             <div
               key={address.addressId}
               className={`border rounded-lg p-4 cursor-pointer transition-colors ${
@@ -302,9 +295,9 @@ const AddressSelectorTailwind: React.FC<AddressSelectorProps> = ({
                     {[address.district, address.city, address.country].filter(Boolean).join(', ')}
                   </p>
                   
-                  {address.zipCode && (
+                  {address.personalPhoneNumber && (
                     <p className="text-gray-500 text-xs mt-1">
-                      Mã bưu điện: {address.zipCode}
+                      Điện thoại: {address.personalPhoneNumber}
                     </p>
                   )}
                 </div>

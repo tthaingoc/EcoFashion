@@ -5,6 +5,8 @@ export interface OrderModel {
   userId: number;
   userName?: string;
   shippingAddress: string;
+  // Số điện thoại nhận hàng (từ PersonalPhoneNumber trên BE)
+  personalPhoneNumber?: string;
   status: string;
   paymentStatus?: string;
   fulfillmentStatus?: string;
@@ -46,6 +48,8 @@ export interface OrderSellerViewModel {
   orderId: number;
   userName: string;
   shippingAddress: string;
+  // Số điện thoại nhận hàng (từ PersonalPhoneNumber trên BE)
+  personalPhoneNumber?: string;
   totalPrice: number;
   orderDate: string;
   paymentStatus: string;

@@ -244,43 +244,23 @@ namespace EcoFashionBackEnd.Services
 
             if (stock == null)
             {
-                var initialQuantity = Convert.ToDecimal(material.QuantityAvailable);
+                // Khởi tạo tồn kho về 0 khi approve (theo yêu cầu business),
+                // supplier sẽ chủ động nhập kho sau đó
+                var initialQuantity = 0m;
                 
                 stock = new MaterialStock
                 {
                     MaterialId = material.MaterialId,
                     WarehouseId = warehouse.WarehouseId,
-                    // CASE A (đồng bộ với QuantityAvailable đã nhập khi tạo):
+                    // Khởi tạo bằng 0 thay vì đồng bộ QuantityAvailable ban đầu
                     QuantityOnHand = initialQuantity,
-                    // CASE B : để 0 và supplier nhập kho thủ công
-                    // QuantityOnHand = 0m,
                     MinThreshold = 0m,
                     LastUpdated = DateTime.UtcNow
                 };
                 _dbContext.MaterialStocks.Add(stock);
                 await _dbContext.SaveChangesAsync();
 
-                // Ghi log transaction cho lần nhập kho đầu tiên khi approve
-                if (initialQuantity > 0)
-                {
-                    var transaction = new MaterialStockTransaction
-                    {
-                        MaterialId = material.MaterialId,
-                        WarehouseId = warehouse.WarehouseId,
-                        TransactionType = MaterialTransactionType.SupplierReceipt,
-                        QuantityChange = initialQuantity,
-                        BeforeQty = 0m,
-                        AfterQty = initialQuantity,
-                        Unit = "mét", // Default unit cho vải
-                        ReferenceType = "MaterialApproval",
-                        ReferenceId = material.MaterialId.ToString(),
-                        Note = $"Nhập kho tự động khi approve material '{material.Name}' - Số lượng ban đầu từ supplier: {material.QuantityAvailable}",
-                        CreatedByUserId = null, // System automatic
-                        CreatedAt = DateTime.UtcNow
-                    };
-                    _dbContext.MaterialStockTransactions.Add(transaction);
-                    await _dbContext.SaveChangesAsync();
-                }
+                // Không tạo transaction nhập kho tự động vì số lượng khởi tạo là 0
             }
 
             // 3) Đồng bộ tổng về Material để homepage hiển thị Material (not in stock)
@@ -288,6 +268,7 @@ namespace EcoFashionBackEnd.Services
                 .Where(s => s.MaterialId == material.MaterialId)
                 .SumAsync(s => s.QuantityOnHand);
 
+            // Đồng bộ QuantityAvailable theo tồn kho thực tế (0 sau approve)
             material.QuantityAvailable = (int)total;
             material.LastUpdated = DateTime.UtcNow;
             await _dbContext.SaveChangesAsync();
