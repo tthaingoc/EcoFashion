@@ -203,14 +203,8 @@ namespace EcoFashionBackEnd.Services
             // Update main status based on fulfillment status
             switch (fulfillmentStatus)
             {
-                case FulfillmentStatus.PartiallyConfirmed:
-                    order.Status = OrderStatus.processing;
-                    break;
                 case FulfillmentStatus.Processing:
                     order.Status = OrderStatus.processing;
-                    break;
-                case FulfillmentStatus.PartiallyShipped:
-                    order.Status = OrderStatus.processing; // Still processing until all shipped
                     break;
                 case FulfillmentStatus.Shipped:
                     order.Status = OrderStatus.shipped;
@@ -229,53 +223,6 @@ namespace EcoFashionBackEnd.Services
             return true;
         }
 
-        // Auto-calculate and update order fulfillment status based on OrderDetails
-        public async Task RecalculateOrderFulfillmentStatusAsync(int orderId)
-        {
-            var order = await _dbContext.Orders.FindAsync(orderId);
-            if (order == null) return;
-
-            var orderDetails = await _dbContext.OrderDetails
-                .Where(od => od.OrderId == orderId)
-                .ToListAsync();
-
-            if (orderDetails.Count == 0) return;
-
-            var confirmedCount = orderDetails.Count(od => od.Status == OrderDetailStatus.confirmed || od.Status == OrderDetailStatus.shipping);
-            var shippingCount = orderDetails.Count(od => od.Status == OrderDetailStatus.shipping);
-            var totalCount = orderDetails.Count;
-
-            FulfillmentStatus newStatus;
-
-            if (confirmedCount == 0)
-            {
-                newStatus = FulfillmentStatus.None;
-            }
-            else if (confirmedCount == totalCount)
-            {
-                if (shippingCount == totalCount)
-                {
-                    newStatus = FulfillmentStatus.Shipped;
-                }
-                else if (shippingCount > 0)
-                {
-                    newStatus = FulfillmentStatus.PartiallyShipped;
-                }
-                else
-                {
-                    newStatus = FulfillmentStatus.Processing;
-                }
-            }
-            else
-            {
-                newStatus = FulfillmentStatus.PartiallyConfirmed;
-            }
-
-            if (order.FulfillmentStatus != newStatus)
-            {
-                await UpdateFulfillmentStatusAsync(orderId, newStatus);
-            }
-        }
 
         // Get orders by seller ID for shipment management
         public async Task<IEnumerable<OrderModel>> GetOrdersBySellerIdAsync(Guid sellerId)

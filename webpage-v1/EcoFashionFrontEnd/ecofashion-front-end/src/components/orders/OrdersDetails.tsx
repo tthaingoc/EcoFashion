@@ -5,7 +5,6 @@ import { formatViDateTime } from '../../utils/date';
 import { paymentsService } from '../../services/api/paymentsService';
 import { Button, Box, Chip, Dialog, DialogTitle, DialogContent, DialogActions, Typography } from '@mui/material';
 import { LocalShipping, Visibility, AccessTime, CheckCircle, Store } from '@mui/icons-material';
-import OrderProgressModal from './OrderProgressModal';
 
 export default function OrdersDetails() {
   const navigate = useNavigate();
@@ -32,8 +31,6 @@ export default function OrdersDetails() {
   const [error, setError] = useState<string | null>(null);
   const [details, setDetails] = useState<any[]>([]);
   const [showTrackingDialog, setShowTrackingDialog] = useState(false);
-  const [showProgressModal, setShowProgressModal] = useState(false);
-  const [hasMixedSellers, setHasMixedSellers] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -44,10 +41,6 @@ export default function OrdersDetails() {
         setData((res as any)?.result || res);
         const lines = await ordersService.getDetailsByOrderId(Number(orderId));
         setDetails(lines);
-        
-        // Check if order has items from multiple sellers
-        const uniqueProviders = new Set(lines.map(d => d.providerName).filter(Boolean));
-        setHasMixedSellers(uniqueProviders.size > 1);
       } catch (e: any) {
         setError(e?.message || 'Không tải được chi tiết đơn');
       } finally {
@@ -63,12 +56,8 @@ export default function OrdersDetails() {
     const isProcessing = data.status === 'processing';
     const fulfillmentStatus = data.fulfillmentStatus || 'None';
     
-    // For mixed orders with partial fulfillment, show progress modal
-    if (hasMixedSellers && isPaid && (['None', 'Processing', 'PartiallyConfirmed', 'PartiallyShipped'].includes(fulfillmentStatus))) {
-      setShowProgressModal(true);
-    }
     // If order is paid but fulfillment is None/Processing, show waiting dialog
-    else if (isPaid && isProcessing && (fulfillmentStatus === 'None' || fulfillmentStatus === 'Processing')) {
+    if (isPaid && isProcessing && (fulfillmentStatus === 'None' || fulfillmentStatus === 'Processing')) {
       setShowTrackingDialog(true);
     } else {
       // For shipped/delivered orders, redirect to tracking page
@@ -85,40 +74,6 @@ export default function OrdersDetails() {
       return (
         <div className="font-medium text-gray-500">
           Chưa thanh toán
-        </div>
-      );
-    }
-    
-    // For mixed orders with partial fulfillment statuses
-    if (hasMixedSellers && isPaid && (['None', 'Processing', 'PartiallyConfirmed', 'PartiallyShipped'].includes(fulfillmentStatus))) {
-      const getStatusText = () => {
-        switch (fulfillmentStatus) {
-          case 'PartiallyConfirmed': return 'Một phần đã xác nhận';
-          case 'PartiallyShipped': return 'Một phần đã gửi';
-          default: return 'Chờ người bán xác nhận';
-        }
-      };
-      
-      return (
-        <div className="font-medium flex items-center gap-2">
-          <span className="text-amber-600">{getStatusText()}</span>
-          {hasMixedSellers && (
-            <span className="px-2 py-1 text-xs bg-purple-100 text-purple-700 rounded-full font-medium">
-              Mixed Order
-            </span>
-          )}
-          <Chip
-            label="Chi tiết tiến độ"
-            size="small"
-            icon={<Visibility />}
-            onClick={handleTrackingClick}
-            sx={{ 
-              bgcolor: '#f3e8ff', 
-              color: '#7c3aed',
-              cursor: 'pointer',
-              '&:hover': { bgcolor: '#e9d5ff' }
-            }}
-          />
         </div>
       );
     }
@@ -352,12 +307,6 @@ export default function OrdersDetails() {
         </DialogActions>
       </Dialog>
 
-      {/* Order Progress Modal for Mixed Orders */}
-      <OrderProgressModal
-        orderId={Number(orderId)}
-        isOpen={showProgressModal}
-        onClose={() => setShowProgressModal(false)}
-      />
     </div>
   );
 }

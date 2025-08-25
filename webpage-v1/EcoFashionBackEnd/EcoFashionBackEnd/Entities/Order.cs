@@ -80,11 +80,9 @@ namespace EcoFashionBackEnd.Entities
     public enum FulfillmentStatus
     {
         None,
-        PartiallyConfirmed,  // Một phần đã được xác nhận bởi sellers
-        Processing,          // Tất cả sellers đã xác nhận
-        PartiallyShipped,    // Một phần đã được vận chuyển
-        Shipped,            // Tất cả đã được vận chuyển
-        Delivered,          // Hoàn thành - chia tiền admin trả tiền lại người bán 90% 
+        Processing,
+        Shipped,
+        Delivered,// chia tiền admin trả tiền lại người bán 90% 
         Canceled
     }
 }

@@ -25,7 +25,6 @@ import SupplierDashboardHome from "./pages/supplier/SupplierDashboardHome";
 import SupplierMaterials from "./pages/supplier/SupplierMaterials";
 import SupplierInventory from "./pages/supplier/SupplierInventory";
 import SupplierOrders from "./pages/supplier/SupplierOrders";
-import SupplierOrdersPartial from "./pages/supplier/SupplierOrdersPartial";
 import SupplierOrdersPending from "./pages/supplier/SupplierOrdersPending";
 import SupplierOrdersCompleted from "./pages/supplier/SupplierOrdersCompleted";
 import MaterialDetailPage from "./pages/material/MaterialDetailPage";
@@ -316,8 +315,7 @@ function App() {
           <Route path="materials" element={<SupplierMaterials />} />
           <Route path="materials/add" element={<AddMaterial />} />
           <Route path="materials/inventory" element={<SupplierInventory />} />
-          <Route path="orders" element={<SupplierOrdersPartial />} />
-          <Route path="orders/legacy" element={<SupplierOrders />} />
+          <Route path="orders" element={<SupplierOrders />} />
           <Route path="orders/pending" element={<SupplierOrdersPending />} />
           <Route path="orders/completed" element={<SupplierOrdersCompleted />} />
         </Route>
