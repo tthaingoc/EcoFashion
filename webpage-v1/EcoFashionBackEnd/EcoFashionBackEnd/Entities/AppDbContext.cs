@@ -40,7 +40,6 @@ namespace EcoFashionBackEnd.Entities
         public DbSet<Blog> Blogs { get; set; }
         public DbSet<BlogImage> BlogImages { get; set; }
         public DbSet<Order> Orders { get; set; }
-        public DbSet<SubOrder> SubOrders { get; set; }
         public DbSet<OrderDetail> OrderDetails { get; set; }
         public DbSet<OrderGroup> OrderGroups { get; set; }
         public DbSet<OrderSellerSettlement> OrderSellerSettlements { get; set; }
@@ -595,7 +594,7 @@ namespace EcoFashionBackEnd.Entities
                 .IsRequired(false)
                 .OnDelete(DeleteBehavior.Restrict);
             modelBuilder.Entity<OrderDetail>()
-                .HasOne(od => od.Order).WithMany()
+                .HasOne(od => od.Order).WithMany(o => o.OrderDetails)
                 .HasForeignKey(od => od.OrderId)
                 .OnDelete(DeleteBehavior.Restrict);
             modelBuilder.Entity<OrderDetail>()

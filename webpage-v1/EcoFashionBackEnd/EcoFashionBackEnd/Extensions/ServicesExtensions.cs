@@ -98,7 +98,6 @@ public static class ServicesExtensions
         services.AddScoped<SustainabilityService>();
         services.AddScoped<BlogService>();
         services.AddScoped<OrderService>();
-        services.AddScoped<SubOrderService>();
         services.AddScoped<CheckoutService>();
         services.AddScoped<FlexibleCheckoutService>();
         services.AddScoped<OrderDetailService>();

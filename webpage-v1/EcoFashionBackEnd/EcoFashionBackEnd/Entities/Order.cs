@@ -61,6 +61,7 @@ namespace EcoFashionBackEnd.Entities
         public DateTime OrderDate { get; set; }
         public DateTime CreateAt { get; set; } = DateTime.Now;
         public virtual ICollection<PaymentTransaction> PaymentTransactions { get; set; } = new List<PaymentTransaction>();
+        public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
     }
     public enum OrderStatus
     {

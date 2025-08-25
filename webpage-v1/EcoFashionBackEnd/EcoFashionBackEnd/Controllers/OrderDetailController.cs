@@ -37,7 +37,7 @@ public class OrderDetailController : ControllerBase
     public async Task<IActionResult> CreateOrderDetail(CreateOrderDetailRequest request)
     {
         if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int userId))
-            return Unauthorized(ApiResult<CreateDesignResponse>.Fail("Không thể xác định người dùng."));
+            return Unauthorized(ApiResult<object>.Fail("Không thể xác định người dùng."));
         var orderDetailId = await _orderDetailService.CreateOrderDetailAsync(userId,request);
         return CreatedAtAction(nameof(GetOrderDetailById), new {id = orderDetailId}, ApiResult<object>.Succeed(new { OrderDetailId = orderDetailId }));
     }
@@ -45,7 +45,7 @@ public class OrderDetailController : ControllerBase
     public async Task<IActionResult> UpdateOrderDetail(int orderDetailId, [FromForm] UpdateOrderDetailRequest request)
     {
         if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int userId))
-            return Unauthorized(ApiResult<CreateDesignResponse>.Fail("Không thể xác định người dùng."));
+            return Unauthorized(ApiResult<object>.Fail("Không thể xác định người dùng."));
         try
         {
             var success = await _orderDetailService.UpdateOrderDetailAsync(orderDetailId, request);
@@ -70,7 +70,7 @@ public class OrderDetailController : ControllerBase
     public async Task<IActionResult> DeleteOrderDetail(int orderDetailId)
     {
         if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int userId))
-            return Unauthorized(ApiResult<CreateDesignResponse>.Fail("Không thể xác định người dùng."));
+            return Unauthorized(ApiResult<object>.Fail("Không thể xác định người dùng."));
         var success = await _orderDetailService.DeleteOrderDetailAsync(orderDetailId);
         if (success)
             return Ok(ApiResult<string>.Succeed("Xóa chi tiết đơn hàng thành công"));
