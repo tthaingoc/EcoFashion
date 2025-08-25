@@ -72,7 +72,10 @@ const CheckoutTailwind: React.FC = () => {
 
 
 
- const orderTotal = totalAmount; // Sử dụng tổng tiền từ sản phẩm đã chọn
+ // Tính orderTotal từ wizard.orders (sau khi backend pre-split) hoặc fallback về totalAmount
+ const orderTotal = wizard.orders.length > 0 
+   ? wizard.orders.reduce((sum, order) => sum + order.totalAmount, 0)
+   : totalAmount;
 
 
 
@@ -171,12 +174,63 @@ const CheckoutTailwind: React.FC = () => {
            return;
          }
          
-         // Tính tổng tiền
-         const total = filteredCartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+         // Convert cart items thành format API và tạo session ngay
+         const cartItemsDto = filteredCartItems.map(item => {
+           console.log('Converting item for session:', item);
+           
+           if (item.type === 'material') {
+             if (!item.materialId) {
+               throw new Error(`Material item ${item.id} missing materialId`);
+             }
+             return {
+               itemType: 'material' as const,
+               materialId: item.materialId,
+               quantity: item.quantity,
+               unitPrice: item.price
+             };
+           } else if (item.type === 'product') {
+             if (!item.productId) {
+               throw new Error(`Product item ${item.id} missing productId`);
+             }
+             return {
+               itemType: 'product' as const,
+               productId: item.productId,
+               quantity: item.quantity,
+               unitPrice: item.price
+             };
+           } else {
+             // design - sử dụng productId vì design được chuyển thành product
+             if (!item.productId) {
+               throw new Error(`Design item ${item.id} missing productId`);
+             }
+             return {
+               itemType: 'design' as const,
+               designId: item.productId, // Design sử dụng productId
+               quantity: item.quantity,
+               unitPrice: item.price
+             };
+           }
+         });
          
-         // Lưu vào state để hiển thị, KHÔNG tạo order
+         // Tạo session với backend để pre-split orders theo seller
+         console.log('Creating session with items:', cartItemsDto);
+         const sessionResp = await checkoutService.createSession({
+           items: cartItemsDto,
+           shippingAddress: 'temp', // Sẽ được cập nhật khi chọn địa chỉ
+           idempotencyKey, // Gửi idempotency key để tránh tạo trùng
+         });
+         
+         console.log('Session created:', sessionResp);
+         
+         // Khởi tạo wizard với response từ backend
+         wizard.start(sessionResp);
+         
+         // Lưu selected items để hiển thị
          setSelectedCartItems(filteredCartItems);
-         setTotalAmount(total);
+         
+         // Tính tổng tiền từ wizard.orders thay vì từ cart items
+         const wizardTotal = sessionResp.orders.reduce((sum, order) => sum + order.totalAmount, 0);
+         setTotalAmount(wizardTotal);
          
          // Xóa danh sách đã chọn sau khi load xong
          localStorage.removeItem('selectedItemsForCheckout');
@@ -220,8 +274,8 @@ const CheckoutTailwind: React.FC = () => {
 
 
  const handlePayment = async () => {
-   if (selectedCartItems.length === 0) {
-     toast.error('Không tìm thấy sản phẩm để thanh toán');
+   if (!wizard.orderGroupId || wizard.orders.length === 0) {
+     toast.error('Không tìm thấy đơn hàng để thanh toán');
      return;
    }
 
@@ -230,7 +284,7 @@ const CheckoutTailwind: React.FC = () => {
      return;
    }
 
-   // Chặn tạo Order khi số dư ví không đủ để tránh tạo order trùng lặp
+   // Chặn thanh toán khi số dư ví không đủ
    if (walletBalance < orderTotal) {
      toast.error('Số dư ví không đủ, vui lòng nạp tiền trước khi thanh toán');
      navigate('/wallet');
@@ -240,73 +294,20 @@ const CheckoutTailwind: React.FC = () => {
    setIsProcessing(true);
 
    try {
-     // Tạo order khi nhấn thanh toán
-     console.log('Creating order for selected items:', selectedCartItems);
+     console.log('Paying for order group:', wizard.orderGroupId);
+     console.log('Orders in group:', wizard.orders);
      
-     // Convert cart items thành format API
-     const cartItemsDto = selectedCartItems.map(item => {
-       console.log('Converting item:', item);
-       
-       if (item.type === 'material') {
-         if (!item.materialId) {
-           throw new Error(`Material item ${item.id} missing materialId`);
-         }
-         const dto = {
-           itemType: 'material' as const,
-           materialId: item.materialId,
-           quantity: item.quantity,
-           unitPrice: item.price
-         };
-         console.log('Material DTO:', dto);
-         return dto;
-       } else if (item.type === 'product') {
-         if (!item.productId) {
-           throw new Error(`Product item ${item.id} missing productId`);
-         }
-         const dto = {
-           itemType: 'product' as const,
-           productId: item.productId,
-           quantity: item.quantity,
-           unitPrice: item.price
-         };
-         console.log('Product DTO:', dto);
-         return dto;
-       } else {
-         // design - sử dụng productId vì design được chuyển thành product
-         if (!item.productId) {
-           throw new Error(`Design item ${item.id} missing productId`);
-         }
-         const dto = {
-           itemType: 'design' as const,
-           designId: item.productId, // Design sử dụng productId
-           quantity: item.quantity,
-           unitPrice: item.price
-         };
-         console.log('Design DTO:', dto);
-         return dto;
-       }
-     });
-     
-     // Tạo session và order
-     const sessionResp = await checkoutService.createSession({
-       items: cartItemsDto,
-       shippingAddress: 'temp', // Sẽ được cập nhật với địa chỉ thực
-       // Gửi idempotencyKey để tránh tạo trùng Order nếu ví chưa đủ và user quay lại bấm lần 2
-       idempotencyKey,
-     });
-     
-     // Thanh toán ngay sau khi tạo order
+     // Thanh toán nhóm đơn hàng
      const addressId = selectedAddress?.addressId;
      if (!addressId) throw new Error('Không có addressId');
      
-     // Lấy order đầu tiên từ session
-     const firstOrder = sessionResp.orders[0];
-     if (!firstOrder) throw new Error('Không tìm thấy order trong session');
+     await payGroupWithWallet({ orderGroupId: wizard.orderGroupId, addressId });
      
-     await payWithWallet({ orderId: firstOrder.orderId, addressId });
      // Thanh toán thành công thì clear idempotencyKey cho lần checkout kế tiếp
      sessionStorage.removeItem('checkoutIdempotencyKey');
-     navigate(`/checkout/result?orderId=${firstOrder.orderId}&paymentMethod=wallet&status=success`);
+     
+     // Chuyển đến trang kết quả với orderGroupId
+     navigate(`/checkout/result?orderGroupId=${wizard.orderGroupId}&paymentMethod=wallet&status=success`);
      
    } catch (error) {
      console.error('Payment error:', error);
@@ -406,7 +407,10 @@ const CheckoutTailwind: React.FC = () => {
        <div className="mb-8">
          <h1 className="text-2xl font-bold text-gray-900 mb-2">Thanh toán</h1>
          <p className="text-gray-600">
-           {selectedCartItems.length} sản phẩm đã chọn - Tổng: {orderTotal.toLocaleString('vi-VN')} VND
+           {wizard.orders.length > 0 
+             ? `${wizard.orders.length} đơn hàng từ ${wizard.orders.length} người bán - Tổng: ${orderTotal.toLocaleString('vi-VN')} VND`
+             : `${selectedCartItems.length} sản phẩm đã chọn - Tổng: ${orderTotal.toLocaleString('vi-VN')} VND`
+           }
          </p>
        </div>
 

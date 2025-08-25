@@ -13,46 +13,62 @@ const CheckoutResultTailwind: React.FC = () => {
 
   useEffect(() => {
     const confirm = async () => {
+      const orderGroupIdFromQuery = searchParams.get('orderGroupId');
       const orderIdFromQuery = Number(searchParams.get('orderId'));
-      if (orderIdFromQuery && !Number.isNaN(orderIdFromQuery)) {
-        wizard.goToOrder(orderIdFromQuery);
-      }
-      const current = wizard.orders[wizard.currentIndex];
-      if (!current) {
-        navigate('/orders');
-        return;
-      }
+      
       try {
         setLoading(true);
-        const resp = await ordersService.getById(current.orderId);
-        const s = (resp as any)?.result?.paymentStatus || (resp as any)?.paymentStatus || (resp as any)?.status;
-        const normalized = String(s || '').toLowerCase();
-        if (normalized === 'paid' || normalized === 'processing') {
-          wizard.markStatus(current.orderId, 'Paid');
+        
+        if (orderGroupIdFromQuery) {
+          // Thanh toán nhóm đơn hàng - hiển thị kết quả thành công
+          console.log('Group payment result for orderGroupId:', orderGroupIdFromQuery);
           setStatus('success');
-        } else if (normalized === 'failed') {
-          wizard.markStatus(current.orderId, 'Failed');
-          setStatus('failed');
+          
+          // Nếu có wizard orders, mark tất cả là Paid
+          if (wizard.orders.length > 0) {
+            wizard.orders.forEach(order => {
+              wizard.markStatus(order.orderId, 'Paid');
+            });
+          }
+        } else if (orderIdFromQuery && !Number.isNaN(orderIdFromQuery)) {
+          // Thanh toán đơn lẻ - kiểm tra trạng thái
+          wizard.goToOrder(orderIdFromQuery);
+          const current = wizard.orders[wizard.currentIndex];
+          if (!current) {
+            navigate('/orders');
+            return;
+          }
+          
+          const resp = await ordersService.getById(current.orderId);
+          const s = (resp as any)?.result?.paymentStatus || (resp as any)?.paymentStatus || (resp as any)?.status;
+          const normalized = String(s || '').toLowerCase();
+          if (normalized === 'paid' || normalized === 'processing') {
+            wizard.markStatus(current.orderId, 'Paid');
+            setStatus('success');
+          } else if (normalized === 'failed') {
+            wizard.markStatus(current.orderId, 'Failed');
+            setStatus('failed');
+          } else {
+            wizard.markStatus(current.orderId, 'Pending');
+            setStatus('pending');
+          }
         } else {
-          wizard.markStatus(current.orderId, 'Pending');
-          setStatus('pending');
+          // Không có orderGroupId hoặc orderId
+          navigate('/orders');
+          return;
         }
+        
       } catch (e: any) {
         setError(e?.message || 'Không xác nhận được trạng thái đơn');
       } finally {
         setLoading(false);
-        // Removed automatic redirect - user will manually check orders
-        // setTimeout(() => {
-        //   wizard.next();
-        //   const hasNext = wizard.currentIndex < wizard.orders.length - 1;
-        //   navigate(hasNext ? '/checkout' : '/orders');
-        // }, 3000);
       }
     };
     confirm();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const orderGroupIdFromQuery = searchParams.get('orderGroupId');
   const current = wizard.orders[wizard.currentIndex];
   const completed = wizard.orders.filter(o => wizard.statusByOrderId[o.orderId] === 'Paid').length;
   const hasNext = wizard.currentIndex < wizard.orders.length - 1;
@@ -81,7 +97,9 @@ const CheckoutResultTailwind: React.FC = () => {
 
   const message = loading
     ? 'Vui lòng đợi trong giây lát'
-    : error || (current ? `Đơn hàng #${current.orderId}` : '');
+    : error || (orderGroupIdFromQuery 
+        ? `Nhóm đơn hàng: ${orderGroupIdFromQuery.substring(0, 8)}...` 
+        : current ? `Đơn hàng #${current.orderId}` : '');
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -91,11 +109,24 @@ const CheckoutResultTailwind: React.FC = () => {
           <h1 className="text-2xl font-bold mb-2">{title}</h1>
           <p className="text-gray-600 mb-6">{message}</p>
 
-          {!loading && current && (
+          {!loading && (orderGroupIdFromQuery || current) && (
             <div className={`rounded-lg p-4 mb-6 ${status === 'success' ? 'bg-green-50 border border-green-200' : status === 'failed' ? 'bg-red-50 border border-red-200' : 'bg-yellow-50 border border-yellow-200'}`}>
-              <p className="text-sm">
-                <span className="font-medium">Mã đơn hàng:</span> #{current.orderId}
-              </p>
+              {orderGroupIdFromQuery ? (
+                <div className="space-y-2">
+                  <p className="text-sm">
+                    <span className="font-medium">Mã nhóm đơn hàng:</span> {orderGroupIdFromQuery}
+                  </p>
+                  {wizard.orders.length > 0 && (
+                    <p className="text-sm">
+                      <span className="font-medium">Số đơn hàng:</span> {wizard.orders.length} đơn từ {wizard.orders.length} người bán khác nhau
+                    </p>
+                  )}
+                </div>
+              ) : current && (
+                <p className="text-sm">
+                  <span className="font-medium">Mã đơn hàng:</span> #{current.orderId}
+                </p>
+              )}
             </div>
           )}
 

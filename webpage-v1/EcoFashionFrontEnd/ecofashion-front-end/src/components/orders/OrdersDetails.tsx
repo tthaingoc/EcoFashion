@@ -48,7 +48,16 @@ export default function OrdersDetails() {
       }
     };
     load();
-  }, [orderId]);
+    
+    // Auto-refresh every 30 seconds for real-time status updates
+    const refreshInterval = setInterval(() => {
+      if (orderId && !loading) {
+        load();
+      }
+    }, 30000);
+    
+    return () => clearInterval(refreshInterval);
+  }, [orderId, loading]);
 
   // Function to handle tracking click based on order status
   const handleTrackingClick = () => {
@@ -67,7 +76,6 @@ export default function OrdersDetails() {
 
   const renderTrackingStatus = () => {
     const isPaid = data.paymentStatus === 'Paid' || data.paymentStatus === 'paid';
-    const isProcessing = data.status === 'processing';
     const fulfillmentStatus = data.fulfillmentStatus || 'None';
     
     if (!isPaid) {
@@ -78,40 +86,42 @@ export default function OrdersDetails() {
       );
     }
     
-    if (isPaid && isProcessing && (fulfillmentStatus === 'None' || fulfillmentStatus === 'Processing')) {
-      return (
-        <div className="font-medium flex items-center gap-2">
-          <span className="text-amber-600">Chờ người bán xác nhận</span>
-          <Chip
-            label="Theo dõi vận chuyển"
-            size="small"
-            icon={<AccessTime />}
-            onClick={handleTrackingClick}
-            sx={{ 
-              bgcolor: '#fef3c7', 
-              color: '#d97706',
-              cursor: 'pointer',
-              '&:hover': { bgcolor: '#fde68a' }
-            }}
-          />
-        </div>
-      );
-    }
+    // Map fulfillment status to Vietnamese and colors
+    const getStatusInfo = (status: string) => {
+      switch (status.toLowerCase()) {
+        case 'delivered':
+          return { text: '✅ Đã giao hàng', color: '#16a34a', bgColor: '#dcfce7' };
+        case 'shipped':
+          return { text: '🚚 Đang vận chuyển', color: '#7c3aed', bgColor: '#ede9fe' };
+        case 'processing':
+          return { text: '📦 Đang xử lý', color: '#2563eb', bgColor: '#dbeafe' };
+        case 'none':
+        default:
+          return { text: '⏳ Chờ xác nhận', color: '#d97706', bgColor: '#fef3c7' };
+      }
+    };
     
-    // For other statuses (shipped, delivered, etc.)
+    const statusInfo = getStatusInfo(fulfillmentStatus);
+    const showWaitingDialog = fulfillmentStatus === 'None' || fulfillmentStatus === 'Processing';
+    
     return (
       <div className="font-medium flex items-center gap-2">
-        {fulfillmentStatus && fulfillmentStatus !== 'None' ? String(fulfillmentStatus) : 'Chưa cập nhật'}
+        <span style={{ color: statusInfo.color }}>
+          {statusInfo.text}
+        </span>
         <Chip
-          label="Theo dõi vận chuyển"
+          label={showWaitingDialog ? "Xem tiến trình" : "Theo dõi vận chuyển"}
           size="small"
-          icon={<LocalShipping />}
+          icon={showWaitingDialog ? <AccessTime /> : <LocalShipping />}
           onClick={handleTrackingClick}
           sx={{ 
-            bgcolor: '#dcfce7', 
-            color: '#16a34a',
+            bgcolor: statusInfo.bgColor, 
+            color: statusInfo.color,
             cursor: 'pointer',
-            '&:hover': { bgcolor: '#bbf7d0' }
+            '&:hover': { 
+              bgcolor: statusInfo.bgColor,
+              opacity: 0.8
+            }
           }}
         />
       </div>
@@ -131,7 +141,33 @@ export default function OrdersDetails() {
     <div className="max-w-[1120px] mx-auto px-4 py-6 space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Đơn #{data.orderId}</h1>
-        <Link to="/orders" className="text-green-700 hover:underline">Danh sách đơn</Link>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => {
+              if (orderId && !loading) {
+                const load = async () => {
+                  try {
+                    setLoading(true);
+                    const res = await ordersService.getById(Number(orderId));
+                    setData((res as any)?.result || res);
+                    const lines = await ordersService.getDetailsByOrderId(Number(orderId));
+                    setDetails(lines);
+                  } catch (e: any) {
+                    setError(e?.message || 'Không tải được chi tiết đơn');
+                  } finally {
+                    setLoading(false);
+                  }
+                };
+                load();
+              }
+            }}
+            disabled={loading}
+            className="text-blue-600 hover:text-blue-700 disabled:opacity-50 text-sm"
+          >
+            {loading ? '🔄 Đang tải...' : '🔄 Làm mới'}
+          </button>
+          <Link to="/orders" className="text-green-700 hover:underline">Danh sách đơn</Link>
+        </div>
       </div>
       <div className="bg-white border rounded-md p-4 grid md:grid-cols-3 gap-4">
         <div>
@@ -242,12 +278,30 @@ export default function OrdersDetails() {
               </div>
 
               <div className="flex items-center gap-4">
-                <div className="w-6 h-6 bg-amber-500 rounded-full flex items-center justify-center">
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                  data.fulfillmentStatus === 'Processing' 
+                    ? 'bg-blue-500' 
+                    : 'bg-amber-500'
+                }`}>
                   <AccessTime sx={{ color: 'white', fontSize: 14 }} />
                 </div>
                 <div className="flex-1">
-                  <div className="font-medium text-amber-700">Chờ xác nhận từ người bán</div>
-                  <div className="text-sm text-gray-600">Người bán đang xem xét và chuẩn bị đơn hàng của bạn</div>
+                  <div className={`font-medium ${
+                    data.fulfillmentStatus === 'Processing' 
+                      ? 'text-blue-700' 
+                      : 'text-amber-700'
+                  }`}>
+                    {data.fulfillmentStatus === 'Processing' 
+                      ? 'Đang xử lý' 
+                      : 'Chờ xác nhận từ người bán'
+                    }
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    {data.fulfillmentStatus === 'Processing' 
+                      ? 'Người bán đang chuẩn bị và đóng gói đơn hàng của bạn'
+                      : 'Người bán đang xem xét và chuẩn bị đơn hàng của bạn'
+                    }
+                  </div>
                 </div>
               </div>
 

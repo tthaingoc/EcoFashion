@@ -24,14 +24,15 @@ const getStatusBadge = (status: string, variant: 'payment' | 'fulfillment' = 'fu
     }
   }
   
-  // Fulfillment status
+  // Fulfillment status - match Supplier Dashboard colors
   switch (status?.toLowerCase()) {
-    case 'delivered': return `${baseClasses} bg-green-100 text-green-700`;
-    case 'shipped': return `${baseClasses} bg-blue-100 text-blue-700`;
-    case 'processing': return `${baseClasses} bg-yellow-100 text-yellow-700`;
-    case 'canceled': return `${baseClasses} bg-red-100 text-red-700`;
+    case 'delivered': return `${baseClasses} bg-green-100 text-green-800`;
+    case 'shipped': return `${baseClasses} bg-purple-100 text-purple-800`;
+    case 'processing': return `${baseClasses} bg-blue-100 text-blue-800`;
+    case 'canceled':
+    case 'cancelled': return `${baseClasses} bg-red-100 text-red-800`;
     case 'none':
-    default: return `${baseClasses} bg-gray-100 text-gray-700`;
+    default: return `${baseClasses} bg-gray-100 text-gray-800`;
   }
 };
 
@@ -51,7 +52,7 @@ const getPaymentStatusText = (paymentStatus?: string) => {
 };
 
 const getStatusLabel = (paymentStatus?: string, fulfillmentStatus?: string, orderStatus?: string) => {
-  // Priority logic based on the implementation guide
+  // Updated priority logic to match Supplier Dashboard states
   if (paymentStatus?.toLowerCase() === 'pending') {
     return { main: '⏳ Chờ thanh toán', sub: 'Chưa thanh toán' };
   }
@@ -59,16 +60,17 @@ const getStatusLabel = (paymentStatus?: string, fulfillmentStatus?: string, orde
   if (paymentStatus?.toLowerCase() === 'paid') {
     switch (fulfillmentStatus?.toLowerCase()) {
       case 'delivered':
-        return { main: '✅ Đã giao hàng', sub: 'Hoàn thành' };
+        return { main: '✅ Đã giao hàng', sub: 'Hoàn thành - Đã nhận tiền' };
       case 'shipped':
-        return { main: '🚚 Đang vận chuyển', sub: 'Chờ giao hàng' };
+        return { main: '🚚 Đang vận chuyển', sub: 'Đã giao cho đơn vị vận chuyển' };
       case 'processing':
-        return { main: '📦 Đang xử lý', sub: 'Chuẩn bị hàng' };
+        return { main: '📦 Đang xử lý', sub: 'Người bán đang chuẩn bị hàng' };
       case 'canceled':
+      case 'cancelled':
         return { main: '❌ Đã hủy', sub: 'Đơn hàng bị hủy' };
       case 'none':
       default:
-        return { main: '📦 Đang xử lý', sub: 'Đã thanh toán' };
+        return { main: '⏳ Chờ xác nhận', sub: 'Chờ người bán xác nhận đơn hàng' };
     }
   }
   
@@ -207,11 +209,14 @@ export default function OrderTabsContainer() {
         </div>
       </div>
 
-      {/* Refresh Button */}
+      {/* Refresh Button - Auto refresh every 30 seconds */}
       <div className="p-4 border-b bg-gray-50">
         <div className="flex justify-between items-center">
           <h3 className="font-medium text-gray-800">
             {activeTabData.label} ({filteredOrders.length})
+            <span className="ml-2 text-xs text-gray-500">
+              (Tự động làm mới sau 30s)
+            </span>
           </h3>
           <button
             onClick={() => {
@@ -222,7 +227,7 @@ export default function OrderTabsContainer() {
             className="flex items-center gap-2 px-3 py-1.5 text-sm text-blue-600 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 disabled:opacity-50"
           >
             <span className={loading ? 'animate-spin' : ''}>↻</span>
-            Làm mới
+            Làm mới ngay
           </button>
         </div>
       </div>

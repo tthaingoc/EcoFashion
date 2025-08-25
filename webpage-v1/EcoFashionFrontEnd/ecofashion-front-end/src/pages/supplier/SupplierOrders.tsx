@@ -14,6 +14,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { ordersService, OrderModel, UpdateFulfillmentStatusRequest, ShipOrderRequest } from '../../services/api/ordersService';
 import { useAuthStore } from '../../store/authStore';
+import { toast } from 'react-toastify';
 
 // Use OrderModel from API service
 type Order = OrderModel;
@@ -256,24 +257,39 @@ const SupplierOrders: React.FC<SupplierOrdersProps> = ({ defaultFilter = 'all' }
 
   const handleConfirmOrder = async (orderId: number) => {
     setIsUpdating(true);
+    
+    // Optimistic update - immediately update UI
+    setOrders(prevOrders => 
+      prevOrders.map(order => 
+        order.orderId === orderId 
+          ? { ...order, fulfillmentStatus: 'Processing', status: 'processing' }
+          : order
+      )
+    );
+    
     try {
-      const request: UpdateFulfillmentStatusRequest = {
+      // Call API to confirm on server
+      await ordersService.updateFulfillmentStatus(orderId, {
         fulfillmentStatus: 'Processing',
         notes: 'Đơn hàng đã được xác nhận bởi người bán'
-      };
+      });
       
-      await ordersService.updateFulfillmentStatus(orderId, request);
-      
-      // Refetch orders to get updated data
-      if (supplierProfile?.supplierId) {
-        const updatedOrders = await ordersService.getOrdersBySeller(supplierProfile.supplierId);
-        setOrders(updatedOrders || []);
-      }
-      
-      alert(`Đơn hàng #${orderId} đã được xác nhận thành công!`);
+      // Success feedback with toast notification
+      toast.success(`✅ Đơn hàng #${orderId} đã được xác nhận thành công!`);
     } catch (error: any) {
-      console.error('Error confirming order:', error);
-      alert(error.message || 'Có lỗi xảy ra khi xác nhận đơn hàng');
+      console.error('❌ Error confirming order:', error);
+      // Rollback optimistic update on error
+      setOrders(prevOrders => 
+        prevOrders.map(order => 
+          order.orderId === orderId 
+            ? { ...order, fulfillmentStatus: 'None', status: 'pending' }
+            : order
+        )
+      );
+      
+      // More specific error handling
+      const errorMsg = error?.response?.data?.message || error.message || 'Có lỗi xảy ra khi xác nhận đơn hàng';
+      toast.error(`❌ Lỗi xác nhận: ${errorMsg}`);
     } finally {
       setIsUpdating(false);
     }
@@ -281,33 +297,61 @@ const SupplierOrders: React.FC<SupplierOrdersProps> = ({ defaultFilter = 'all' }
 
   const handleUpdateStatus = async (orderId: number, newStatus: string) => {
     setIsUpdating(true);
+    
+    // Optimistic update - immediately update UI
+    const statusMapping: Record<string, string> = {
+      'Shipped': 'shipped',
+      'Delivered': 'delivered',
+      'Processing': 'processing'
+    };
+    
+    setOrders(prevOrders => 
+      prevOrders.map(order => 
+        order.orderId === orderId 
+          ? { ...order, fulfillmentStatus: newStatus, status: statusMapping[newStatus] || 'processing' }
+          : order
+      )
+    );
+    
     try {
       if (newStatus === 'Shipped') {
-        const request: ShipOrderRequest = {
+        // Use ship API for better tracking
+        await ordersService.markOrderShipped(orderId, {
           carrier: 'Vận chuyển tiêu chuẩn',
           notes: 'Đơn hàng đã được giao cho đơn vị vận chuyển'
-        };
-        await ordersService.markOrderShipped(orderId, request);
+        });
       } else if (newStatus === 'Delivered') {
+        // Use deliver API to trigger settlement
         await ordersService.markOrderDelivered(orderId);
       } else {
-        const request: UpdateFulfillmentStatusRequest = {
+        // For other status updates, use fulfillment status API
+        await ordersService.updateFulfillmentStatus(orderId, {
           fulfillmentStatus: newStatus,
           notes: `Cập nhật trạng thái: ${newStatus}`
-        };
-        await ordersService.updateFulfillmentStatus(orderId, request);
+        });
       }
       
-      // Refetch orders to get updated data
+      // Success feedback with toast notifications and status-specific messages
+      const statusMessages: Record<string, string> = {
+        'Shipped': '🚚 Đơn hàng đã được chuyển cho đơn vị vận chuyển',
+        'Delivered': '✅ Đơn hàng đã hoàn thành và kích hoạt thanh toán cho người bán',
+        'Processing': '⏳ Đơn hàng đang được xử lý',
+      };
+      
+      const successMsg = statusMessages[newStatus] || `Đơn hàng #${orderId} đã được cập nhật: ${newStatus}`;
+      toast.success(successMsg);
+    } catch (error: any) {
+      console.error('❌ Error updating order status:', error);
+      
+      // Rollback optimistic update on error - restore previous state
       if (supplierProfile?.supplierId) {
         const updatedOrders = await ordersService.getOrdersBySeller(supplierProfile.supplierId);
         setOrders(updatedOrders || []);
       }
       
-      alert(`Đơn hàng #${orderId} đã được cập nhật trạng thái: ${newStatus}`);
-    } catch (error: any) {
-      console.error('Error updating order status:', error);
-      alert(error.message || 'Có lỗi xảy ra khi cập nhật trạng thái đơn hàng');
+      // More specific error handling
+      const errorMsg = error?.response?.data?.message || error.message || 'Có lỗi xảy ra khi cập nhật trạng thái đơn hàng';
+      toast.error(`❌ Lỗi cập nhật: ${errorMsg}`);
     } finally {
       setIsUpdating(false);
     }
