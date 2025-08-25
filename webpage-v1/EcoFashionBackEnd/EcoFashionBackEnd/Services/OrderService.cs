@@ -418,5 +418,274 @@ namespace EcoFashionBackEnd.Services
                 Console.WriteLine($"Settlement error for order {order.OrderId}: {ex.Message}");
             }
         }
+
+        // ===== ORDER SPLITTING SYSTEM =====
+
+        /// <summary>
+        /// Process order splitting after successful payment
+        /// This method should be called after payment is confirmed
+        /// </summary>
+        public async Task<bool> ProcessOrderSplittingAsync(int orderId)
+        {
+            try
+            {
+                var order = await _dbContext.Orders
+                    .Include(o => o.OrderDetails)
+                    .FirstOrDefaultAsync(o => o.OrderId == orderId);
+
+                if (order == null || order.PaymentStatus != PaymentStatus.Paid)
+                    return false;
+
+                // Check if order has multiple sellers
+                var orderDetails = order.OrderDetails.ToList();
+                var sellerGroups = orderDetails
+                    .GroupBy(od => od.SupplierId ?? od.DesignerId)
+                    .Where(g => g.Key.HasValue)
+                    .ToList();
+
+                // If only one seller, no need to split
+                if (sellerGroups.Count <= 1)
+                    return true;
+
+                // Create sub-orders for each seller (inline implementation to avoid circular dependency)
+                var subOrders = await CreateSubOrdersFromOrderInlineAsync(orderId);
+
+                if (subOrders.Any())
+                {
+                    // Update parent order to indicate it has been split
+                    order.Status = OrderStatus.processing;
+                    order.FulfillmentStatus = FulfillmentStatus.None; // Reset to None, will be calculated from sub-orders
+                    
+                    _dbContext.Orders.Update(order);
+                    await _dbContext.SaveChangesAsync();
+
+                    return true;
+                }
+
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error splitting order {orderId}: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Calculate overall order status from sub-orders
+        /// </summary>
+        public async Task<bool> UpdateOrderStatusFromSubOrdersAsync(int orderId)
+        {
+            try
+            {
+                var order = await _dbContext.Orders.FindAsync(orderId);
+                if (order == null) return false;
+
+                var subOrders = await _dbContext.SubOrders
+                    .Where(so => so.ParentOrderId == orderId)
+                    .ToListAsync();
+
+                if (!subOrders.Any()) return true;
+
+                // Calculate overall fulfillment status
+                var confirmedCount = subOrders.Count(so => so.Status >= SubOrderStatus.Confirmed);
+                var shippedCount = subOrders.Count(so => so.Status >= SubOrderStatus.Shipped);
+                var deliveredCount = subOrders.Count(so => so.Status == SubOrderStatus.Delivered);
+                var totalCount = subOrders.Count;
+
+                FulfillmentStatus newFulfillmentStatus;
+                OrderStatus newOrderStatus;
+
+                if (deliveredCount == totalCount)
+                {
+                    // All sub-orders delivered
+                    newFulfillmentStatus = FulfillmentStatus.Delivered;
+                    newOrderStatus = OrderStatus.delivered;
+                }
+                else if (shippedCount == totalCount)
+                {
+                    // All sub-orders shipped
+                    newFulfillmentStatus = FulfillmentStatus.Shipped;
+                    newOrderStatus = OrderStatus.shipped;
+                }
+                else if (confirmedCount == totalCount)
+                {
+                    // All sub-orders confirmed
+                    newFulfillmentStatus = FulfillmentStatus.Processing;
+                    newOrderStatus = OrderStatus.processing;
+                }
+                else if (confirmedCount > 0)
+                {
+                    // Partially confirmed - keep processing status
+                    newFulfillmentStatus = FulfillmentStatus.Processing;
+                    newOrderStatus = OrderStatus.processing;
+                }
+                else
+                {
+                    // No confirmations yet
+                    newFulfillmentStatus = FulfillmentStatus.None;
+                    newOrderStatus = OrderStatus.processing;
+                }
+
+                // Update order if status changed
+                if (order.FulfillmentStatus != newFulfillmentStatus || order.Status != newOrderStatus)
+                {
+                    order.FulfillmentStatus = newFulfillmentStatus;
+                    order.Status = newOrderStatus;
+
+                    // Trigger settlement if all delivered
+                    if (newFulfillmentStatus == FulfillmentStatus.Delivered && order.Status != OrderStatus.delivered)
+                    {
+                        await ProcessSettlementAsync(order);
+                    }
+
+                    _dbContext.Orders.Update(order);
+                    await _dbContext.SaveChangesAsync();
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error updating order status from sub-orders {orderId}: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Check if an order should be split (has multiple sellers)
+        /// </summary>
+        public async Task<bool> ShouldSplitOrderAsync(int orderId)
+        {
+            var order = await _dbContext.Orders
+                .Include(o => o.OrderDetails)
+                .FirstOrDefaultAsync(o => o.OrderId == orderId);
+
+            if (order == null) return false;
+
+            var uniqueSellers = order.OrderDetails
+                .Select(od => od.SupplierId ?? od.DesignerId)
+                .Where(sellerId => sellerId.HasValue)
+                .Distinct()
+                .Count();
+
+            return uniqueSellers > 1;
+        }
+
+        /// <summary>
+        /// Get sub-orders for a parent order (convenience method)
+        /// </summary>
+        public async Task<IEnumerable<SubOrder>> GetSubOrdersAsync(int parentOrderId)
+        {
+            return await _dbContext.SubOrders
+                .Include(so => so.Supplier)
+                .Include(so => so.Designer)
+                .Include(so => so.OrderDetails)
+                .Where(so => so.ParentOrderId == parentOrderId)
+                .OrderBy(so => so.CreatedAt)
+                .ToListAsync();
+        }
+
+        /// <summary>
+        /// Create sub-orders inline (to avoid circular dependency with SubOrderService)
+        /// </summary>
+        private async Task<List<SubOrder>> CreateSubOrdersFromOrderInlineAsync(int parentOrderId)
+        {
+            var parentOrder = await _dbContext.Orders
+                .Include(o => o.OrderDetails)
+                .FirstOrDefaultAsync(o => o.OrderId == parentOrderId);
+
+            if (parentOrder == null) return new List<SubOrder>();
+
+            var orderDetails = parentOrder.OrderDetails.ToList();
+            if (!orderDetails.Any()) return new List<SubOrder>();
+
+            // Group OrderDetails by seller (SupplierId or DesignerId)
+            var sellerGroups = orderDetails
+                .GroupBy(od => new
+                {
+                    SellerId = od.SupplierId ?? od.DesignerId,
+                    SellerType = od.SupplierId.HasValue ? "Supplier" : "Designer",
+                    SupplierId = od.SupplierId,
+                    DesignerId = od.DesignerId
+                })
+                .ToList();
+
+            var createdSubOrders = new List<SubOrder>();
+
+            foreach (var group in sellerGroups)
+            {
+                if (!group.Key.SellerId.HasValue) continue;
+
+                // Get seller information
+                var sellerInfo = await GetSellerInfoInlineAsync(group.Key.SellerId.Value, group.Key.SellerType);
+                if (sellerInfo == null) continue;
+
+                // Calculate totals for this sub-order
+                var subtotal = group.Sum(od => od.UnitPrice * od.Quantity);
+                var shippingFee = CalculateShippingFeeInline(group.ToList());
+                
+                var subOrder = new SubOrder
+                {
+                    ParentOrderId = parentOrderId,
+                    SellerId = group.Key.SellerId.Value,
+                    SellerName = sellerInfo.Name,
+                    SellerType = group.Key.SellerType,
+                    SellerAvatarUrl = sellerInfo.AvatarUrl,
+                    SupplierId = group.Key.SupplierId,
+                    DesignerId = group.Key.DesignerId,
+                    Subtotal = subtotal,
+                    ShippingFee = shippingFee,
+                    TotalPrice = subtotal + shippingFee,
+                    Status = SubOrderStatus.Pending,
+                    FulfillmentStatus = FulfillmentStatus.None,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                _dbContext.SubOrders.Add(subOrder);
+                await _dbContext.SaveChangesAsync(); // Save to get SubOrderId
+
+                // Update OrderDetails to link to SubOrder
+                foreach (var orderDetail in group)
+                {
+                    orderDetail.SubOrderId = subOrder.SubOrderId;
+                }
+
+                _dbContext.OrderDetails.UpdateRange(group);
+                createdSubOrders.Add(subOrder);
+            }
+
+            await _dbContext.SaveChangesAsync();
+            return createdSubOrders;
+        }
+
+        private async Task<SellerInfo?> GetSellerInfoInlineAsync(Guid sellerId, string sellerType)
+        {
+            if (sellerType == "Supplier")
+            {
+                var supplier = await _dbContext.Suppliers.FirstOrDefaultAsync(s => s.SupplierId == sellerId);
+                return supplier != null ? new SellerInfo
+                {
+                    Name = supplier.SupplierName,
+                    AvatarUrl = supplier.AvatarUrl
+                } : null;
+            }
+            else
+            {
+                var designer = await _dbContext.Designers.FirstOrDefaultAsync(d => d.DesignerId == sellerId);
+                return designer != null ? new SellerInfo
+                {
+                    Name = designer.DesignerName,
+                    AvatarUrl = designer.AvatarUrl
+                } : null;
+            }
+        }
+
+        private decimal CalculateShippingFeeInline(List<OrderDetail> orderDetails)
+        {
+            // Simple shipping calculation - can be enhanced
+            var itemCount = orderDetails.Sum(od => od.Quantity);
+            return itemCount <= 3 ? 25000 : 50000; // Base shipping fee logic
+        }
     }
 }

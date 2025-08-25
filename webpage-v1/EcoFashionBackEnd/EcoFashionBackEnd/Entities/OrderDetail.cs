@@ -12,6 +12,11 @@ namespace EcoFashionBackEnd.Entities
         [ForeignKey("Order")]
         public int OrderId { get; set; }
         public virtual Order Order { get; set; } = null!;
+
+        // Link to SubOrder (for order splitting system)
+        public int? SubOrderId { get; set; }
+        [ForeignKey("SubOrderId")]
+        public virtual SubOrder? SubOrder { get; set; }
         [ForeignKey("Design")]
         public int? DesignId { get; set; }
         public virtual Design? Design { get; set; }

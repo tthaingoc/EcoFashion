@@ -40,6 +40,7 @@ namespace EcoFashionBackEnd.Entities
         public DbSet<Blog> Blogs { get; set; }
         public DbSet<BlogImage> BlogImages { get; set; }
         public DbSet<Order> Orders { get; set; }
+        public DbSet<SubOrder> SubOrders { get; set; }
         public DbSet<OrderDetail> OrderDetails { get; set; }
         public DbSet<OrderGroup> OrderGroups { get; set; }
         public DbSet<OrderSellerSettlement> OrderSellerSettlements { get; set; }
