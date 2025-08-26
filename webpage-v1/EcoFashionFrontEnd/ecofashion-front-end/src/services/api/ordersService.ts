@@ -19,7 +19,7 @@ export interface OrderModel {
 
 // Request/Response interfaces
 export interface UpdateFulfillmentStatusRequest {
-  fulfillmentStatus: string;
+  fulfillmentStatus: string | number;
   notes?: string;
   location?: string;
 }
@@ -55,7 +55,26 @@ export const ordersService = {
   },
   
   updateFulfillmentStatus: async (orderId: number, request: UpdateFulfillmentStatusRequest) => {
-    const { data } = await apiClient.patch(`/order/${orderId}/fulfillment-status`, request);
+    const toEnumNumber = (value: string | number): number => {
+      if (typeof value === 'number') return value;
+      const map: Record<string, number> = {
+        none: 0,
+        processing: 1,
+        shipped: 2,
+        delivered: 3,
+        canceled: 4,
+        cancelled: 4,
+      };
+      return map[value?.toLowerCase?.() as string] ?? 0;
+    };
+
+    const payload = {
+      fulfillmentStatus: toEnumNumber(request.fulfillmentStatus),
+      notes: request.notes,
+      location: request.location,
+    };
+
+    const { data } = await apiClient.patch(`/order/${orderId}/fulfillment-status`, payload);
     return data?.result || data;
   },
   

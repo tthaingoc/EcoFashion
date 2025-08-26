@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ordersService } from '../../services/api/ordersService';
+import { shipmentService, ShipmentTrackingResponse } from '../../services/api/shipmentService';
 import { formatViDateTime } from '../../utils/date';
 import { paymentsService } from '../../services/api/paymentsService';
 import { Button, Box, Chip, Dialog, DialogTitle, DialogContent, DialogActions, Typography } from '@mui/material';
@@ -31,6 +32,9 @@ export default function OrdersDetails() {
   const [error, setError] = useState<string | null>(null);
   const [details, setDetails] = useState<any[]>([]);
   const [showTrackingDialog, setShowTrackingDialog] = useState(false);
+  const [trackingInfo, setTrackingInfo] = useState<ShipmentTrackingResponse | null>(null);
+  const [trackingLoading, setTrackingLoading] = useState(false);
+  const [trackingError, setTrackingError] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -48,19 +52,10 @@ export default function OrdersDetails() {
       }
     };
     load();
-    
-    // Auto-refresh every 30 seconds for real-time status updates
-    const refreshInterval = setInterval(() => {
-      if (orderId && !loading) {
-        load();
-      }
-    }, 30000);
-    
-    return () => clearInterval(refreshInterval);
-  }, [orderId, loading]);
+  }, [orderId]);
 
   // Function to handle tracking click based on order status
-  const handleTrackingClick = () => {
+  const handleTrackingClick = async () => {
     const isPaid = data.paymentStatus === 'Paid' || data.paymentStatus === 'paid';
     const isProcessing = data.status === 'processing';
     const fulfillmentStatus = data.fulfillmentStatus || 'None';
@@ -69,8 +64,19 @@ export default function OrdersDetails() {
     if (isPaid && isProcessing && (fulfillmentStatus === 'None' || fulfillmentStatus === 'Processing')) {
       setShowTrackingDialog(true);
     } else {
-      // For shipped/delivered orders, redirect to tracking page
-      window.open(`/shipment/track/${data.orderId}`, '_blank');
+      // For shipped/delivered orders, load tracking info and show dialog
+      try {
+        setTrackingLoading(true);
+        setTrackingError(null);
+        const info = await shipmentService.getTracking(Number(data.orderId));
+        setTrackingInfo(info);
+      } catch (e: any) {
+        setTrackingInfo(null);
+        setTrackingError(e?.message || 'Không tải được thông tin vận chuyển');
+      } finally {
+        setShowTrackingDialog(true);
+        setTrackingLoading(false);
+      }
     }
   };
 
@@ -247,111 +253,167 @@ export default function OrdersDetails() {
         fullWidth
       >
         <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <AccessTime sx={{ color: '#d97706' }} />
+          {(['shipped','delivered'].includes(String(data.fulfillmentStatus || '').toLowerCase()))
+            ? <LocalShipping sx={{ color: '#7c3aed' }} />
+            : <AccessTime sx={{ color: '#d97706' }} />}
           Trạng thái đơn hàng #{data.orderId}
         </DialogTitle>
         <DialogContent>
           <div className="space-y-6 py-4">
-            {/* Current Status */}
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center">
-                  <AccessTime sx={{ color: 'white', fontSize: 16 }} />
-                </div>
-                <div>
-                  <div className="font-semibold text-amber-800">Chờ người bán xác nhận</div>
-                  <div className="text-sm text-amber-600">Đơn hàng đã được thanh toán và đang chờ người bán xác nhận</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Progress Timeline */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-4">
-                <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-                  <CheckCircle sx={{ color: 'white', fontSize: 14 }} />
-                </div>
-                <div className="flex-1">
-                  <div className="font-medium text-green-700">Đã thanh toán</div>
-                  <div className="text-sm text-gray-600">Thanh toán đã được xử lý thành công</div>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-4">
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                  data.fulfillmentStatus === 'Processing' 
-                    ? 'bg-blue-500' 
-                    : 'bg-amber-500'
-                }`}>
-                  <AccessTime sx={{ color: 'white', fontSize: 14 }} />
-                </div>
-                <div className="flex-1">
-                  <div className={`font-medium ${
-                    data.fulfillmentStatus === 'Processing' 
-                      ? 'text-blue-700' 
-                      : 'text-amber-700'
-                  }`}>
-                    {data.fulfillmentStatus === 'Processing' 
-                      ? 'Đang xử lý' 
-                      : 'Chờ xác nhận từ người bán'
-                    }
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    {data.fulfillmentStatus === 'Processing' 
-                      ? 'Người bán đang chuẩn bị và đóng gói đơn hàng của bạn'
-                      : 'Người bán đang xem xét và chuẩn bị đơn hàng của bạn'
-                    }
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-4 opacity-40">
-                <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center">
-                  <LocalShipping sx={{ color: 'white', fontSize: 14 }} />
-                </div>
-                <div className="flex-1">
-                  <div className="font-medium text-gray-500">Vận chuyển</div>
-                  <div className="text-sm text-gray-400">Đơn hàng sẽ được vận chuyển sau khi người bán xác nhận</div>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-4 opacity-40">
-                <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center">
-                  <CheckCircle sx={{ color: 'white', fontSize: 14 }} />
-                </div>
-                <div className="flex-1">
-                  <div className="font-medium text-gray-500">Hoàn thành</div>
-                  <div className="text-sm text-gray-400">Đơn hàng được giao thành công</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Seller Information */}
-            {details.length > 0 && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Store sx={{ color: '#3b82f6' }} />
-                  <span className="font-medium text-blue-800">Thông tin người bán</span>
-                </div>
-                <div className="space-y-1">
-                  {[...new Set(details.map(d => d.providerName).filter(Boolean))].map((providerName, idx) => (
-                    <div key={idx} className="text-sm text-blue-700">
-                      • {providerName}
+            {/* Waiting/Processing content */}
+            {(String(data.fulfillmentStatus || 'None').toLowerCase() === 'none' || String(data.fulfillmentStatus || 'None').toLowerCase() === 'processing') && (
+              <>
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center">
+                      <AccessTime sx={{ color: 'white', fontSize: 16 }} />
                     </div>
-                  ))}
+                    <div>
+                      <div className="font-semibold text-amber-800">Chờ người bán xác nhận</div>
+                      <div className="text-sm text-amber-600">Đơn hàng đã được thanh toán và đang chờ người bán xác nhận</div>
+                    </div>
+                  </div>
                 </div>
-              </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                      <CheckCircle sx={{ color: 'white', fontSize: 14 }} />
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium text-green-700">Đã thanh toán</div>
+                      <div className="text-sm text-gray-600">Thanh toán đã được xử lý thành công</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4">
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                      data.fulfillmentStatus === 'Processing' 
+                        ? 'bg-blue-500' 
+                        : 'bg-amber-500'
+                    }`}>
+                      <AccessTime sx={{ color: 'white', fontSize: 14 }} />
+                    </div>
+                    <div className="flex-1">
+                      <div className={`font-medium ${
+                        data.fulfillmentStatus === 'Processing' 
+                          ? 'text-blue-700' 
+                          : 'text-amber-700'
+                      }`}>
+                        {data.fulfillmentStatus === 'Processing' 
+                          ? 'Đang xử lý' 
+                          : 'Chờ xác nhận từ người bán'
+                        }
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        {data.fulfillmentStatus === 'Processing' 
+                          ? 'Người bán đang chuẩn bị và đóng gói đơn hàng của bạn'
+                          : 'Người bán đang xem xét và chuẩn bị đơn hàng của bạn'
+                        }
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4 opacity-40">
+                    <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center">
+                      <LocalShipping sx={{ color: 'white', fontSize: 14 }} />
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium text-gray-500">Vận chuyển</div>
+                      <div className="text-sm text-gray-400">Đơn hàng sẽ được vận chuyển sau khi người bán xác nhận</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4 opacity-40">
+                    <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center">
+                      <CheckCircle sx={{ color: 'white', fontSize: 14 }} />
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium text-gray-500">Hoàn thành</div>
+                      <div className="text-sm text-gray-400">Đơn hàng được giao thành công</div>
+                    </div>
+                  </div>
+                </div>
+
+                {details.length > 0 && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Store sx={{ color: '#3b82f6' }} />
+                      <span className="font-medium text-blue-800">Thông tin người bán</span>
+                    </div>
+                    <div className="space-y-1">
+                      {[...new Set(details.map(d => d.providerName).filter(Boolean))].map((providerName, idx) => (
+                        <div key={idx} className="text-sm text-blue-700">
+                          • {providerName}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="bg-gray-50 border rounded-lg p-4">
+                  <div className="font-medium text-gray-800 mb-2">Thời gian dự kiến</div>
+                  <div className="text-sm text-gray-600">
+                    • Xác nhận từ người bán: 1-2 ngày làm việc<br/>
+                    • Vận chuyển: 3-7 ngày làm việc<br/>
+                    • Tổng thời gian: 4-9 ngày làm việc
+                  </div>
+                </div>
+              </>
             )}
 
-            {/* Expected Timeline */}
-            <div className="bg-gray-50 border rounded-lg p-4">
-              <div className="font-medium text-gray-800 mb-2">Thời gian dự kiến</div>
-              <div className="text-sm text-gray-600">
-                • Xác nhận từ người bán: 1-2 ngày làm việc<br/>
-                • Vận chuyển: 3-7 ngày làm việc<br/>
-                • Tổng thời gian: 4-9 ngày làm việc
+            {/* Tracking info for Shipped/Delivered */}
+            {(String(data.fulfillmentStatus || '').toLowerCase() === 'shipped' || String(data.fulfillmentStatus || '').toLowerCase() === 'delivered') && (
+              <div className="space-y-4">
+                <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
+                      <LocalShipping sx={{ color: 'white', fontSize: 16 }} />
+                    </div>
+                    <div>
+                      <div className="font-semibold text-purple-800">{String(data.fulfillmentStatus || '').toLowerCase() === 'delivered' ? 'Đã giao hàng' : 'Đang vận chuyển'}</div>
+                      {trackingInfo && (
+                        <div className="text-sm text-purple-700">Mã vận đơn: {trackingInfo.trackingNumber || '—'} • Nhà vận chuyển: {trackingInfo.carrier || '—'}</div>
+                      )}
+                    </div>
+                  </div>
+                  {trackingInfo?.estimatedDelivery && (
+                    <div className="text-sm text-gray-700">Dự kiến giao: {new Date(trackingInfo.estimatedDelivery).toLocaleString('vi-VN')}</div>
+                  )}
+                  {trackingInfo?.currentLocation && (
+                    <div className="text-sm text-gray-700">Vị trí hiện tại: {trackingInfo.currentLocation}</div>
+                  )}
+                  {!trackingInfo && !trackingLoading && !trackingError && (
+                    <div className="text-sm text-gray-600">Chưa có thông tin vận chuyển chi tiết.</div>
+                  )}
+                </div>
+
+                {trackingLoading && (
+                  <div className="text-sm text-gray-600">Đang tải thông tin vận chuyển...</div>
+                )}
+                {trackingError && (
+                  <div className="text-sm text-red-600">{trackingError}</div>
+                )}
+
+                {trackingInfo && Array.isArray(trackingInfo.statusHistory) && trackingInfo.statusHistory.length > 0 && (
+                  <div className="bg-white border rounded-lg">
+                    <div className="px-4 py-3 border-b font-medium">Lịch sử vận chuyển</div>
+                    <div className="divide-y">
+                      {trackingInfo.statusHistory.map((h, idx) => (
+                        <div key={idx} className="px-4 py-3 flex items-start gap-3">
+                          <div className="w-2 h-2 mt-2 rounded-full bg-purple-500" />
+                          <div className="flex-1">
+                            <div className="text-sm font-medium text-gray-900">{h.status}</div>
+                            <div className="text-sm text-gray-600">{h.description}</div>
+                            <div className="text-xs text-gray-500">{new Date(h.timestamp).toLocaleString('vi-VN')} • {h.location}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
-            </div>
+            )}
           </div>
         </DialogContent>
         <DialogActions>
