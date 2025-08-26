@@ -16,8 +16,10 @@ export interface WalletTransaction {
   balanceAfter: number;
   description?: string;
   createdAt: string;
-  type: 'Deposit' | 'Withdrawal' | 'Payment' | 'Refund' | 'Transfer';
+  type: 'Deposit' | 'Withdrawal' | 'Payment' | 'PaymentReceived' | 'Refund' | 'Transfer';
   status: 'Pending' | 'Success' | 'Fail';
+  orderId?: number;
+  orderGroupId?: string;
 }
 
 export interface DepositRequest {
@@ -117,7 +119,8 @@ export const walletService = {
     switch (type) {
       case 'Deposit': return 'Nạp tiền';
       case 'Withdrawal': return 'Rút tiền';
-      case 'Payment': return 'Thanh toán';
+      case 'Payment': return 'Thanh toán đơn hàng';
+      case 'PaymentReceived': return 'Nhận tiền từ đơn hàng';
       case 'Refund': return 'Hoàn tiền';
       case 'Transfer': return 'Chuyển tiền';
       default: return type;
@@ -176,6 +179,83 @@ export const walletService = {
     }
     
     return errors;
+  },
+
+  // Transaction grouping helpers
+  groupTransactionsByOrder: (transactions: WalletTransaction[]) => {
+    const grouped = new Map<string, {
+      orderGroupId?: string;
+      orderId?: number;
+      transactions: WalletTransaction[];
+      totalAmount: number;
+      isMultiOrder: boolean;
+      orderCount: number;
+      orderIds: number[];
+    }>();
+
+    transactions.forEach(transaction => {
+      const key = transaction.orderGroupId || `order_${transaction.orderId}`;
+      
+      if (!grouped.has(key)) {
+        grouped.set(key, {
+          orderGroupId: transaction.orderGroupId,
+          orderId: transaction.orderId,
+          transactions: [],
+          totalAmount: 0,
+          isMultiOrder: !!transaction.orderGroupId,
+          orderCount: 0,
+          orderIds: []
+        });
+      }
+
+      const group = grouped.get(key)!;
+      group.transactions.push(transaction);
+      group.totalAmount += transaction.amount;
+      
+      if (transaction.orderId && !group.orderIds.includes(transaction.orderId)) {
+        group.orderIds.push(transaction.orderId);
+        group.orderCount = group.orderIds.length;
+      }
+    });
+
+    return Array.from(grouped.values());
+  },
+
+  getOrderTransactionDisplay: (transaction: WalletTransaction): {
+    title: string;
+    subtitle: string;
+    icon: string;
+    isOrderRelated: boolean;
+  } => {
+    const isOrderRelated = !!(transaction.orderId || transaction.orderGroupId);
+    
+    if (!isOrderRelated) {
+      return {
+        title: walletService.getTransactionTypeLabel(transaction.type),
+        subtitle: new Date(transaction.createdAt).toLocaleDateString('vi-VN'),
+        icon: transaction.amount >= 0 ? '📈' : '📉',
+        isOrderRelated: false
+      };
+    }
+
+    if (transaction.orderGroupId) {
+      // Multi-order transaction
+      const orderCount = transaction.description?.match(/(\d+)\s*đơn/)?.[1] || '?';
+      return {
+        title: `🛍️ Nhóm đơn hàng (${orderCount} đơn)`,
+        subtitle: `${new Date(transaction.createdAt).toLocaleDateString('vi-VN')} • Click xem chi tiết`,
+        icon: '🛍️',
+        isOrderRelated: true
+      };
+    } else {
+      // Single order transaction
+      return {
+        title: `📦 Đơn hàng #ĐH${transaction.orderId}`,
+        subtitle: `${new Date(transaction.createdAt).toLocaleDateString('vi-VN')} • Click xem chi tiết`,
+        icon: '📦',
+        isOrderRelated: true
+      };
+    }
   }
 };
 

@@ -47,6 +47,7 @@ import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import LocalShippingOutlinedIcon from "@mui/icons-material/LocalShippingOutlined";
 import DesignServicesOutlinedIcon from "@mui/icons-material/DesignServicesOutlined";
 import AddIcon from "@mui/icons-material/Add";
+import DesignerOrders from "./DesignerOrders";
 import {
   DressIcon,
   EcoIcon,
@@ -1310,6 +1311,16 @@ export default function DesignerDashBoard() {
               },
             }}
           />
+          <Tab
+            label="Quản Lý Đơn Hàng"
+            sx={{
+              flex: 1,
+              "&.Mui-selected": {
+                color: "rgba(22, 163, 74)", // Màu khi được chọn
+                fontWeight: "bold", // Tuỳ chọn: in đậm
+              },
+            }}
+          />
         </Tabs>
       </Box>
 
@@ -2321,6 +2332,13 @@ export default function DesignerDashBoard() {
               width: "100%", // or set a fixed px width like "800px"
             }}
           />
+        </Box>
+      )}
+
+      {/* Tab Quản Lý Đơn Hàng */}
+      {tabIndex === 4 && (
+        <Box sx={{ width: "100%" }}>
+          <DesignerOrders />
         </Box>
       )}
 
