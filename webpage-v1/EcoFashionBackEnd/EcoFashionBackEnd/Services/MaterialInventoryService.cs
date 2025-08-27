@@ -300,7 +300,7 @@ namespace EcoFashionBackEnd.Services
                 Unit = unit,
                 ReferenceType = referenceType,
                 ReferenceId = referenceId,
-                Note = note ?? $"{transactionType.GetDescription()} - {Math.Abs(quantityChange)} {unit}",
+                Note = note ?? $"{GetTransactionTypeDescription(transactionType)} - {Math.Abs(quantityChange)} {unit}",
                 CreatedByUserId = userId,
                 CreatedAt = DateTime.UtcNow
             };
@@ -316,8 +316,24 @@ namespace EcoFashionBackEnd.Services
 
             await tx.CommitAsync();
             
-            Console.WriteLine($"✅ {transactionType.GetDescription()}: MaterialId {materialId}, Change: {quantityChange}, Before: {before}, After: {after}");
+            Console.WriteLine($"✅ {GetTransactionTypeDescription(transactionType)}: MaterialId {materialId}, Change: {quantityChange}, Before: {before}, After: {after}");
             return true;
+        }
+        
+        /// <summary>
+        /// Lấy mô tả cho transaction type
+        /// </summary>
+        private string GetTransactionTypeDescription(MaterialTransactionType transactionType)
+        {
+            return transactionType switch
+            {
+                MaterialTransactionType.SupplierReceipt => "Nhận hàng từ supplier",
+                MaterialTransactionType.CustomerSale => "Bán cho khách hàng",
+                MaterialTransactionType.CustomerReturn => "Khách hàng trả hàng",
+                MaterialTransactionType.ManualAdjustment => "Điều chỉnh thủ công",
+                MaterialTransactionType.StockTransfer => "Chuyển kho",
+                _ => transactionType.ToString()
+            };
         }
         
         /// <summary>
