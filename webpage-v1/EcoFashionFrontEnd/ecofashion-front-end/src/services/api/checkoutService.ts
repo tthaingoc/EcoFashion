@@ -30,6 +30,10 @@ export interface CreateSessionResponse {
   orderGroupId: string;
   orders: CheckoutOrderDto[];
   expiresAt: string;
+  // Thêm các field mới từ backend
+  orderIds: number[];
+  totalOrderCount: number;
+  totalAmount: number;
 }
 
 // Service xử lý các chức năng liên quan đến Standard Checkout

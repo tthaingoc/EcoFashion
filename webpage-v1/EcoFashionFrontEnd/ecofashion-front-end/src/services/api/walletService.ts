@@ -181,7 +181,7 @@ export const walletService = {
     return errors;
   },
 
-  // Transaction grouping helpers
+  // Transaction grouping helpers - Cải thiện để hỗ trợ orderGroupId tốt hơn
   groupTransactionsByOrder: (transactions: WalletTransaction[]) => {
     const grouped = new Map<string, {
       orderGroupId?: string;
@@ -194,12 +194,17 @@ export const walletService = {
     }>();
 
     transactions.forEach(transaction => {
-      const key = transaction.orderGroupId || `order_${transaction.orderId}`;
+      // Ưu tiên orderGroupId trước, sau đó mới đến orderId
+      const key = transaction.orderGroupId 
+        ? `group_${transaction.orderGroupId}` 
+        : transaction.orderId 
+          ? `order_${transaction.orderId}` 
+          : `misc_${transaction.id}`;
       
       if (!grouped.has(key)) {
         grouped.set(key, {
           orderGroupId: transaction.orderGroupId,
-          orderId: transaction.orderId,
+          orderId: transaction.orderGroupId ? undefined : transaction.orderId, // Chỉ set orderId nếu không có orderGroupId
           transactions: [],
           totalAmount: 0,
           isMultiOrder: !!transaction.orderGroupId,
@@ -212,13 +217,19 @@ export const walletService = {
       group.transactions.push(transaction);
       group.totalAmount += transaction.amount;
       
+      // Thu thập tất cả orderIds từ các transactions trong group
       if (transaction.orderId && !group.orderIds.includes(transaction.orderId)) {
         group.orderIds.push(transaction.orderId);
-        group.orderCount = group.orderIds.length;
       }
+      
+      // Cập nhật orderCount
+      group.orderCount = group.orderIds.length || (group.isMultiOrder ? 1 : 0);
     });
 
-    return Array.from(grouped.values());
+    // Sort theo thời gian mới nhất
+    return Array.from(grouped.values()).sort((a, b) => 
+      new Date(b.transactions[0].createdAt).getTime() - new Date(a.transactions[0].createdAt).getTime()
+    );
   },
 
   getOrderTransactionDisplay: (transaction: WalletTransaction): {
@@ -226,34 +237,68 @@ export const walletService = {
     subtitle: string;
     icon: string;
     isOrderRelated: boolean;
+    detailedDescription?: string;
   } => {
     const isOrderRelated = !!(transaction.orderId || transaction.orderGroupId);
     
     if (!isOrderRelated) {
+      // Giao dịch không liên quan đến đơn hàng - có thể là nạp tiền, rút tiền, chuyển tiền seller
+      const typeIcon = transaction.type === 'Deposit' ? '💰' :
+                      transaction.type === 'Withdrawal' ? '🏧' :
+                      transaction.type === 'Transfer' ? '🔄' :
+                      transaction.amount >= 0 ? '📈' : '📉';
+      
+      const title = transaction.type === 'Transfer' && transaction.description?.includes('Shop') 
+        ? `${typeIcon} Chia tiền cho seller`
+        : `${typeIcon} ${walletService.getTransactionTypeLabel(transaction.type)}`;
+      
       return {
-        title: walletService.getTransactionTypeLabel(transaction.type),
-        subtitle: new Date(transaction.createdAt).toLocaleDateString('vi-VN'),
-        icon: transaction.amount >= 0 ? '📈' : '📉',
-        isOrderRelated: false
+        title,
+        subtitle: `${new Date(transaction.createdAt).toLocaleDateString('vi-VN')} • ${transaction.status}`,
+        icon: typeIcon,
+        isOrderRelated: false,
+        detailedDescription: transaction.description
       };
     }
 
     if (transaction.orderGroupId) {
-      // Multi-order transaction
+      // Multi-order transaction - trích xuất thông tin từ description
       const orderCount = transaction.description?.match(/(\d+)\s*đơn/)?.[1] || '?';
+      
+      // Phân biệt các loại giao dịch nhóm đơn hàng
+      const transactionTypeIcon = transaction.type === 'Payment' ? '💳' : 
+                                  transaction.type === 'PaymentReceived' ? '💰' :
+                                  transaction.type === 'Refund' ? '↩️' : '🛍️';
+      
+      const title = transaction.type === 'Payment' ? `${transactionTypeIcon} Thanh toán nhóm (${orderCount} đơn)` :
+                    transaction.type === 'PaymentReceived' ? `${transactionTypeIcon} Nhận tiền nhóm (${orderCount} đơn)` :
+                    transaction.type === 'Refund' ? `${transactionTypeIcon} Hoàn tiền nhóm (${orderCount} đơn)` :
+                    `${transactionTypeIcon} Nhóm đơn hàng (${orderCount} đơn)`;
+      
       return {
-        title: `🛍️ Nhóm đơn hàng (${orderCount} đơn)`,
-        subtitle: `${new Date(transaction.createdAt).toLocaleDateString('vi-VN')} • Click xem chi tiết`,
-        icon: '🛍️',
-        isOrderRelated: true
+        title,
+        subtitle: `${new Date(transaction.createdAt).toLocaleDateString('vi-VN')} • ${transaction.status} • Click xem chi tiết`,
+        icon: transactionTypeIcon,
+        isOrderRelated: true,
+        detailedDescription: transaction.description
       };
     } else {
       // Single order transaction
+      const transactionTypeIcon = transaction.type === 'Payment' ? '💳' : 
+                                  transaction.type === 'PaymentReceived' ? '💰' :
+                                  transaction.type === 'Refund' ? '↩️' : '📦';
+      
+      const title = transaction.type === 'Payment' ? `${transactionTypeIcon} Thanh toán #ĐH${transaction.orderId}` :
+                    transaction.type === 'PaymentReceived' ? `${transactionTypeIcon} Nhận tiền #ĐH${transaction.orderId}` :
+                    transaction.type === 'Refund' ? `${transactionTypeIcon} Hoàn tiền #ĐH${transaction.orderId}` :
+                    `${transactionTypeIcon} Đơn hàng #ĐH${transaction.orderId}`;
+      
       return {
-        title: `📦 Đơn hàng #ĐH${transaction.orderId}`,
-        subtitle: `${new Date(transaction.createdAt).toLocaleDateString('vi-VN')} • Click xem chi tiết`,
-        icon: '📦',
-        isOrderRelated: true
+        title,
+        subtitle: `${new Date(transaction.createdAt).toLocaleDateString('vi-VN')} • ${transaction.status} • Click xem chi tiết`,
+        icon: transactionTypeIcon,
+        isOrderRelated: true,
+        detailedDescription: transaction.description
       };
     }
   }

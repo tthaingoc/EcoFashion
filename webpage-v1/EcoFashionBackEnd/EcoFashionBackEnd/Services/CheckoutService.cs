@@ -82,7 +82,11 @@ namespace EcoFashionBackEnd.Services
                             Discount = o.Discount,
                             TotalAmount = o.TotalPrice,
                             PaymentStatus = o.PaymentStatus.ToString()
-                        }).ToList()
+                        }).ToList(),
+                        // Populate các field mới
+                        OrderIds = existingOrders.Select(o => o.OrderId).ToList(),
+                        TotalOrderCount = existingOrders.Count,
+                        TotalAmount = existingOrders.Sum(o => o.TotalPrice)
                     };
                     return existingResponse;
                 }
@@ -139,7 +143,10 @@ namespace EcoFashionBackEnd.Services
             var response = new CreateSessionResponse
             {
                 OrderGroupId = orderGroup.OrderGroupId,
-                ExpiresAt = expiresAt
+                ExpiresAt = expiresAt,
+                OrderIds = new List<int>(), // Sẽ được populate sau khi tạo orders
+                TotalOrderCount = 0, // Sẽ được update sau
+                TotalAmount = 0 // Sẽ được tính toán sau
             };
 
             int totalOrders = 0;
@@ -206,6 +213,9 @@ namespace EcoFashionBackEnd.Services
                     TotalAmount = order.TotalPrice,
                     PaymentStatus = order.PaymentStatus.ToString()
                 });
+                
+                // Thêm OrderId vào danh sách
+                response.OrderIds.Add(order.OrderId);
             }
 
             // Update counts on group
@@ -213,6 +223,10 @@ namespace EcoFashionBackEnd.Services
             orderGroup.CompletedOrders = 0;
             _orderGroupRepository.Update(orderGroup);
             await _orderGroupRepository.Commit();
+
+            // Cập nhật thông tin tổng hợp trong response
+            response.TotalOrderCount = totalOrders;
+            response.TotalAmount = response.Orders.Sum(o => o.TotalAmount);
 
             return response;
         }

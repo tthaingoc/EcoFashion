@@ -166,7 +166,9 @@ namespace EcoFashionBackEnd.Services
                 Type = transaction.Type,
                 Status = transaction.Status,
                 Description = transaction.Description,
-                CreatedAt = transaction.CreatedAt
+                CreatedAt = transaction.CreatedAt,
+                OrderId = transaction.OrderId,
+                OrderGroupId = transaction.OrderGroupId
             }; 
         }
 
@@ -278,7 +280,9 @@ namespace EcoFashionBackEnd.Services
                     Type = t.Type,
                     Status = t.Status,
                     Description = t.Description,
-                    CreatedAt = t.CreatedAt
+                    CreatedAt = t.CreatedAt,
+                    OrderId = t.OrderId,
+                    OrderGroupId = t.OrderGroupId
                 })
                 .ToListAsync();
 
@@ -349,7 +353,9 @@ namespace EcoFashionBackEnd.Services
                 BalanceAfter = t.BalanceAfter,
                 Status = t.Status,
                 Description = t.Description,
-                CreatedAt = t.CreatedAt
+                CreatedAt = t.CreatedAt,
+                OrderId = t.OrderId,
+                OrderGroupId = t.OrderGroupId
             }).ToList();
         }
 
@@ -377,7 +383,9 @@ namespace EcoFashionBackEnd.Services
                     Type = t.Type,
                     Status = t.Status,
                     Description = t.Description,
-                    CreatedAt = t.CreatedAt
+                    CreatedAt = t.CreatedAt,
+                    OrderId = t.OrderId,
+                    OrderGroupId = t.OrderGroupId
                 })
                 .ToListAsync();
 
@@ -412,7 +420,9 @@ namespace EcoFashionBackEnd.Services
                 Type = transaction.Type,
                 Status = transaction.Status,
                 Description = transaction.Description ?? GetTransactionDescription(transaction.Type),
-                CreatedAt = transaction.CreatedAt
+                CreatedAt = transaction.CreatedAt,
+                OrderId = transaction.OrderId,
+                OrderGroupId = transaction.OrderGroupId
             };
         }
 
@@ -447,7 +457,7 @@ namespace EcoFashionBackEnd.Services
         
 
         public async Task CreateTransactionAsync(int walletId, TransactionType type, double amount, 
-            int? orderId = null, Guid? settlementId = null)
+            int? orderId = null, Guid? settlementId = null, Guid? orderGroupId = null, string? description = null)
         {
             var wallet = await _walletRepository.GetByIdAsync(walletId);
             if (wallet == null) throw new Exception($"Wallet with ID {walletId} not found");
@@ -464,10 +474,11 @@ namespace EcoFashionBackEnd.Services
                 BalanceAfter = wallet.Balance,
                 Type = type,
                 Status = Entities.TransactionStatus.Success,
-                Description = GetTransactionDescriptionWithDetails(type, orderId, settlementId),
+                Description = description ?? GetTransactionDescriptionWithDetails(type, orderId, settlementId, orderGroupId),
                 CreatedAt = DateTime.UtcNow,
                 OrderId = orderId,
-                SettlementId = settlementId
+                SettlementId = settlementId,
+                OrderGroupId = orderGroupId
             };
 
             _walletRepository.Update(wallet);
@@ -476,11 +487,23 @@ namespace EcoFashionBackEnd.Services
         }
 
         // Method tạo description chi tiết hơn với thông tin đơn hàng
-        private string GetTransactionDescriptionWithDetails(TransactionType type, int? orderId = null, Guid? settlementId = null)
+        private string GetTransactionDescriptionWithDetails(TransactionType type, int? orderId = null, Guid? settlementId = null, Guid? orderGroupId = null)
         {
             var baseDescription = GetTransactionDescription(type);
             
-            // Thêm thông tin chi tiết nếu có
+            // Ưu tiên orderGroupId trước nếu có (giao dịch nhóm đơn hàng)
+            if (orderGroupId.HasValue)
+            {
+                return type switch
+                {
+                    TransactionType.Payment => $"{baseDescription} nhóm #GR{orderGroupId.ToString()[..8]}",
+                    TransactionType.PaymentReceived => $"{baseDescription} nhóm #GR{orderGroupId.ToString()[..8]}",
+                    TransactionType.Refund => $"{baseDescription} nhóm #GR{orderGroupId.ToString()[..8]}",
+                    _ => $"{baseDescription} #GR{orderGroupId.ToString()[..8]}"
+                };
+            }
+            
+            // Thêm thông tin chi tiết nếu có orderId đơn lẻ
             if (orderId.HasValue)
             {
                 return type switch

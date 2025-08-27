@@ -24,6 +24,11 @@ namespace EcoFashionBackEnd.Dtos
         public Guid OrderGroupId { get; set; }
         public List<CheckoutOrderDto> Orders { get; set; } = new();
         public DateTime ExpiresAt { get; set; }
+        
+        // Thêm các field mới để frontend dễ sử dụng
+        public List<int> OrderIds { get; set; } = new();
+        public int TotalOrderCount { get; set; }
+        public decimal TotalAmount { get; set; }
     }
 
     public class CheckoutOrderDto

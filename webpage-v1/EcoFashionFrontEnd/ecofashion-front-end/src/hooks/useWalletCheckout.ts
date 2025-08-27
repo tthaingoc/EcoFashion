@@ -29,6 +29,12 @@ export const usePayGroupWithWallet = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ orderGroupId, addressId }: { orderGroupId: string; addressId: number }) => { // Thanh toán với ID nhóm đơn và địa chỉ
+      // Log orderIds từ session để tracking
+      const orderIds = sessionStorage.getItem('checkoutOrderIds');
+      if (orderIds) {
+        console.log('Paying for orderIds:', JSON.parse(orderIds));
+      }
+      
       const response = await apiClient.post('/checkout/pay-group-with-wallet', { orderGroupId, addressId });
       return response.data?.result || response.data;
     },

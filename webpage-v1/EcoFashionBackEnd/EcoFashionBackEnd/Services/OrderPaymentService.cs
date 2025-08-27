@@ -85,13 +85,17 @@ namespace EcoFashionBackEnd.Services
                 if (adminWallet == null)
                     return false;
 
-                // Khách hàng trả tiền cho nhóm đơn hàng
+                // Tạo description chi tiết cho giao dịch nhóm đơn hàng
+                var orderDetails = orders.Select(o => $"orderId: {o.OrderId}, số tiền: {o.TotalPrice:N0}").ToList();
+                var groupDescription = $"Thanh toán cho {orders.Count} đơn hàng có {string.Join("; ", orderDetails)}";
+                
+                // Khách hàng trả tiền cho nhóm đơn hàng với description chi tiết
                 await _walletService.CreateTransactionAsync(customerWallet.WalletId, 
-                    TransactionType.Payment, -(double)totalAmount);
+                    TransactionType.Payment, -(double)totalAmount, orderGroupId: orderGroupId, description: groupDescription);
 
                 // Admin nhận tiền từ nhóm đơn hàng (thay vì Deposit)
                 await _walletService.CreateTransactionAsync(adminWallet.WalletId, 
-                    TransactionType.PaymentReceived, (double)totalAmount);
+                    TransactionType.PaymentReceived, (double)totalAmount, orderGroupId: orderGroupId, description: groupDescription);
 
                 foreach (var order in orders)
                 {

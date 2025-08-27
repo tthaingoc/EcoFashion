@@ -39,6 +39,8 @@ namespace EcoFashionBackEnd.Entities
         // Optional references for auditability
         public int? OrderId { get; set; }
 
+        public Guid? OrderGroupId { get; set; }
+
         public Guid? SettlementId { get; set; }
 
         // Optional: Liên kết với PaymentTransaction nếu có

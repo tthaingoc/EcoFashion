@@ -141,7 +141,13 @@ const CheckoutTailwind: React.FC = () => {
            }],
            expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString() // 30 phút từ bây giờ
          };
-         wizard.start(resp);
+         wizard.start({
+             ...resp,
+             orderIds: resp.orders.map((o: any) => o.orderId),
+             totalOrderCount: resp.orders.length,
+             totalAmount: resp.orders.reduce((sum: number, o: any) => sum + o.totalAmount, 0)
+           });
+
        } else {
          // Flow thông thường: kiểm tra có danh sách sản phẩm đã chọn không
          const selectedItemsStr = localStorage.getItem('selectedItemsForCheckout');
@@ -228,9 +234,16 @@ const CheckoutTailwind: React.FC = () => {
          // Lưu selected items để hiển thị
          setSelectedCartItems(filteredCartItems);
          
-         // Tính tổng tiền từ wizard.orders thay vì từ cart items
-         const wizardTotal = sessionResp.orders.reduce((sum, order) => sum + order.totalAmount, 0);
-         setTotalAmount(wizardTotal);
+         // Sử dụng totalAmount từ backend thay vì tính lại
+         setTotalAmount(sessionResp.totalAmount || sessionResp.orders.reduce((sum, order) => sum + order.totalAmount, 0));
+         
+         // LƯU ORDERIDS VÀO SESSION STORAGE cho việc thanh toán
+         if (sessionResp.orderIds && sessionResp.orderIds.length > 0) {
+           sessionStorage.setItem('checkoutOrderIds', JSON.stringify(sessionResp.orderIds));
+           sessionStorage.setItem('checkoutOrderGroupId', sessionResp.orderGroupId);
+           console.log('Saved orderIds to session:', sessionResp.orderIds);
+           console.log('Saved orderGroupId to session:', sessionResp.orderGroupId);
+         }
          
          // Xóa danh sách đã chọn sau khi load xong
          localStorage.removeItem('selectedItemsForCheckout');
@@ -303,8 +316,10 @@ const CheckoutTailwind: React.FC = () => {
      
      await payGroupWithWallet({ orderGroupId: wizard.orderGroupId, addressId });
      
-     // Thanh toán thành công thì clear idempotencyKey cho lần checkout kế tiếp
+     // Thanh toán thành công thì clear các keys liên quan
      sessionStorage.removeItem('checkoutIdempotencyKey');
+     sessionStorage.removeItem('checkoutOrderIds');
+     sessionStorage.removeItem('checkoutOrderGroupId');
      
      // Chuyển đến trang kết quả với orderGroupId
      navigate(`/checkout/result?orderGroupId=${wizard.orderGroupId}&paymentMethod=wallet&status=success`);
@@ -408,10 +423,16 @@ const CheckoutTailwind: React.FC = () => {
          <h1 className="text-2xl font-bold text-gray-900 mb-2">Thanh toán</h1>
          <p className="text-gray-600">
            {wizard.orders.length > 0 
-             ? `${wizard.orders.length} đơn hàng từ ${wizard.orders.length} người bán - Tổng: ${orderTotal.toLocaleString('vi-VN')} VND`
+             ? `Thanh toán cho ${wizard.orders.length} đơn hàng từ ${wizard.orders.length} người bán khác nhau - Tổng: ${orderTotal.toLocaleString('vi-VN')} VND`
              : `${selectedCartItems.length} sản phẩm đã chọn - Tổng: ${orderTotal.toLocaleString('vi-VN')} VND`
            }
          </p>
+         {/* Hiển thị danh sách OrderIds nếu có */}
+         {wizard.orders.length > 0 && (
+           <div className="mt-2 text-sm text-gray-500">
+             <span>Mã đơn hàng: {wizard.orders.map(o => `#ĐH${o.orderId}`).join(', ')}</span>
+           </div>
+         )}
        </div>
 
 
@@ -492,7 +513,28 @@ const CheckoutTailwind: React.FC = () => {
          {/* Order Summary */}
          <div className="lg:col-span-1">
            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 sticky top-8">
-             <h3 className="text-lg font-semibold text-gray-900 mb-4">Tóm tắt đơn hàng</h3>
+             <h3 className="text-lg font-semibold text-gray-900 mb-4">
+               Tóm tắt đơn hàng
+               {wizard.orders.length > 0 && (
+                 <span className="text-sm font-normal text-gray-500 ml-2">
+                   ({wizard.orders.length} đơn)
+                 </span>
+               )}
+             </h3>
+
+             {/* Hiển thị từng đơn hàng nếu có nhiều đơn */}
+             {wizard.orders.length > 1 && (
+               <div className="mb-4 space-y-2">
+                 <h4 className="text-sm font-medium text-gray-700">Chi tiết từng đơn hàng:</h4>
+                 {wizard.orders.map((order, index) => (
+                   <div key={order.orderId} className="flex justify-between text-sm">
+                     <span className="text-gray-600">Đơn #{order.orderId}:</span>
+                     <span className="text-gray-900">{order.totalAmount.toLocaleString('vi-VN')} VND</span>
+                   </div>
+                 ))}
+                 <div className="border-t pt-2 mt-2"></div>
+               </div>
+             )}
            
              <div className="space-y-3 mb-4">
                <div className="flex justify-between text-sm">
@@ -525,15 +567,25 @@ const CheckoutTailwind: React.FC = () => {
                {isProcessing ? (
                  <>
                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                   Đang xử lý...
+                   Đang xử lý thanh toán...
                  </>
                ) : (
                  <>
                    <BanknotesIcon className="w-5 h-5" />
-                   Thanh toán {orderTotal.toLocaleString('vi-VN')} VND
+                   {wizard.orders.length > 1 
+                     ? `Thanh toán ${wizard.orders.length} đơn hàng - ${orderTotal.toLocaleString('vi-VN')} VND`
+                     : `Thanh toán ${orderTotal.toLocaleString('vi-VN')} VND`
+                   }
                  </>
                )}
              </button>
+             
+             {/* Thông tin bổ sung về thanh toán */}
+             {wizard.orders.length > 1 && (
+               <div className="mt-2 text-xs text-gray-500 text-center">
+                 Bạn sẽ thanh toán một lần cho tất cả {wizard.orders.length} đơn hàng
+               </div>
+             )}
 
 
 
