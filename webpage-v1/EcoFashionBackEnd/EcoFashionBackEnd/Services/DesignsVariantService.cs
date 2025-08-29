@@ -134,11 +134,11 @@ namespace EcoFashionBackEnd.Services
             var variant = await _designVariantRepository.GetByIdAsync(variantId);
             if (variant == null) return false;
 
-            var size = await _sizeRepository.GetByIdAsync(request.SizeId);
-            if (size == null) throw new Exception("Size không tồn tại.");
+            //var size = await _sizeRepository.GetByIdAsync(request.SizeId);
+            //if (size == null) throw new Exception("Size không tồn tại.");
 
-            variant.SizeId = request.SizeId;
-            variant.ColorCode = request.ColorCode;
+            //variant.SizeId = variant.SizeId;
+            //variant.ColorCode = variant.ColorCode;
             variant.Quantity = request.Quantity;
 
             _designVariantRepository.Update(variant);
@@ -197,7 +197,7 @@ namespace EcoFashionBackEnd.Services
             var variant = await _designVariantRepository.GetByIdAsync(variantId);
             if (variant == null) return false;
 
-            //_designVariantRepository.Remove();
+            _designVariantRepository.Remove(variant);
             await _designVariantRepository.Commit();
             return true;
         }

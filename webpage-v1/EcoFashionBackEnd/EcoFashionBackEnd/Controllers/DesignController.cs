@@ -8,6 +8,7 @@ using EcoFashionBackEnd.Dtos.Design;
 using EcoFashionBackEnd.Dtos.DesignShow;
 using EcoFashionBackEnd.Services;
 using Humanizer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -155,7 +156,7 @@ public class DesignController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, ApiResult<List<DesignSummaryDto>>.Fail("Có lỗi xảy ra trong quá trình xử lý."));
+            return StatusCode(500, ex.Message);
         }
     }
 

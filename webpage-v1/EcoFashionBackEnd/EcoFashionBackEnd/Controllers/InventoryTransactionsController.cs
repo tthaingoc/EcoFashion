@@ -22,6 +22,7 @@ namespace EcoFashionBackEnd.Controllers
         }
 
         /// Lấy tất cả transaction của Product
+        /// Lấy tất cả transaction của Product
         [HttpGet("products")]
         public async Task<IActionResult> GetProductTransactions()
         {

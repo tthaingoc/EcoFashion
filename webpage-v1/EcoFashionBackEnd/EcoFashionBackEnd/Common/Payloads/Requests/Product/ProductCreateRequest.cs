@@ -10,6 +10,6 @@ namespace EcoFashionBackEnd.Common.Payloads.Requests.Product
         public string Variants { get; set; }
 
         // Ảnh upload
-        public List<IFormFile> Images { get; set; }
+        public List<IFormFile> Images { get; set; } = new();
     }
 }

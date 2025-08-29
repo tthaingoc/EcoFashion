@@ -340,62 +340,6 @@ export default function DesignsList() {
                       </Box>
 
                       {/* Filter Sections */}
-                      {/* Filter By Color */}
-                      <Accordion
-                        disableGutters
-                        elevation={0}
-                        sx={{ boxShadow: "none" }}
-                      >
-                        <AccordionSummary expandIcon={<GridExpandMoreIcon />}>
-                          <Typography fontSize={16}>Màu Sắc</Typography>
-                        </AccordionSummary>
-                        <AccordionDetails>
-                          <Box
-                            sx={{
-                              maxHeight: 200,
-                              overflowY: "auto",
-                              pr: 1,
-                            }}
-                          >
-                            <FormGroup>
-                              {dynamicColorFilterOptions.map((item, index) => (
-                                <FormControlLabel
-                                  key={index}
-                                  control={
-                                    <Checkbox
-                                      checked={selectedColors.includes(
-                                        item.label
-                                      )}
-                                      onChange={() =>
-                                        handleColorChange(item.label)
-                                      }
-                                    />
-                                  }
-                                  label={
-                                    <Box display="flex" alignItems="center">
-                                      <Box
-                                        sx={{
-                                          width: 14,
-                                          height: 14,
-                                          borderRadius: "50%",
-                                          backgroundColor: colorToHex(
-                                            item.label
-                                          ),
-                                          border: "1px solid #ccc",
-                                          mr: 1,
-                                        }}
-                                      />
-                                      {`${item.label} (${item.count})`}
-                                    </Box>
-                                  }
-                                  sx={{ mb: 0.5, alignItems: "center" }}
-                                />
-                              ))}
-                            </FormGroup>
-                          </Box>
-                        </AccordionDetails>
-                      </Accordion>
-                      <Divider />
                       {/* Filter By Type */}
                       <Accordion
                         disableGutters

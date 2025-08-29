@@ -177,7 +177,7 @@ export default function FileUpload({
           <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
             {files.map((file, index) => (
               <Card key={index} sx={{ position: "relative", width: 120 }}>
-                {file.type.startsWith("image/") ? (
+                {file.type?.startsWith("image/") ? (
                   <CardMedia
                     component="img"
                     height="80"

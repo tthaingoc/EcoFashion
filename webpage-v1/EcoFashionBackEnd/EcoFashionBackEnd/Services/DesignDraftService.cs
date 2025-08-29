@@ -101,6 +101,7 @@ namespace EcoFashionBackEnd.Services
                         Width = (decimal)part.Width,
                         Quantity = part.Quantity,
                         MaterialId = part.MaterialId,
+                        MaterialStatus = Enum.Parse<MaterialStatus>(part.MaterialStatus),
                     }).ToList();
 
                     await _draftPartRepository.AddRangeAsync(draftPartEntities);
@@ -145,7 +146,7 @@ namespace EcoFashionBackEnd.Services
                     {
                         DesignId = design.DesignId,
                         MaterialId = m.MaterialId,
-                        MeterUsed = (int)m.MeterUsed
+                        MeterUsed =(decimal) m.MeterUsed
                     }).ToList();
 
                     await _designMaterialRepository.AddRangeAsync(newMaterials);
@@ -222,6 +223,7 @@ namespace EcoFashionBackEnd.Services
                 .AsNoTracking()
                 .Where(d => d.DesignId == designId && d.DesignerId == designerId)
                 .Include(d => d.DraftParts)
+                    .ThenInclude(dm => dm.Material)
                 .Include(d =>d.DesignFeatures)
                 .Include(d => d.DesignsMaterials)
                     .ThenInclude(dm => dm.Materials)
@@ -249,6 +251,8 @@ namespace EcoFashionBackEnd.Services
                     Width = (float)p.Width,
                     Quantity = p.Quantity,
                     MaterialId = p.MaterialId,
+                    MaterialName = p.Material.Name,
+                    MaterialStatus = p.MaterialStatus.ToString(),
                 }).ToList(),
                 DesignFeature = new DesignFeatureModel
                 {
@@ -261,7 +265,8 @@ namespace EcoFashionBackEnd.Services
                 {
                     MaterialId = m.MaterialId,
                     MaterialName = m.Materials.Name,
-                    MeterUsed = m.MeterUsed
+                    MeterUsed = m.MeterUsed,
+                    Price = m.Materials.PricePerUnit
                 }).ToList(),
 
                 SketchImageUrls = design.DraftSketches

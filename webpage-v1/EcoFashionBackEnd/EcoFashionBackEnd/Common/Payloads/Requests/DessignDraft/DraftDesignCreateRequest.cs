@@ -24,6 +24,7 @@ namespace EcoFashionBackEnd.Common.Payloads.Requests.DessignDraft
 
         public List<IFormFile> SketchImages { get; set; } = new();
 
+
     }
 }
 

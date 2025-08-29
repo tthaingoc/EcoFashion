@@ -34,5 +34,6 @@ namespace EcoFashionBackEnd.Dtos.DesignDraft
         public decimal MaterialId { get; set; }
         public string MaterialName { get; set; }
         public decimal MeterUsed { get; set; }
+        public decimal Price { get; set; }
     }
 }

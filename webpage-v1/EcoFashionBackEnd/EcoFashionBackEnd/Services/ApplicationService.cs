@@ -241,6 +241,18 @@ namespace EcoFashionBackEnd.Services
             };
 
             await _supplierRepository.AddAsync(supplier);
+            var supplierWarehouse = new Warehouse
+            {
+                WarehouseId = 0, // auto gen nếu Identity
+                Name = $"{supplier.SupplierName} - Main Warehouse",
+                WarehouseType = "Material", // Supplier chủ yếu cung cấp vật liệu
+                SupplierId = supplier.SupplierId,
+                IsDefault = true,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _dbContext.Warehouses.AddAsync(supplierWarehouse);
             // Cập nhật vai trò người dùng
             user.RoleId = 3; // Supplier role
             _dbContext.Users.Update(user); // Cập nhật user trong database
@@ -293,7 +305,24 @@ namespace EcoFashionBackEnd.Services
             // Cập nhật vai trò người dùng
             user.RoleId = 2; // Designer role
             _dbContext.Users.Update(user); // Cập nhật user trong database
+            var materialWarehouse = new Warehouse
+            {
+                Name = $"{designer.DesignerName} - Material Warehouse",
+                WarehouseType = "Material",
+                DesignerId = designer.DesignerId,
+                IsDefault = true,
+                CreatedAt = DateTime.UtcNow
+            };
 
+            var productWarehouse = new Warehouse
+            {
+                Name = $"{designer.DesignerName} - Product Warehouse",
+                WarehouseType = "Product",
+                DesignerId = designer.DesignerId,
+                IsDefault = true,
+                CreatedAt = DateTime.UtcNow
+            };
+            await _dbContext.Warehouses.AddRangeAsync(materialWarehouse, productWarehouse);
             application.Status = ApplicationStatus.approved;
             application.ProcessedAt = DateTime.UtcNow;
             application.ProcessedBy = adminId;

@@ -25,6 +25,7 @@ import {
 } from "../../assets/icons/icon";
 import type { Fashion } from "../../types/Fashion";
 import {
+  FavoriteBorder,
   FavoriteBorderOutlined,
   Gradient,
   LocalShipping,
@@ -53,6 +54,7 @@ const FashionCard: React.FC<FashionCardProps> = ({
   onToggleFavorite,
   onProductClick,
 }) => {
+  const [isFavorite, setIsFavorite] = useState(false);
   const navigate = useNavigate();
   const addProductToCart = useCartStore((s) => s.addProductToCart);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
@@ -95,7 +97,7 @@ const FashionCard: React.FC<FashionCardProps> = ({
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    
+
     if (product.productCount <= 0) {
       toast.warning("Sản phẩm này hiện tại đã hết hàng");
       return;
@@ -113,9 +115,13 @@ const FashionCard: React.FC<FashionCardProps> = ({
     }
   };
 
+  const handleToggleFavorite = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsFavorite(!isFavorite);
+  };
+
   return (
     <Card
-      className="design-fashion-card"
       sx={{
         width: "95%",
         height: "95%",
@@ -157,24 +163,6 @@ const FashionCard: React.FC<FashionCardProps> = ({
             justifyContent: "space-between",
           }}
         >
-          {/* {product.isNew && (
-          <Chip
-            label="Mới"
-            size="small"
-            sx={{ mb: 1, bgcolor: "#e91e63", color: "white" }}
-          />
-        )} */}
-          {/* {product.isBestSeller && (
-          <Chip
-            label="Bán Chạy Nhất"
-            size="small"
-            sx={{
-              mb: 1,
-              backgroundColor: "rgba(245, 144, 56, 1)",
-              color: "white",
-            }}
-          />
-        )} */}
           <Chip
             icon={<EcoIcon />}
             label={`${product.recycledPercentage}% Bền Vững`}
@@ -198,8 +186,13 @@ const FashionCard: React.FC<FashionCardProps> = ({
             zIndex: 1,
             backgroundColor: "white",
           }}
+          onClick={handleToggleFavorite}
         >
-          <FavoriteBorderOutlined />
+          <FavoriteBorder
+            sx={{
+              color: isFavorite ? "#f44336" : grey[600],
+            }}
+          />
         </IconButton>
       </Box>
       {/* Product Image */}
@@ -231,7 +224,9 @@ const FashionCard: React.FC<FashionCardProps> = ({
           if (onProductClick) {
             onProductClick(product);
           } else {
-            navigate(`/detail/${product.designId}/${product.designer.designerId}`);
+            navigate(
+              `/detail/${product.designId}/${product.designer.designerId}`
+            );
           }
         }}
       />
@@ -468,16 +463,22 @@ const FashionCard: React.FC<FashionCardProps> = ({
               fullWidth
               disabled={product.productCount <= 0 || isAddingToCart}
               sx={{
-                backgroundColor: product.productCount <= 0 ? "#ccc" : "rgba(22, 163, 74, 1)",
+                backgroundColor:
+                  product.productCount <= 0 ? "#ccc" : "rgba(22, 163, 74, 1)",
                 "&:hover": {
-                  backgroundColor: product.productCount <= 0 ? "#ccc" : "rgba(20, 140, 65, 1)",
+                  backgroundColor:
+                    product.productCount <= 0 ? "#ccc" : "rgba(20, 140, 65, 1)",
                 },
                 pointerEvents: "auto",
               }}
               onClick={handleAddToCart}
             >
               <AddToCart />
-              {isAddingToCart ? "Đang thêm..." : product.productCount <= 0 ? "Hết hàng" : "Thêm vào giỏ"}
+              {isAddingToCart
+                ? "Đang thêm..."
+                : product.productCount <= 0
+                ? "Hết hàng"
+                : "Thêm vào giỏ"}
             </Button>
           )}
         </Box>

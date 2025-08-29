@@ -59,7 +59,7 @@ namespace EcoFashionBackEnd.Services
 
         public async Task<List<int>> CreateProductsAsync(ProductCreateRequest request, Guid designerId)
         {
-            // Parse JSON string sang object list
+            // 1️⃣ Parse JSON Variants
             List<DesignsVariantCreateRequest> variants;
             try
             {
@@ -69,21 +69,19 @@ namespace EcoFashionBackEnd.Services
             {
                 throw new ArgumentException("Variants JSON không hợp lệ", ex);
             }
-
             if (variants == null || !variants.Any())
                 throw new ArgumentException("Variants không được để trống");
 
+            // 2️⃣ Lấy warehouse và design
             var warehouseId = await GetDefaultProductWarehouseIdForDesigner(designerId);
-
             var design = await _designRepository.GetAll()
                 .Include(d => d.DesignsMaterials).ThenInclude(dm => dm.Materials)
                 .FirstOrDefaultAsync(d => d.DesignId == request.DesignId);
             if (design == null)
                 throw new Exception("Design không tồn tại");
 
+            // 3️⃣ Tính tổng nguyên liệu cần trừ
             var totalUsageMap = new Dictionary<int, decimal>();
-
-            // Tính nguyên liệu
             foreach (var variantReq in variants)
             {
                 var sizeRatio = await _itemTypeSizeRatioRepository.GetAll()
@@ -100,45 +98,44 @@ namespace EcoFashionBackEnd.Services
                 }
             }
 
-            //await _inventoryService.DeductMaterialsAsync(designerId, totalUsageMap);
+            // 4️⃣ Trừ nguyên liệu
+            await _inventoryService.DeductMaterialsAsync(designerId, totalUsageMap);
 
+            // 5️⃣ Tạo hoặc cộng dồn Product + Inventory
             var createdProductIds = new List<int>();
             var productInventoryChanges = new List<(int productId, int warehouseId, int quantity)>();
-            // 3️ Tạo sản phẩm cho từng variant
+
             foreach (var variant in variants)
             {
                 var basicColorName = ColorExchange.ClassifyColorAdvanced(variant.ColorCode);
-                var sku = $"{design.DesignId}-S{variant.SizeId}-C{basicColorName.Replace(" ", "").ToUpper()}";
+                var sku = $"D{design.DesignId}-S{variant.SizeId}-C{basicColorName.Replace(" ", "").ToUpper()}";
 
-                var existingProduct = await _productRepository
-                    .GetAll()
-                    .FirstOrDefaultAsync(p => p.SKU == sku);
-
-                if (existingProduct != null)
+                // Check Product đã tồn tại chưa
+                var product = await _productRepository.GetAll().FirstOrDefaultAsync(p => p.SKU == sku);
+                if (product == null)
                 {
-                    // Nếu đã tồn tại thì chỉ nhập thêm inventory
-                    productInventoryChanges.Add((existingProduct.ProductId, warehouseId, variant.Quantity));
-                    continue;
+                    // Chưa có → tạo mới
+                    product = new Product
+                    {
+                        DesignId = design.DesignId,
+                        SKU = sku,
+                        Price = (decimal)design.SalePrice,
+                        ColorCode = variant.ColorCode,
+                        SizeId = variant.SizeId
+                    };
+                    await _productRepository.AddAsync(product);
+                    await _productRepository.Commit(); // commit ngay để có ProductId
+                    createdProductIds.Add(product.ProductId);
                 }
 
-                // Nếu chưa tồn tại → tạo mới
-                var product = new Product
-                {
-                    DesignId = design.DesignId,
-                    SKU = sku,
-                    Price = (decimal)design.SalePrice,
-                    ColorCode = variant.ColorCode,
-                    SizeId = variant.SizeId,
-                };
-
-                await _productRepository.AddAsync(product);
-                await _productRepository.Commit(); // Commit ngay để có ProductId cho inventory
-
-                createdProductIds.Add(product.ProductId);
+                // Dồn quantity vào inventory
                 productInventoryChanges.Add((product.ProductId, warehouseId, variant.Quantity));
             }
 
-            // Upload ảnh nếu có
+            // 6️⃣ Cập nhật ProductInventory + Transaction
+            await _inventoryService.AddProductInventoriesAsync(productInventoryChanges);
+
+            // 7️⃣ Upload ảnh nếu có
             if (request.Images?.Any() == true)
             {
                 var uploadResults = await _cloudService.UploadImagesAsync(request.Images);
@@ -154,7 +151,6 @@ namespace EcoFashionBackEnd.Services
                                 ImageUrl = uploadResult.SecureUrl.ToString()
                             }
                         };
-
                         await _designImageRepository.AddAsync(designImage);
                     }
                 }
@@ -163,6 +159,7 @@ namespace EcoFashionBackEnd.Services
 
             return createdProductIds;
         }
+
 
         public async Task<List<int>> CreateProductsWithExistVariantAsync(CreateProductsFromDesignRequest request, Guid designerId)
         {
@@ -216,7 +213,7 @@ namespace EcoFashionBackEnd.Services
             foreach (var variant in variants)
             {
                 var basicColorName = ColorExchange.ClassifyColorAdvanced(variant.ColorCode);
-                var sku = $"{design.DesignId}-S{variant.SizeId}-C{basicColorName.Replace(" ", "").ToUpper()}";
+                var sku = $"D{design.DesignId}-S{variant.SizeId}-C{basicColorName.Replace(" ", "").ToUpper()}";
 
                 var existingProduct = await _productRepository
                     .GetAll()

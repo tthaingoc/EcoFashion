@@ -14,6 +14,7 @@ import { useAuthStore } from "../store/authStore";
 import { useNavigate } from "react-router-dom";
 
 export default function BusinessInfor() {
+  window.scrollTo(0, 0);
   const [tabIndex, setTabIndex] = useState(0);
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -192,7 +193,7 @@ export default function BusinessInfor() {
                       <Typography variant="subtitle1" fontWeight="bold">
                         Hoa hồng:
                         <Typography variant="body2">
-                          Nhận 5% hoa hồng trên mỗi đơn hàng thành công, giúp
+                          Nhận 10% hoa hồng trên mỗi đơn hàng thành công, giúp
                           bạn tăng thu nhập khi mở rộng kinh doanh.
                         </Typography>
                       </Typography>
@@ -395,7 +396,7 @@ export default function BusinessInfor() {
                         <Typography variant="subtitle1" fontWeight="bold">
                           Hoa hồng:
                           <Typography variant="body2">
-                            Nhận 5% hoa hồng trên mỗi đơn hàng thành công, giúp
+                            Nhận 10% hoa hồng trên mỗi đơn hàng thành công, giúp
                             bạn tăng thu nhập khi mở rộng kinh doanh.
                           </Typography>
                         </Typography>

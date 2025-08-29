@@ -44,7 +44,11 @@ import {
   getSustainabilityColor,
   getMaterialTypeColor,
 } from "../../utils/themeColors";
-import type { MaterialDetailResponse, MaterialDetailDto, MaterialSustainabilityReport } from "../../schemas/materialSchema";
+import type {
+  MaterialDetailResponse,
+  MaterialDetailDto,
+  MaterialSustainabilityReport,
+} from "../../schemas/materialSchema";
 
 // Constants - Removed price multiplier since backend already has correct VND prices
 
@@ -112,7 +116,8 @@ const MaterialDetailPage: React.FC = () => {
   const [relatedMaterials, setRelatedMaterials] = useState<MaterialDetailDto[]>(
     []
   );
-  const [sustainabilityReport, setSustainabilityReport] = useState<MaterialSustainabilityReport | null>(null);
+  const [sustainabilityReport, setSustainabilityReport] =
+    useState<MaterialSustainabilityReport | null>(null);
   const [zoomOpen, setZoomOpen] = useState(false);
   const [zoomScale, setZoomScale] = useState(1.5);
   const [dragging, setDragging] = useState(false);
@@ -141,7 +146,8 @@ const MaterialDetailPage: React.FC = () => {
 
         // Fetch sustainability report
         try {
-          const sustainabilityData = await materialService.getMaterialSustainability(parseInt(id));
+          const sustainabilityData =
+            await materialService.getMaterialSustainability(parseInt(id));
           setSustainabilityReport(sustainabilityData);
         } catch (err) {
           console.error("Error fetching sustainability report:", err);
@@ -151,11 +157,12 @@ const MaterialDetailPage: React.FC = () => {
         // Fetch related materials using server-side filtering for better performance
         if (materialData.materialTypeName) {
           try {
-            const allMaterials = await materialService.getAllMaterialsWithFilters({
-              materialName: materialData.materialTypeName,
-              sortBySustainability: true,
-              publicOnly: true
-            });
+            const allMaterials =
+              await materialService.getAllMaterialsWithFilters({
+                materialName: materialData.materialTypeName,
+                sortBySustainability: true,
+                publicOnly: true,
+              });
             const related = allMaterials
               .filter((m) => m.materialId !== materialData.materialId)
               .slice(0, 3);
@@ -182,14 +189,14 @@ const MaterialDetailPage: React.FC = () => {
     return getMaterialTypeColor(typeName);
   };
 
-    const getSustainabilityScore = () => {
+  const getSustainabilityScore = () => {
     if (
       material?.sustainabilityScore !== undefined &&
       material.sustainabilityScore !== null
     ) {
       return material.sustainabilityScore;
     }
-  
+
     // Fallback: nếu không có sustainability score từ backend, trả về 0
     // vì recycled percentage không còn là tiêu chí đánh giá chính
     return 0;
@@ -214,10 +221,23 @@ const MaterialDetailPage: React.FC = () => {
     setOffset({ x: 0, y: 0 });
     setZoomOpen(true);
   };
-  const onMouseDown = (e: React.MouseEvent) => { setDragging(true); setLastPos({ x: e.clientX, y: e.clientY }); };
-  const onMouseMove = (e: React.MouseEvent) => { if (!dragging) return; const dx = e.clientX - lastPos.x; const dy = e.clientY - lastPos.y; setOffset(o => ({ x: o.x + dx, y: o.y + dy })); setLastPos({ x: e.clientX, y: e.clientY }); };
+  const onMouseDown = (e: React.MouseEvent) => {
+    setDragging(true);
+    setLastPos({ x: e.clientX, y: e.clientY });
+  };
+  const onMouseMove = (e: React.MouseEvent) => {
+    if (!dragging) return;
+    const dx = e.clientX - lastPos.x;
+    const dy = e.clientY - lastPos.y;
+    setOffset((o) => ({ x: o.x + dx, y: o.y + dy }));
+    setLastPos({ x: e.clientX, y: e.clientY });
+  };
   const onMouseUp = () => setDragging(false);
-  const onWheel = (e: React.WheelEvent) => { e.preventDefault(); const delta = e.deltaY < 0 ? 0.1 : -0.1; setZoomScale(z => Math.min(4, Math.max(1, z + delta))); };
+  const onWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    const delta = e.deltaY < 0 ? 0.1 : -0.1;
+    setZoomScale((z) => Math.min(4, Math.max(1, z + delta)));
+  };
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabIndex(newValue);
@@ -359,7 +379,9 @@ const MaterialDetailPage: React.FC = () => {
                 onClick={openZoom}
                 onMouseEnter={(e) => {
                   setHovering(true);
-                  const rect = (e.currentTarget as HTMLImageElement).getBoundingClientRect();
+                  const rect = (
+                    e.currentTarget as HTMLImageElement
+                  ).getBoundingClientRect();
                   setImgSize({ w: rect.width, h: rect.height });
                 }}
                 onMouseMove={(e) => {
@@ -379,8 +401,14 @@ const MaterialDetailPage: React.FC = () => {
                 <Box
                   sx={{
                     position: "absolute",
-                    top: Math.max(0, Math.min(imgSize.h - lensSize, hoverPos.y - lensSize / 2)),
-                    left: Math.max(0, Math.min(imgSize.w - lensSize, hoverPos.x - lensSize / 2)),
+                    top: Math.max(
+                      0,
+                      Math.min(imgSize.h - lensSize, hoverPos.y - lensSize / 2)
+                    ),
+                    left: Math.max(
+                      0,
+                      Math.min(imgSize.w - lensSize, hoverPos.x - lensSize / 2)
+                    ),
                     width: lensSize,
                     height: lensSize,
                     border: "2px solid rgba(255,255,255,0.9)",
@@ -402,10 +430,18 @@ const MaterialDetailPage: React.FC = () => {
                     borderRadius: 2,
                     border: "1px solid #e0e0e0",
                     backgroundColor: "#fff",
-                    backgroundImage: `url(${material.imageUrls && material.imageUrls.length > 0 ? material.imageUrls[currentImageIndex] || mainImage : mainImage})`,
+                    backgroundImage: `url(${
+                      material.imageUrls && material.imageUrls.length > 0
+                        ? material.imageUrls[currentImageIndex] || mainImage
+                        : mainImage
+                    })`,
                     backgroundRepeat: "no-repeat",
-                    backgroundSize: `${imgSize.w * hoverZoom}px ${imgSize.h * hoverZoom}px`,
-                    backgroundPosition: `${(hoverPos.x / imgSize.w) * 100}% ${(hoverPos.y / imgSize.h) * 100}%`,
+                    backgroundSize: `${imgSize.w * hoverZoom}px ${
+                      imgSize.h * hoverZoom
+                    }px`,
+                    backgroundPosition: `${(hoverPos.x / imgSize.w) * 100}% ${
+                      (hoverPos.y / imgSize.h) * 100
+                    }%`,
                     boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
                     zIndex: 1300,
                     pointerEvents: "none",
@@ -558,10 +594,7 @@ const MaterialDetailPage: React.FC = () => {
                 fontWeight="bold"
                 sx={{ mb: 1 }}
               >
-                {(
-                  (material.pricePerUnit || 0)
-                )?.toLocaleString("vi-VN")}{" "}
-                ₫/mét
+                {(material.pricePerUnit || 0)?.toLocaleString("vi-VN")} ₫/mét
               </Typography>
               <Chip
                 label={
@@ -608,7 +641,8 @@ const MaterialDetailPage: React.FC = () => {
                 color="text.secondary"
                 sx={{ mb: 2, display: "block" }}
               >
-                📐 Phân loại kích cỡ (ước tính khổ vải 1.4m): 1m ≈ (1 × 1.4m), 2m ≈ (2 × 1.4m), 3m ≈ (3 × 1.4m)
+                📐 Phân loại kích cỡ (ước tính khổ vải 1.4m): 1m ≈ (1 × 1.4m),
+                2m ≈ (2 × 1.4m), 3m ≈ (3 × 1.4m)
               </Typography>
 
               <Box
@@ -669,11 +703,7 @@ const MaterialDetailPage: React.FC = () => {
                 variant="outlined"
                 size="large"
                 onClick={() =>
-                  navigate(
-                    `/supplier/${
-                      material.supplier?.supplierId || 0
-                    }`
-                  )
+                  navigate(`/supplier/${material.supplier?.supplierId || 0}`)
                 }
               >
                 Xem hồ sơ
@@ -714,7 +744,9 @@ const MaterialDetailPage: React.FC = () => {
                   <ListItem>
                     <ListItemText
                       primary="Điểm bền vững tổng hợp"
-                      secondary={`${sustainabilityScore.toFixed(1)}% (dựa trên 5 tiêu chí, mỗi tiêu chí 20% trọng số)`}
+                      secondary={`${sustainabilityScore.toFixed(
+                        1
+                      )}% (dựa trên 5 tiêu chí, mỗi tiêu chí 20% trọng số)`}
                     />
                   </ListItem>
                   <ListItem>
@@ -735,7 +767,7 @@ const MaterialDetailPage: React.FC = () => {
                     <ListItemText
                       primary="Giá trên đơn vị"
                       secondary={`${(
-                        (material.pricePerUnit || 0)
+                        material.pricePerUnit || 0
                       )?.toLocaleString("vi-VN")} ₫/mét`}
                     />
                   </ListItem>
@@ -780,8 +812,6 @@ const MaterialDetailPage: React.FC = () => {
                     </ListItem>
                   )}
 
-
-
                   {/* Chứng nhận bền vững */}
                   {material.certificationDetails && (
                     <ListItem
@@ -795,8 +825,6 @@ const MaterialDetailPage: React.FC = () => {
                       </Box>
                     </ListItem>
                   )}
-
-                  
                 </List>
               </Box>
             )}
@@ -808,103 +836,94 @@ const MaterialDetailPage: React.FC = () => {
                   Thông tin bền vững
                 </Typography>
 
-                                 {/* Tổng quan điểm bền vững */}
-                 <Box sx={{ mb: 4, p: 3, bgcolor: "#f8f9fa", borderRadius: 2 }}>
-                   <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
-                     Tổng quan điểm bền vững
-                   </Typography>
-                   <SustainabilityToolbar
-                     sustainabilityScore={sustainabilityScore}
-                     sustainabilityLevel={material.sustainabilityLevel}
-                     sustainabilityColor={material.sustainabilityColor}
-                     showDetails={true}
-                   />
-                 </Box>
+                {/* Tổng quan điểm bền vững */}
+                <Box sx={{ mb: 4, p: 3, bgcolor: "#f8f9fa", borderRadius: 2 }}>
+                  <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
+                    Tổng quan điểm bền vững
+                  </Typography>
+                  <SustainabilityToolbar
+                    sustainabilityScore={sustainabilityScore}
+                    sustainabilityLevel={material.sustainabilityLevel}
+                    sustainabilityColor={material.sustainabilityColor}
+                    showDetails={true}
+                  />
+                </Box>
 
+                {/* Benchmarks Section */}
+                {material?.benchmarks && material.benchmarks.length > 0 ? (
+                  <>
+                    <Typography variant="h5" fontWeight="bold" sx={{ mb: 3 }}>
+                      So sánh với chuẩn ngành
+                    </Typography>
 
-
-                                 {/* Benchmarks Section */}
-                 {material?.benchmarks && material.benchmarks.length > 0 ? (
-                   <>
-                     <Typography variant="h5" fontWeight="bold" sx={{ mb: 3 }}>
-                       So sánh với chuẩn ngành
-                     </Typography>
-                    
                     <Grid container spacing={3}>
                       {/* Display regular benchmarks */}
                       {material.benchmarks
-                        .filter(benchmark => benchmark.criteriaId !== 5) // Keep filter for now, we'll add Transport separately
+                        .filter((benchmark) => benchmark.criteriaId !== 5) // Keep filter for now, we'll add Transport separately
                         .map((benchmark, index) => (
                           <Grid key={index}>
-                        <Card>
-                          <CardContent>
-                                                                                                                   <Typography
-                                   variant="h6"
-                                   fontWeight="bold"
-                                   sx={{ mb: 2 }}
-                                 >
-                                   {benchmark.sustainabilityCriteria?.name ||
-                                     `Tiêu chí ${index + 1}`}
-                                 </Typography>
+                            <Card>
+                              <CardContent>
+                                <Typography
+                                  variant="h6"
+                                  fontWeight="bold"
+                                  sx={{ mb: 2 }}
+                                >
+                                  {benchmark.sustainabilityCriteria?.name ||
+                                    `Tiêu chí ${index + 1}`}
+                                </Typography>
 
-                                                         {/* Điểm đạt được */}
-                             {(() => {
-                               const criterionName = benchmark.sustainabilityCriteria?.name;
-                               if (!criterionName || !sustainabilityReport?.criterionDetails) return null;
-                               
-                               const criterionDetail = sustainabilityReport.criterionDetails.find(
-                                 detail => detail.criterionName === criterionName
-                               );
-                               
-                               if (!criterionDetail) return null;
-                               
-                               const score = criterionDetail.score;
-                               const bgColor = score >= 80 ? 'green' : score >= 60 ? '#FFD700' : score >= 40 ? 'orange' : 'red';
-                               
-                               return (
-                                 <Box
-                                   sx={{
-                                     display: "flex",
-                                     justifyContent: "space-between",
-                                     mb: 1,
-                                   }}
-                                 >
-                                   <Typography variant="body2">
-                                     Điểm đạt được:
-                                   </Typography>
-                                   <Typography variant="body2" fontWeight="bold" sx={{ color: bgColor }}>
-                                     {score.toFixed(1)}%
-                                   </Typography>
-                                 </Box>
-                               );
-                             })()}
+                                {/* Điểm đạt được */}
+                                {(() => {
+                                  const criterionName =
+                                    benchmark.sustainabilityCriteria?.name;
+                                  if (
+                                    !criterionName ||
+                                    !sustainabilityReport?.criterionDetails
+                                  )
+                                    return null;
 
-                             {/* Giá trị chuẩn */}
-                             <Box
-                               sx={{
-                                 display: "flex",
-                                 justifyContent: "space-between",
-                                 mb: 1,
-                               }}
-                             >
-                               <Typography variant="body2">
-                                 Giá trị chuẩn:
-                               </Typography>
-                               <Typography variant="body2" fontWeight="bold">
-                                 {benchmark.criteriaId === 4
-                                   ? benchmark.value >= 1
-                                     ? "Có"
-                                     : "Không"
-                                   : `${benchmark.value} ${
-                                       benchmark.sustainabilityCriteria?.unit ||
-                                       ""
-                                     }`}
-                               </Typography>
-                             </Box>
+                                  const criterionDetail =
+                                    sustainabilityReport.criterionDetails.find(
+                                      (detail) =>
+                                        detail.criterionName === criterionName
+                                    );
 
-                            {/* Giá trị thực tế */}
-                            {benchmark.actualValue !== null &&
-                              benchmark.actualValue !== undefined && (
+                                  if (!criterionDetail) return null;
+
+                                  const score = criterionDetail.score;
+                                  const bgColor =
+                                    score >= 80
+                                      ? "green"
+                                      : score >= 60
+                                      ? "#FFD700"
+                                      : score >= 40
+                                      ? "orange"
+                                      : "red";
+
+                                  return (
+                                    <Box
+                                      sx={{
+                                        display: "flex",
+                                        justifyContent: "space-between",
+                                        mb: 1,
+                                      }}
+                                    >
+                                      <Typography variant="body2">
+                                        Điểm đạt được:
+                                      </Typography>
+                                      <Typography
+                                        variant="body2"
+                                        fontWeight="bold"
+                                        sx={{ color: bgColor }}
+                                      >
+                                        {score.toFixed(1)}%
+                                      </Typography>
+                                    </Box>
+                                  );
+                                })()}
+
+                                {/* Giá trị chuẩn */}
                                 <Box
                                   sx={{
                                     display: "flex",
@@ -913,316 +932,516 @@ const MaterialDetailPage: React.FC = () => {
                                   }}
                                 >
                                   <Typography variant="body2">
-                                    Giá trị thực tế:
+                                    Giá trị chuẩn:
                                   </Typography>
                                   <Typography variant="body2" fontWeight="bold">
                                     {benchmark.criteriaId === 4
-                                      ? benchmark.actualValue >= 1
+                                      ? benchmark.value >= 1
                                         ? "Có"
                                         : "Không"
-                                      : `${benchmark.actualValue} ${
+                                      : `${benchmark.value} ${
                                           benchmark.sustainabilityCriteria
                                             ?.unit || ""
                                         }`}
                                   </Typography>
                                 </Box>
-                              )}
 
-                                                         {/* So sánh cải thiện */}
-                             {benchmark.improvementPercentage !== null &&
-                               benchmark.improvementPercentage !== undefined && (
-                                 <Box
-                                   sx={{
-                                     display: "flex",
-                                     justifyContent: "space-between",
-                                     mb: 1,
-                                   }}
-                                 >
-                                   <Typography variant="body2">
-                                     Cải thiện:
-                                   </Typography>
-                                   <Typography
-                                     variant="body2"
-                                     fontWeight="bold"
-                                     color={
-                                       benchmark.improvementColor === "success"
-                                         ? "success.main"
-                                         : benchmark.improvementColor === "error"
-                                         ? "error.main"
-                                         : "warning.main"
-                                     }
-                                   >
-                                     {benchmark.criteriaId === 4
-                                       ? `(${benchmark.improvementStatus})`
-                                       : `${
-                                           benchmark.improvementPercentage > 0
-                                             ? "+"
-                                             : ""
-                                         }${benchmark.improvementPercentage.toFixed(
-                                           1
-                                         )}% (${benchmark.improvementStatus})`}
-                                   </Typography>
-                                 </Box>
-                               )}
+                                {/* Giá trị thực tế */}
+                                {benchmark.actualValue !== null &&
+                                  benchmark.actualValue !== undefined && (
+                                    <Box
+                                      sx={{
+                                        display: "flex",
+                                        justifyContent: "space-between",
+                                        mb: 1,
+                                      }}
+                                    >
+                                      <Typography variant="body2">
+                                        Giá trị thực tế:
+                                      </Typography>
+                                      <Typography
+                                        variant="body2"
+                                        fontWeight="bold"
+                                      >
+                                        {benchmark.criteriaId === 4
+                                          ? benchmark.actualValue >= 1
+                                            ? "Có"
+                                            : "Không"
+                                          : `${benchmark.actualValue} ${
+                                              benchmark.sustainabilityCriteria
+                                                ?.unit || ""
+                                            }`}
+                                      </Typography>
+                                    </Box>
+                                  )}
 
-                            {/* Loại vật liệu */}
-                            <Box
-                              sx={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                mb: 1,
-                              }}
-                            >
-                              <Typography variant="body2">
-                                Loại vật liệu:
-                              </Typography>
-                              <Typography variant="body2" fontWeight="bold">
-                                {benchmark.materialType?.typeName ||
-                                  "Chưa có thông tin"}
-                              </Typography>
-                            </Box>
+                                {/* So sánh cải thiện */}
+                                {benchmark.improvementPercentage !== null &&
+                                  benchmark.improvementPercentage !==
+                                    undefined && (
+                                    <Box
+                                      sx={{
+                                        display: "flex",
+                                        justifyContent: "space-between",
+                                        mb: 1,
+                                      }}
+                                    >
+                                      <Typography variant="body2">
+                                        Cải thiện:
+                                      </Typography>
+                                      <Typography
+                                        variant="body2"
+                                        fontWeight="bold"
+                                        color={
+                                          benchmark.improvementColor ===
+                                          "success"
+                                            ? "success.main"
+                                            : benchmark.improvementColor ===
+                                              "error"
+                                            ? "error.main"
+                                            : "warning.main"
+                                        }
+                                      >
+                                        {benchmark.criteriaId === 4
+                                          ? `(${benchmark.improvementStatus})`
+                                          : `${
+                                              benchmark.improvementPercentage >
+                                              0
+                                                ? "+"
+                                                : ""
+                                            }${benchmark.improvementPercentage.toFixed(
+                                              1
+                                            )}% (${
+                                              benchmark.improvementStatus
+                                            })`}
+                                      </Typography>
+                                    </Box>
+                                  )}
 
-                            {/* Tiêu chí ID */}
-                            <Box
-                              sx={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                              }}
-                            >
-                              <Typography variant="body2">
-                                Tiêu chí ID:
-                              </Typography>
-                              <Typography variant="body2" fontWeight="bold">
-                                {benchmark.criteriaId}
-                              </Typography>
-                            </Box>
-                          </CardContent>
-                        </Card>
-                      </Grid>
-                    ))}
-                    
-                    {/* Transport Information from Sustainability Report */}
-                    {sustainabilityReport?.criterionDetails && material?.transportDistance && material?.transportMethod && (
-                      <>
-                        {(() => {
-                          const transportDetail = sustainabilityReport.criterionDetails.find(
-                            detail => detail.criterionName === 'Transport'
-                          );
-                          if (!transportDetail) return null;
-                          
-                          return (
-                            <Grid>
-                              <Card>
-                                <CardContent>
-                                                                                                                                           <Typography
-                                       variant="h6"
-                                       fontWeight="bold"
-                                       sx={{ mb: 2 }}
-                                     >
-                                       Transport
-                                     </Typography>
+                                {/* Loại vật liệu */}
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    mb: 1,
+                                  }}
+                                >
+                                  <Typography variant="body2">
+                                    Loại vật liệu:
+                                  </Typography>
+                                  <Typography variant="body2" fontWeight="bold">
+                                    {benchmark.materialType?.typeName ||
+                                      "Chưa có thông tin"}
+                                  </Typography>
+                                </Box>
 
-                                  
+                                {/* Tiêu chí ID */}
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                  }}
+                                >
+                                  <Typography variant="body2">
+                                    Tiêu chí ID:
+                                  </Typography>
+                                  <Typography variant="body2" fontWeight="bold">
+                                    {benchmark.criteriaId}
+                                  </Typography>
+                                </Box>
+                              </CardContent>
+                            </Card>
+                          </Grid>
+                        ))}
 
-                                                                     {/* Điểm đạt được */}
-                                   <Box
-                                     sx={{
-                                       display: "flex",
-                                       justifyContent: "space-between",
-                                       mb: 1,
-                                     }}
-                                   >
-                                     <Typography variant="body2">
-                                       Điểm đạt được:
-                                     </Typography>
-                                     <Typography variant="body2" fontWeight="bold" sx={{ 
-                                       color: transportDetail.score >= 80 ? 'green' : transportDetail.score >= 60 ? '#FFD700' : transportDetail.score >= 40 ? 'orange' : 'red' 
-                                     }}>
-                                       {transportDetail.score.toFixed(1)}%
-                                     </Typography>
-                                   </Box>
+                      {/* Transport Information from Sustainability Report */}
+                      {sustainabilityReport?.criterionDetails &&
+                        material?.transportDistance &&
+                        material?.transportMethod && (
+                          <>
+                            {(() => {
+                              const transportDetail =
+                                sustainabilityReport.criterionDetails.find(
+                                  (detail) =>
+                                    detail.criterionName === "Transport"
+                                );
+                              if (!transportDetail) return null;
 
-                                   {/* Distance */}
-                                   <Box
-                                     sx={{
-                                       display: "flex",
-                                       justifyContent: "space-between",
-                                       mb: 1,
-                                     }}
-                                   >
-                                     <Typography variant="body2">
-                                       Khoảng cách:
-                                     </Typography>
-                                     <Typography variant="body2" fontWeight="bold">
-                                       {material.transportDistance.toLocaleString('vi-VN')} km
-                                     </Typography>
-                                   </Box>
+                              return (
+                                <Grid>
+                                  <Card>
+                                    <CardContent>
+                                      <Typography
+                                        variant="h6"
+                                        fontWeight="bold"
+                                        sx={{ mb: 2 }}
+                                      >
+                                        Transport
+                                      </Typography>
 
-                                  {/* Method */}
-                                  <Box
+                                      {/* Điểm đạt được */}
+                                      <Box
+                                        sx={{
+                                          display: "flex",
+                                          justifyContent: "space-between",
+                                          mb: 1,
+                                        }}
+                                      >
+                                        <Typography variant="body2">
+                                          Điểm đạt được:
+                                        </Typography>
+                                        <Typography
+                                          variant="body2"
+                                          fontWeight="bold"
+                                          sx={{
+                                            color:
+                                              transportDetail.score >= 80
+                                                ? "green"
+                                                : transportDetail.score >= 60
+                                                ? "#FFD700"
+                                                : transportDetail.score >= 40
+                                                ? "orange"
+                                                : "red",
+                                          }}
+                                        >
+                                          {transportDetail.score.toFixed(1)}%
+                                        </Typography>
+                                      </Box>
+
+                                      {/* Distance */}
+                                      <Box
+                                        sx={{
+                                          display: "flex",
+                                          justifyContent: "space-between",
+                                          mb: 1,
+                                        }}
+                                      >
+                                        <Typography variant="body2">
+                                          Khoảng cách:
+                                        </Typography>
+                                        <Typography
+                                          variant="body2"
+                                          fontWeight="bold"
+                                        >
+                                          {material.transportDistance.toLocaleString(
+                                            "vi-VN"
+                                          )}{" "}
+                                          km
+                                        </Typography>
+                                      </Box>
+
+                                      {/* Method */}
+                                      <Box
+                                        sx={{
+                                          display: "flex",
+                                          justifyContent: "space-between",
+                                          mb: 1,
+                                        }}
+                                      >
+                                        <Typography variant="body2">
+                                          Phương thức:
+                                        </Typography>
+                                        <Typography
+                                          variant="body2"
+                                          fontWeight="bold"
+                                        >
+                                          {material.transportMethod}
+                                        </Typography>
+                                      </Box>
+
+                                      {/* Status */}
+                                      <Box
+                                        sx={{
+                                          display: "flex",
+                                          justifyContent: "space-between",
+                                          mb: 1,
+                                        }}
+                                      >
+                                        <Typography variant="body2">
+                                          Trạng thái:
+                                        </Typography>
+                                        <Typography
+                                          variant="body2"
+                                          fontWeight="bold"
+                                          color="success.main"
+                                        >
+                                          {transportDetail.status}
+                                        </Typography>
+                                      </Box>
+
+                                      {/* Loại vật liệu */}
+                                      <Box
+                                        sx={{
+                                          display: "flex",
+                                          justifyContent: "space-between",
+                                          mb: 1,
+                                        }}
+                                      >
+                                        <Typography variant="body2">
+                                          Loại vật liệu:
+                                        </Typography>
+                                        <Typography
+                                          variant="body2"
+                                          fontWeight="bold"
+                                        >
+                                          {material.materialTypeName ||
+                                            "Chưa có thông tin"}
+                                        </Typography>
+                                      </Box>
+
+                                      {/* Tiêu chí ID */}
+                                      <Box
+                                        sx={{
+                                          display: "flex",
+                                          justifyContent: "space-between",
+                                        }}
+                                      >
+                                        <Typography variant="body2">
+                                          Tiêu chí ID:
+                                        </Typography>
+                                        <Typography
+                                          variant="body2"
+                                          fontWeight="bold"
+                                        >
+                                          5
+                                        </Typography>
+                                      </Box>
+                                    </CardContent>
+                                  </Card>
+                                </Grid>
+                              );
+                            })()}
+                          </>
+                        )}
+                    </Grid>
+
+                    {/* Thông tin tổng quan về benchmark */}
+                    <Box
+                      sx={{ mt: 4, p: 2, bgcolor: "#e3f2fd", borderRadius: 2 }}
+                    >
+                      <Typography
+                        variant="subtitle1"
+                        fontWeight="bold"
+                        sx={{ mb: 1 }}
+                      >
+                        ℹ️ Thông tin về benchmark
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Hệ thống so sánh hiệu suất của nguyên liệu với chuẩn
+                        ngành cho từng tiêu chí. Điểm sustainability tổng hợp
+                        được tính dựa trên 5 tiêu chí với trọng số 20% mỗi tiêu
+                        chí.
+                      </Typography>
+                    </Box>
+
+                    {/* Tổng kết tính toán điểm */}
+                    {sustainabilityReport?.criterionDetails && (
+                      <Box
+                        sx={{
+                          mt: 3,
+                          p: 2,
+                          bgcolor: "#fff3cd",
+                          borderRadius: 2,
+                          border: "1px solid #ffeaa7",
+                        }}
+                      >
+                        <Typography
+                          variant="subtitle1"
+                          fontWeight="bold"
+                          sx={{ mb: 1, color: "#856404" }}
+                        >
+                          📊 Tổng kết tính toán điểm Sustainability
+                        </Typography>
+                        <Box
+                          sx={{
+                            display: "grid",
+                            gridTemplateColumns: {
+                              xs: "1fr",
+                              md: "repeat(2, 1fr)",
+                            },
+                            gap: 2,
+                          }}
+                        >
+                          {sustainabilityReport.criterionDetails.map(
+                            (detail, index) => (
+                              <Box
+                                key={index}
+                                sx={{
+                                  display: "flex",
+                                  justifyContent: "space-between",
+                                  alignItems: "center",
+                                  p: 1,
+                                  bgcolor: "#fff",
+                                  borderRadius: 1,
+                                }}
+                              >
+                                <Typography
+                                  variant="body2"
+                                  sx={{ fontWeight: "bold" }}
+                                >
+                                  {detail.criterionName}:
+                                </Typography>
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 1,
+                                  }}
+                                >
+                                  <Typography
+                                    variant="body2"
                                     sx={{
-                                      display: "flex",
-                                      justifyContent: "space-between",
-                                      mb: 1,
+                                      color:
+                                        detail.score >= 80
+                                          ? "green"
+                                          : detail.score >= 60
+                                          ? "orange"
+                                          : "red",
+                                      fontWeight: "bold",
                                     }}
                                   >
-                                    <Typography variant="body2">
-                                      Phương thức:
-                                    </Typography>
-                                    <Typography variant="body2" fontWeight="bold">
-                                      {material.transportMethod}
-                                    </Typography>
-                                  </Box>
-
-                                                                                                                                           {/* Status */}
-                                    <Box
-                                      sx={{
-                                        display: "flex",
-                                        justifyContent: "space-between",
-                                        mb: 1,
-                                      }}
-                                    >
-                                      <Typography variant="body2">
-                                        Trạng thái:
-                                      </Typography>
-                                      <Typography variant="body2" fontWeight="bold" color="success.main">
-                                        {transportDetail.status}
-                                      </Typography>
-                                    </Box>
-
-                                    {/* Loại vật liệu */}
-                                    <Box
-                                      sx={{
-                                        display: "flex",
-                                        justifyContent: "space-between",
-                                        mb: 1,
-                                      }}
-                                    >
-                                      <Typography variant="body2">
-                                        Loại vật liệu:
-                                      </Typography>
-                                      <Typography variant="body2" fontWeight="bold">
-                                        {material.materialTypeName || "Chưa có thông tin"}
-                                      </Typography>
-                                    </Box>
-
-                                    {/* Tiêu chí ID */}
-                                    <Box
-                                      sx={{
-                                        display: "flex",
-                                        justifyContent: "space-between",
-                                      }}
-                                    >
-                                      <Typography variant="body2">
-                                        Tiêu chí ID:
-                                      </Typography>
-                                      <Typography variant="body2" fontWeight="bold">
-                                        5
-                                      </Typography>
-                                    </Box>
-                                   
-                                 </CardContent>
-                               </Card>
-                             </Grid>
-                          );
-                        })()}
-                      </>
-                                         )}
-                   </Grid>
-
-                   {/* Thông tin tổng quan về benchmark */}
-                   <Box sx={{ mt: 4, p: 2, bgcolor: "#e3f2fd", borderRadius: 2 }}>
-                     <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 1 }}>
-                       ℹ️ Thông tin về benchmark
-                     </Typography>
-                     <Typography variant="body2" color="text.secondary">
-                       Hệ thống so sánh hiệu suất của nguyên liệu với chuẩn ngành cho từng tiêu chí. 
-                       Điểm sustainability tổng hợp được tính dựa trên 5 tiêu chí với trọng số 20% mỗi tiêu chí.
-                     </Typography>
-                   </Box>
-                   
-                   {/* Tổng kết tính toán điểm */}
-                   {sustainabilityReport?.criterionDetails && (
-                     <Box sx={{ mt: 3, p: 2, bgcolor: "#fff3cd", borderRadius: 2, border: "1px solid #ffeaa7" }}>
-                       <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 1, color: "#856404" }}>
-                         📊 Tổng kết tính toán điểm Sustainability
-                       </Typography>
-                       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(2, 1fr)" }, gap: 2 }}>
-                         {sustainabilityReport.criterionDetails.map((detail, index) => (
-                           <Box key={index} sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", p: 1, bgcolor: "#fff", borderRadius: 1 }}>
-                             <Typography variant="body2" sx={{ fontWeight: "bold" }}>
-                               {detail.criterionName}:
-                             </Typography>
-                             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                               <Typography variant="body2" sx={{ color: detail.score >= 80 ? 'green' : detail.score >= 60 ? 'orange' : 'red', fontWeight: "bold" }}>
-                                 {detail.score.toFixed(1)}%
-                               </Typography>
-                               <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                                 × 20% = {(detail.score * 0.2).toFixed(1)}%
-                               </Typography>
-                             </Box>
-                           </Box>
-                         ))}
-                       </Box>
-                       <Typography variant="body2" sx={{ mt: 2, fontWeight: "bold", color: "#856404" }}>
-                         Tổng điểm: {sustainabilityReport.overallSustainabilityScore}% 
-                         ({sustainabilityReport.criterionDetails.reduce((sum, detail) => sum + (detail.score * 0.2), 0).toFixed(1)}%)
-                       </Typography>
-                     </Box>
-                   )}
-
-                   {/* Cách tính điểm Transport */}
-                   {sustainabilityReport?.criterionDetails && (
-                     <Box sx={{ mt: 3, p: 2, bgcolor: "#f3e5f5", borderRadius: 2, border: "1px solid #e1bee7" }}>
-                       <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 1, color: "#6a1b9a" }}>
-                         🚚 Cách tính điểm Transport
-                       </Typography>
-                                               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                          <strong>Logic tính điểm Transport (20% của tổng điểm sustainability):</strong>
+                                    {detail.score.toFixed(1)}%
+                                  </Typography>
+                                  <Typography
+                                    variant="caption"
+                                    sx={{ color: "text.secondary" }}
+                                  >
+                                    × 20% = {(detail.score * 0.2).toFixed(1)}%
+                                  </Typography>
+                                </Box>
+                              </Box>
+                            )
+                          )}
+                        </Box>
+                        <Typography
+                          variant="body2"
+                          sx={{ mt: 2, fontWeight: "bold", color: "#856404" }}
+                        >
+                          Tổng điểm:{" "}
+                          {sustainabilityReport.overallSustainabilityScore}% (
+                          {sustainabilityReport.criterionDetails
+                            .reduce(
+                              (sum, detail) => sum + detail.score * 0.2,
+                              0
+                            )
+                            .toFixed(1)}
+                          %)
                         </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                           Khoảng cách địa lý và phương thức vận chuyển được chia thành 2 phần:
+                      </Box>
+                    )}
+
+                    {/* Cách tính điểm Transport */}
+                    {sustainabilityReport?.criterionDetails && (
+                      <Box
+                        sx={{
+                          mt: 3,
+                          p: 2,
+                          bgcolor: "#f3e5f5",
+                          borderRadius: 2,
+                          border: "1px solid #e1bee7",
+                        }}
+                      >
+                        <Typography
+                          variant="subtitle1"
+                          fontWeight="bold"
+                          sx={{ mb: 1, color: "#6a1b9a" }}
+                        >
+                          🚚 Cách tính điểm Transport
                         </Typography>
-                        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(2, 1fr)" }, gap: 2 }}>
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          sx={{ mb: 2 }}
+                        >
+                          <strong>
+                            Logic tính điểm Transport (20% của tổng điểm
+                            sustainability):
+                          </strong>
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          sx={{ mb: 2 }}
+                        >
+                          Khoảng cách địa lý và phương thức vận chuyển được chia
+                          thành 2 phần:
+                        </Typography>
+                        <Box
+                          sx={{
+                            display: "grid",
+                            gridTemplateColumns: {
+                              xs: "1fr",
+                              md: "repeat(2, 1fr)",
+                            },
+                            gap: 2,
+                          }}
+                        >
                           <Box sx={{ p: 1, bgcolor: "#fff", borderRadius: 1 }}>
-                            <Typography variant="body2" sx={{ fontWeight: "bold", mb: 1 }}>
+                            <Typography
+                              variant="body2"
+                              sx={{ fontWeight: "bold", mb: 1 }}
+                            >
                               📏 Bước 1: Tính điểm khoảng cách (15% tổng điểm)
                             </Typography>
-                                                        <Typography variant="caption" color="text.secondary">
-                               • ≤100km: 100%<br/>
-                               • 100-500km: 90%<br/>
-                               • 500-1000km: 80%<br/>
-                               • 1000-2000km: 60%<br/>
-                               • 2000-5000km: 40%<br/>
-                               • trên 5000km: 20%
-                             </Typography>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
+                              • ≤100km: 100%
+                              <br />
+                              • 100-500km: 90%
+                              <br />
+                              • 500-1000km: 80%
+                              <br />
+                              • 1000-2000km: 60%
+                              <br />
+                              • 2000-5000km: 40%
+                              <br />• trên 5000km: 20%
+                            </Typography>
                           </Box>
                           <Box sx={{ p: 1, bgcolor: "#fff", borderRadius: 1 }}>
-                            <Typography variant="body2" sx={{ fontWeight: "bold", mb: 1 }}>
+                            <Typography
+                              variant="body2"
+                              sx={{ fontWeight: "bold", mb: 1 }}
+                            >
                               🚢 Bước 2: Tính điểm phương thức (5% tổng điểm)
                             </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              • Sea (Đường biển): 80% (ít carbon nhất)<br/>
-                              • Rail (Đường sắt): 90% (hiệu quả cao)<br/>
-                              • Land (Đường bộ): 70% (trung bình)<br/>
-                              • Air (Đường hàng không): 30% (nhiều carbon nhất)
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
+                              • Sea (Đường biển): 80% (ít carbon nhất)
+                              <br />
+                              • Rail (Đường sắt): 90% (hiệu quả cao)
+                              <br />
+                              • Land (Đường bộ): 70% (trung bình)
+                              <br />• Air (Đường hàng không): 30% (nhiều carbon
+                              nhất)
                             </Typography>
                           </Box>
                         </Box>
-                        <Typography variant="body2" sx={{ mt: 2, color: "#6a1b9a", fontStyle: "italic" }}>
-                          <strong>Công thức:</strong> Transport Score = (Khoảng cách × 15%) + (Phương thức × 5%)
+                        <Typography
+                          variant="body2"
+                          sx={{ mt: 2, color: "#6a1b9a", fontStyle: "italic" }}
+                        >
+                          <strong>Công thức:</strong> Transport Score = (Khoảng
+                          cách × 15%) + (Phương thức × 5%)
                         </Typography>
-                        <Typography variant="body2" sx={{ mt: 1, color: "#6a1b9a" }}>
-                          <strong>Ví dụ:</strong> 800km (80% × 15% = 12%) + Sea (80% × 5% = 4%) = 16%
+                        <Typography
+                          variant="body2"
+                          sx={{ mt: 1, color: "#6a1b9a" }}
+                        >
+                          <strong>Ví dụ:</strong> 800km (80% × 15% = 12%) + Sea
+                          (80% × 5% = 4%) = 16%
                         </Typography>
-                     </Box>
-                   )}
-                     </>
-                   ) : (
-                     <Typography variant="body2" color="text.secondary">
-                       Chưa có thông tin benchmark.
-                     </Typography>
-                   )}
+                      </Box>
+                    )}
+                  </>
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    Chưa có thông tin benchmark.
+                  </Typography>
+                )}
               </Box>
             )}
 
@@ -1312,13 +1531,15 @@ const MaterialDetailPage: React.FC = () => {
                         color="primary"
                         fontWeight="bold"
                       >
-                        {(
-                          (relatedMaterial.pricePerUnit || 0)
-                        )?.toLocaleString("vi-VN")}{" "}
+                        {(relatedMaterial.pricePerUnit || 0)?.toLocaleString(
+                          "vi-VN"
+                        )}{" "}
                         ₫/mét
                       </Typography>
                       <Chip
-                        label={`${(relatedMaterial.sustainabilityScore || 0).toFixed(0)}% Sustainability`}
+                        label={`${(
+                          relatedMaterial.sustainabilityScore || 0
+                        ).toFixed(0)}% Sustainability`}
                         size="small"
                         color="success"
                         sx={{ mt: 1 }}
@@ -1331,16 +1552,47 @@ const MaterialDetailPage: React.FC = () => {
           </Box>
         )}
       </Box>
-      <Dialog open={zoomOpen} onClose={() => setZoomOpen(false)} fullWidth maxWidth="lg">
-        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", p: 1, borderBottom: "1px solid #eee" }}>
+      <Dialog
+        open={zoomOpen}
+        onClose={() => setZoomOpen(false)}
+        fullWidth
+        maxWidth="lg"
+      >
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            p: 1,
+            borderBottom: "1px solid #eee",
+          }}
+        >
           <Box sx={{ display: "flex", gap: 1 }}>
-            <IconButton onClick={() => setZoomScale(z => Math.min(4, z + 0.2))} aria-label="Phóng to"><ZoomIn /></IconButton>
-            <IconButton onClick={() => setZoomScale(z => Math.max(1, z - 0.2))} aria-label="Thu nhỏ"><ZoomOut /></IconButton>
+            <IconButton
+              onClick={() => setZoomScale((z) => Math.min(4, z + 0.2))}
+              aria-label="Phóng to"
+            >
+              <ZoomIn />
+            </IconButton>
+            <IconButton
+              onClick={() => setZoomScale((z) => Math.max(1, z - 0.2))}
+              aria-label="Thu nhỏ"
+            >
+              <ZoomOut />
+            </IconButton>
           </Box>
-          <IconButton onClick={() => setZoomOpen(false)} aria-label="Đóng"><Close /></IconButton>
+          <IconButton onClick={() => setZoomOpen(false)} aria-label="Đóng">
+            <Close />
+          </IconButton>
         </Box>
         <DialogContent sx={{ p: 0 }}>
-          <Box sx={{ position: "relative", overflow: "hidden", cursor: dragging ? "grabbing" : "grab", height: { xs: "70vh", md: "80vh" } }}
+          <Box
+            sx={{
+              position: "relative",
+              overflow: "hidden",
+              cursor: dragging ? "grabbing" : "grab",
+              height: { xs: "70vh", md: "80vh" },
+            }}
             onMouseDown={onMouseDown}
             onMouseMove={onMouseMove}
             onMouseUp={onMouseUp}
@@ -1349,7 +1601,11 @@ const MaterialDetailPage: React.FC = () => {
           >
             <Box
               component="img"
-              src={material.imageUrls && material.imageUrls.length > 0 ? material.imageUrls[currentImageIndex] || mainImage : mainImage}
+              src={
+                material.imageUrls && material.imageUrls.length > 0
+                  ? material.imageUrls[currentImageIndex] || mainImage
+                  : mainImage
+              }
               alt={material.name || "Material"}
               sx={{
                 position: "absolute",

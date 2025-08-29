@@ -121,7 +121,18 @@ const FashionsSection: React.FC<ProductsSectionProps> = ({
         <Grid container spacing={2}>
           {visibleProducts.map((product) => (
             <Grid key={product.designId} size={3}>
-              <div className="design-card">
+              {type ? (
+                <div className="design-card">
+                  <FashionCard
+                    product={product}
+                    type={type}
+                    onSelect={onProductSelect}
+                    onAddToCart={onAddToCart}
+                    onToggleFavorite={onToggleFavorite}
+                    onProductClick={onProductClick}
+                  />
+                </div>
+              ) : (
                 <FashionCard
                   product={product}
                   type={type}
@@ -130,17 +141,19 @@ const FashionsSection: React.FC<ProductsSectionProps> = ({
                   onToggleFavorite={onToggleFavorite}
                   onProductClick={onProductClick}
                 />
-              </div>
+              )}
             </Grid>
           ))}
         </Grid>
       </Box>
 
       <Box sx={{ textAlign: "center", paddingTop: 2, paddingBottom: 2 }}>
-          <Button
+        <Button
           variant="outlined"
           size="large"
-            onClick={() => onViewMore ? navigate(onViewMore()) : navigate('/fashion')}
+          onClick={() =>
+            onViewMore ? navigate(onViewMore()) : navigate("/fashion")
+          }
           sx={{
             color: "rgba(22, 163, 74, 1)",
             borderColor: "rgba(22, 163, 74, 1)",

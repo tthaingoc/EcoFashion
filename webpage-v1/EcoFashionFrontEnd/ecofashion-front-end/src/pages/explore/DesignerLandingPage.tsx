@@ -128,7 +128,7 @@ export default function DesignerLandingPage() {
 
       <div className="content">
         <div className="left">
-          <div className="card">
+          <div className="designer-card">
             <h3>🎨 Giới thiệu</h3>
             <p>
               {designer.bio?.trim() ||
@@ -141,7 +141,7 @@ export default function DesignerLandingPage() {
             </div>
           </div>
 
-          <div className="card">
+          <div className="designer-card">
             <h3>🌿 Chuyên môn</h3>
             <a
               className="btn"
@@ -155,7 +155,7 @@ export default function DesignerLandingPage() {
             </a>
           </div>
 
-          <div className="card">
+          <div className="designer-card">
             <h3>🌐 Portfolio</h3>
             <a
               className="btn"
@@ -173,7 +173,7 @@ export default function DesignerLandingPage() {
             (() => {
               const files = JSON.parse(designer.portfolioFiles!);
               return (
-                <div className="card">
+                <div className="designer-card">
                   <h3>🖼️ Portfolio Images</h3>
                   <div className="images">
                     {files.map((url: string, idx: number) => (
@@ -198,7 +198,7 @@ export default function DesignerLandingPage() {
               );
             })()
           ) : (
-            <div className="card">
+            <div className="designer-card">
               <h3>🖼️ Portfolio Images</h3>
               <div className="images">
                 <img
@@ -221,7 +221,7 @@ export default function DesignerLandingPage() {
             (() => {
               const certs = JSON.parse(designer.certificates!);
               return (
-                <div className="card">
+                <div className="designer-card">
                   <h3>🎖️ Chứng chỉ</h3>
                   <ul>
                     {certs.map((cert: string, idx: number) => (
@@ -232,7 +232,7 @@ export default function DesignerLandingPage() {
               );
             })()
           ) : (
-            <div className="card">
+            <div className="designer-card">
               <h3>🎖️ Chứng chỉ</h3>
               <div>Chưa có chứng chỉ</div>
             </div>
@@ -250,7 +250,7 @@ export default function DesignerLandingPage() {
                     links.website?.trim());
                 if (hasLinks) {
                   return (
-                    <div className="card">
+                    <div className="designer-card">
                       <h3>🔗 Mạng xã hội</h3>
                       <ul>
                         {links.instagram?.trim() && (
@@ -314,7 +314,7 @@ export default function DesignerLandingPage() {
           )}
           {designer.address?.trim() && <p>Địa chỉ: {designer.address}</p>}
 
-          <div className="card">
+          <div className="designer-card">
             <h3>📊 Thống kê</h3>
             <p>Đánh giá: {designer.rating?.toFixed(1) || "0"}/5</p>
             <p>Lượt đánh giá: {designer.reviewCount || 0}</p>
@@ -324,7 +324,7 @@ export default function DesignerLandingPage() {
           {/* Thông tin bổ sung */}
           {(designer.taxNumber?.trim() ||
             designer.identificationPictureOwner?.trim()) && (
-            <div className="card">
+            <div className="designer-card">
               <h3>📝 Thông tin bổ sung</h3>
               {designer.taxNumber?.trim() && (
                 <p>

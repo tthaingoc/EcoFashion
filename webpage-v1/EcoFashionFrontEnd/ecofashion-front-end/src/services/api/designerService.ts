@@ -78,6 +78,9 @@ export interface DesignerPublic {
   certificates?: string;
   createdAt: string;
   userFullName?: string;
+  taxNumber?: string;
+  socialLinks: string;
+  identificationPictureOwner: string;
 }
 
 export interface FollowedSupplierResponse {

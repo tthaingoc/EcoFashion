@@ -1922,6 +1922,9 @@ namespace EcoFashionBackEnd.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<Guid?>("OrderGroupId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<int?>("OrderId")
                         .HasColumnType("int");
 

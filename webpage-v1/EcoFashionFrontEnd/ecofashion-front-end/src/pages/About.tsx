@@ -33,6 +33,7 @@ const teamMembers = [
 ];
 
 function AboutPage() {
+  window.scrollTo(0, 0);
   return (
     <Box
       sx={{

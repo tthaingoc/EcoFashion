@@ -37,7 +37,8 @@ namespace EcoFashionBackEnd.Entities
     public enum MaterialStatus
     {
         Main,       // Vật liệu chính
-        Supplement, // Vật liệu phụ trợ
+        Lining, // Vật liệu phụ trợ
+        Trims, // Phụ Liệu
         Other       // Vật liệu khác
     }
 }

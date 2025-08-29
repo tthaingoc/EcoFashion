@@ -213,7 +213,7 @@ namespace EcoFashionBackEnd.Services
                     TotalAmount = order.TotalPrice,
                     PaymentStatus = order.PaymentStatus.ToString()
                 });
-                
+
                 // Thêm OrderId vào danh sách
                 response.OrderIds.Add(order.OrderId);
             }
@@ -298,7 +298,7 @@ namespace EcoFashionBackEnd.Services
             {
                 var order = await _dbContext.Orders
                     .FirstOrDefaultAsync(o => o.OrderId == orderId && o.UserId == userId && o.PaymentStatus == PaymentStatus.Pending);
-                
+
                 if (order == null) return false;
 
                 var formattedAddress = await _userAddressService.GetFormattedAddressAsync(addressId, userId);
@@ -350,7 +350,7 @@ namespace EcoFashionBackEnd.Services
             {
                 var order = await _dbContext.Orders
                     .FirstOrDefaultAsync(o => o.OrderId == orderId && o.UserId == userId && o.PaymentStatus == PaymentStatus.Pending);
-                
+
                 if (order == null) return false;
 
                 order.ShippingAddress = shippingAddress;
@@ -366,5 +366,3 @@ namespace EcoFashionBackEnd.Services
         }
     }
 }
-
-

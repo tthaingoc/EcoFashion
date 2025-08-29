@@ -6,6 +6,7 @@ using EcoFashionBackEnd.Dtos.Design;
 using EcoFashionBackEnd.Dtos.DesignerMaterialInventory;
 using EcoFashionBackEnd.Dtos.Material;
 using EcoFashionBackEnd.Entities;
+using EcoFashionBackEnd.Exceptions;
 using EcoFashionBackEnd.Repositories;
 using Microsoft.EntityFrameworkCore;
 
@@ -101,6 +102,7 @@ namespace EcoFashionBackEnd.Services
             {
                 var inventories = await _dbContext.DesignerMaterialInventories
                     .Include(dmi => dmi.Material).ThenInclude(m => m.Supplier)
+                    .Where(dmi => dmi.Warehouse.DesignerId == designerId)
                     .ToListAsync();
                 var inventoriesDtos = new List<DesignerMaterialInventoryDto>();
                 var materialIds = inventories.Select(m => m.MaterialId).ToList();
@@ -112,8 +114,9 @@ namespace EcoFashionBackEnd.Services
                     {
                         InventoryId = inventorie.InventoryId,
                         MaterialId = inventorie.MaterialId,
-                        Quantity = (int?)inventorie.Quantity,
+                        Quantity = (decimal?)inventorie.Quantity,
                         LastBuyDate = inventorie.LastBuyDate,
+                        Cost = (decimal)inventorie.Cost,
                         Material = new DesginerStoredMaterialsDto
                         {
                             MaterialId = inventorie.Material.MaterialId,
@@ -155,5 +158,36 @@ namespace EcoFashionBackEnd.Services
             }
             
         }
+        public async Task<List<DesignerMaterialInventorySummaryDto>> GetDesignerMaterialInventoryOfDesigner(Guid designerId)
+        {
+            var inventories = await _dbContext.DesignerMaterialInventories
+                .Include(dmi => dmi.Material)
+                    .ThenInclude(m => m.MaterialImages)
+                        .ThenInclude(mi => mi.Image)
+                .Where(dmi => dmi.Warehouse.DesignerId == designerId)
+                .ToListAsync();
+
+            if (!inventories.Any())
+                throw new NotFoundException("Không tìm thấy kho vật liệu.");
+
+            return inventories.Select(inv => new DesignerMaterialInventorySummaryDto
+            {
+                InventoryId = inv.InventoryId,
+                MaterialId = inv.MaterialId,
+                Name = inv.Material?.Name ?? string.Empty,
+                ImageUrl = inv.Material?.MaterialImages?
+                                .Select(img => img.Image != null ? img.Image.ImageUrl : null)
+                                .FirstOrDefault(url => !string.IsNullOrEmpty(url)) ?? string.Empty,
+                Quantity = (decimal)(inv.Quantity),
+                Status = inv.Quantity <= 0 ? "Hết hàng"
+                         : inv.Quantity < 10 ? "Còn ít"
+                         : "Còn hàng",
+                PricePerUnit = inv.Material?.PricePerUnit ?? 0,
+                TotalValue = (decimal)(inv.Quantity) * (inv.Material?.PricePerUnit ?? 0),
+                LastUpdated = inv.LastBuyDate
+            }).ToList();
+        }
+
+
     }
 }

@@ -204,15 +204,6 @@ export default function DesignDetail() {
     setCurrentIndex(0);
   }, [designDetail]);
 
-  // if (!designDetail) {
-  //   return (
-  //     <Box sx={{ p: 4 }}>
-  //       <Typography color="error">Không tìm thấy sản phẩm.</Typography>
-  //     </Box>
-  //   );
-  // }
-  //Open popup
-
   if (loading) return <div className="designer-loading">Đang tải...</div>;
   if (error || !designDetail)
     return (
@@ -290,12 +281,17 @@ export default function DesignDetail() {
   const data = { data: materialData, valueFormatter };
 
   // Color map
-  const colorMap: Record<string, string> = {
-    RED: "#ff0000",
-    BLK: "#000000",
-    WHT: "#ffffff",
-    BLU: "#0432ecff",
-    GRN: "#00ff4cff",
+  const mapColorCodeToHex = (code: string): string => {
+    const colorMap: Record<string, string> = {
+      RED: "#ff0000",
+      BLK: "#000000",
+      WHT: "#ffffff",
+      BLU: "#0432ecff",
+      GRN: "#00ff4cff",
+      // thêm các mã khác tùy ý
+    };
+
+    return colorMap[code.toUpperCase()] || code;
   };
   const products = designDetail.products;
 
@@ -351,12 +347,17 @@ export default function DesignDetail() {
     }
 
     if (quantity > selectedProduct.quantityAvailable) {
-      toast.error(`Chỉ còn ${selectedProduct.quantityAvailable} sản phẩm có sẵn!`);
+      toast.error(
+        `Chỉ còn ${selectedProduct.quantityAvailable} sản phẩm có sẵn!`
+      );
       return;
     }
 
     try {
-      await addProductToCart({ productId: selectedProduct.productId, quantity });
+      await addProductToCart({
+        productId: selectedProduct.productId,
+        quantity,
+      });
       toast.success(
         `Đã thêm ${quantity} sản phẩm ${designDetail.name} vào giỏ hàng! 🛒`
       );
@@ -645,7 +646,7 @@ export default function DesignDetail() {
                       width: 40,
                       height: 40,
                       borderRadius: "50%",
-                      backgroundColor: colorMap[colorCode],
+                      backgroundColor: mapColorCodeToHex(colorCode),
                       border:
                         selectedColor === colorCode
                           ? "3px solid #1976d2"
@@ -1001,7 +1002,7 @@ export default function DesignDetail() {
                             designDetail.designer.createAt
                           ).getFullYear();
                         return yearsAgo === 0
-                          ? "Mới năm nay"
+                          ? "Năm nay"
                           : `${yearsAgo} năm trước`;
                       })()}
                     </Typography>
@@ -1516,11 +1517,17 @@ export default function DesignDetail() {
         </Box>
 
         {/* Related Products */}
-        <FashionsSection
-          products={relatedDesign}
-          title="SẢN PHẨM LIÊN QUAN"
-          onViewMore={() => `/brand/${designerId}`}
-        />
+        <Box
+          sx={{
+            width: "100%",
+          }}
+        >
+          <FashionsSection
+            products={relatedDesign}
+            title="SẢN PHẨM LIÊN QUAN"
+            onViewMore={() => `/brand/${designerId}`}
+          />
+        </Box>
       </Box>
     </Box>
   );

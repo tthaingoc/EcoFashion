@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using EcoFashionBackEnd.Entities;
 using EcoFashionBackEnd.Dtos.Warehouse;
 
@@ -112,7 +113,12 @@ namespace EcoFashionBackEnd.Services
         {
             if (quantity <= 0) throw new ArgumentException("Quantity must be positive");
 
-            using var tx = await _dbContext.Database.BeginTransactionAsync();
+            var existingTx = _dbContext.Database.CurrentTransaction;
+            IDbContextTransaction? startedTx = null;
+            if (existingTx == null)
+            {
+                startedTx = await _dbContext.Database.BeginTransactionAsync();
+            }
 
             var stock = await _dbContext.MaterialStocks
                 .FirstOrDefaultAsync(s => s.MaterialId == materialId && s.WarehouseId == warehouseId);
@@ -165,7 +171,10 @@ namespace EcoFashionBackEnd.Services
                 await _dbContext.SaveChangesAsync();
             }
 
-            await tx.CommitAsync();
+            if (startedTx != null)
+            {
+                await startedTx.CommitAsync();
+            }
             return true;
         }
 
@@ -185,14 +194,28 @@ namespace EcoFashionBackEnd.Services
         {
             if (quantity <= 0) throw new ArgumentException("Quantity must be positive");
 
-            using var tx = await _dbContext.Database.BeginTransactionAsync();
+            var existingTx = _dbContext.Database.CurrentTransaction;
+            IDbContextTransaction? startedTx = null;
+            if (existingTx == null)
+            {
+                startedTx = await _dbContext.Database.BeginTransactionAsync();
+            }
 
             var stock = await _dbContext.MaterialStocks
                 .FirstOrDefaultAsync(s => s.MaterialId == materialId && s.WarehouseId == warehouseId);
             
             if (stock == null)
             {
-                throw new InvalidOperationException($"No stock found for MaterialId {materialId} in WarehouseId {warehouseId}");
+                // Auto-create missing stock row to allow deduction and proper logging
+                stock = new MaterialStock
+                {
+                    MaterialId = materialId,
+                    WarehouseId = warehouseId,
+                    QuantityOnHand = 0,
+                    MinThreshold = 0
+                };
+                _dbContext.MaterialStocks.Add(stock);
+                await _dbContext.SaveChangesAsync();
             }
 
             var before = stock.QuantityOnHand;
@@ -238,7 +261,10 @@ namespace EcoFashionBackEnd.Services
                 await _dbContext.SaveChangesAsync();
             }
 
-            await tx.CommitAsync();
+            if (startedTx != null)
+            {
+                await startedTx.CommitAsync();
+            }
             return true;
         }
         
@@ -269,14 +295,28 @@ namespace EcoFashionBackEnd.Services
             if (quantityChange == 0) 
                 throw new ArgumentException("Quantity change cannot be zero");
 
-            using var tx = await _dbContext.Database.BeginTransactionAsync();
+            var existingTx = _dbContext.Database.CurrentTransaction;
+            IDbContextTransaction? startedTx = null;
+            if (existingTx == null)
+            {
+                startedTx = await _dbContext.Database.BeginTransactionAsync();
+            }
 
             var stock = await _dbContext.MaterialStocks
                 .FirstOrDefaultAsync(s => s.MaterialId == materialId && s.WarehouseId == warehouseId);
             
             if (stock == null)
             {
-                throw new InvalidOperationException($"No stock found for MaterialId {materialId} in WarehouseId {warehouseId}");
+                // Auto-create missing stock row to allow transaction to proceed
+                stock = new MaterialStock
+                {
+                    MaterialId = materialId,
+                    WarehouseId = warehouseId,
+                    QuantityOnHand = 0,
+                    MinThreshold = 0
+                };
+                _dbContext.MaterialStocks.Add(stock);
+                await _dbContext.SaveChangesAsync();
             }
 
             var before = stock.QuantityOnHand;
@@ -314,7 +354,10 @@ namespace EcoFashionBackEnd.Services
             // Cập nhật Material.QuantityAvailable
             await UpdateMaterialQuantityAvailableAsync(materialId);
 
-            await tx.CommitAsync();
+            if (startedTx != null)
+            {
+                await startedTx.CommitAsync();
+            }
             
             Console.WriteLine($"✅ {GetTransactionTypeDescription(transactionType)}: MaterialId {materialId}, Change: {quantityChange}, Before: {before}, After: {after}");
             return true;
@@ -331,7 +374,7 @@ namespace EcoFashionBackEnd.Services
                 MaterialTransactionType.CustomerSale => "Bán cho khách hàng",
                 MaterialTransactionType.CustomerReturn => "Khách hàng trả hàng",
                 MaterialTransactionType.ManualAdjustment => "Điều chỉnh thủ công",
-                MaterialTransactionType.StockTransfer => "Chuyển kho",
+                //MaterialTransactionType.StockTransfer => "Chuyển kho",
                 _ => transactionType.ToString()
             };
         }

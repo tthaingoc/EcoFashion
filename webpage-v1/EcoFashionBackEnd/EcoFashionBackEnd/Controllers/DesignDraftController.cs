@@ -10,6 +10,7 @@ using EcoFashionBackEnd.Dtos.DesignDraft;
 using EcoFashionBackEnd.Entities;
 using EcoFashionBackEnd.Services;
 using Humanizer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 namespace EcoFashionBackEnd.Controllers;
@@ -28,6 +29,7 @@ public class DesignDraftController : ControllerBase
     }
 
     [HttpPost("create-draft")]
+    [Authorize(Roles = "designer")]
     public async Task<ActionResult<ApiResult<int>>> CreateDraft([FromForm] DraftDesignCreateRequest request)
     {
         // Lấy userId từ claim
@@ -90,6 +92,7 @@ public class DesignDraftController : ControllerBase
    
      
     [HttpPut("update-draft")]
+    [Authorize(Roles = "designer")]
     public async Task<ActionResult<ApiResult<bool>>> UpdateDraft([FromForm] DraftDesignUpdateRequest request, DesignDraftService _designDraftService)
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
@@ -150,6 +153,7 @@ public class DesignDraftController : ControllerBase
 
     }
     [HttpDelete("{designId}")]
+    [Authorize(Roles = "designer")]
     public async Task<IActionResult> DeleteDesign(int designId)
     {
 

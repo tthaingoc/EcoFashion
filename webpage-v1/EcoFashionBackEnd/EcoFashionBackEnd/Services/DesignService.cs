@@ -179,6 +179,7 @@ namespace EcoFashionBackEnd.Services
             var designs = await _dbContext.Designs
                 .AsNoTracking()
                 .OrderByDescending(d => d.CreatedAt)
+                .Where(d => d.Products.Any())
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .Select(d => new DesignWithProductInfoDto
@@ -218,7 +219,7 @@ namespace EcoFashionBackEnd.Services
         {
             var designs = await _dbContext.Designs
                 .AsNoTracking()
-                .Where(d => d.DesignerId == designerId)
+                .Where(d => d.DesignerId == designerId && d.Products.Any())
                 .OrderByDescending(d => d.CreatedAt)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
@@ -268,7 +269,8 @@ namespace EcoFashionBackEnd.Services
                     RecycledPercentage = d.RecycledPercentage,
                     ItemTypeName = d.ItemTypes.TypeName,
                     SalePrice = d.SalePrice,
-
+                    Description = d.Description,
+                    CareInstruction = d.CareInstruction,
                     // Only select URLs, not entire image entity
                     DesignImageUrls = d.DesignImages
                         .Select(di => di.Image.ImageUrl)
@@ -289,11 +291,25 @@ namespace EcoFashionBackEnd.Services
                         {
                             Id = dv.Id,
                             DesignId = dv.DesignId,
+                            Quantity = dv.Quantity,
+                            SizeName = dv.Size.SizeName,
+                            ColorCode = dv.ColorCode,
+                            Ratio = d.ItemTypes.TypeSizeRatios
+                                .Where(r => r.SizeId == dv.SizeId)
+                                .Select(r => r.Ratio)
+                                .FirstOrDefault()
                         }).ToList(),
                          // Only select URLs, not entire image entity
                     DrafSketches = d.DraftSketches
                         .Select(di => di.Image.ImageUrl)
                         .ToList(),
+                    DesignFeatures = d.DesignFeatures == null ? null : new DesignFeatureDto
+                    {
+                         Durable = d.DesignFeatures.Durable,
+                         EthicallyManufactured = d.DesignFeatures.EthicallyManufactured,
+                         LowImpactDyes = d.DesignFeatures.LowImpactDyes,
+                         ReduceWaste = d.DesignFeatures.ReduceWaste,
+                    }
                 })
                 .ToListAsync();
         }
@@ -324,6 +340,15 @@ namespace EcoFashionBackEnd.Services
                         })
                         .ToList(),
                     ProductCount = d.Products.Count,
+                    Description = d.Description,
+                    CareInstruction = d.CareInstruction,
+                    DesignFeatures = d.DesignFeatures == null ? null : new DesignFeatureDto
+                    {
+                        Durable = d.DesignFeatures.Durable,
+                        EthicallyManufactured = d.DesignFeatures.EthicallyManufactured,
+                        LowImpactDyes = d.DesignFeatures.LowImpactDyes,
+                        ReduceWaste = d.DesignFeatures.ReduceWaste,
+                    }
                 })
                 .ToListAsync();
         }
@@ -383,55 +408,85 @@ namespace EcoFashionBackEnd.Services
             }
 
             // Cập nhật thông tin cơ bản
-            design.Name = request.Name;
-            design.Description = request.Description;
-            design.CareInstruction = request.CareInstruction;
+            if (request.Name != null)
+            { design.Name = request.Name; }
+
+            if (request.Description != null)
+            { design.Description = request.Description; }
+
+            if (request.CareInstruction != null)
+            { design.CareInstruction = request.CareInstruction; }
+
+
 
             // Cập nhật DesignFeatures
             // Giả định DesignFeatures là một đối tượng duy nhất
-            if (design.DesignFeatures == null)
+            if (request.DesignFeatures != null)
             {
-                design.DesignFeatures = new DesignFeature
+                if (design.DesignFeatures == null)
                 {
-                    DesignId = request.DesignId,
-                    ReduceWaste = request.DesignFeatures.ReduceWaste,
-                    LowImpactDyes = request.DesignFeatures.LowImpactDyes,
-                    Durable = request.DesignFeatures.Durable,
-                    EthicallyManufactured = request.DesignFeatures.EthicallyManufactured
-                };
-            }
-            else
-            {
-                design.DesignFeatures.ReduceWaste = request.DesignFeatures.ReduceWaste;
-                design.DesignFeatures.LowImpactDyes = request.DesignFeatures.LowImpactDyes;
-                design.DesignFeatures.Durable = request.DesignFeatures.Durable;
-                design.DesignFeatures.EthicallyManufactured = request.DesignFeatures.EthicallyManufactured;
-            }
-
-            if (request.DesignImages != null && request.DesignImages.Any())
-            {
-                var oldImages = _designImageRepository.GetAll().Where(s => s.DesignId == request.DesignId);
-                _designImageRepository.RemoveRange(oldImages);
-                await _designImageRepository.Commit();
-
-                var uploadResults = await _cloudService.UploadImagesAsync(request.DesignImages);
-                var newImages = uploadResults
-                    .Where(u => !string.IsNullOrWhiteSpace(u?.SecureUrl?.ToString()))
-                    .Select(u => new DesignImage
+                    design.DesignFeatures = new DesignFeature
                     {
                         DesignId = request.DesignId,
-                        Image = new Image { ImageUrl = u.SecureUrl.ToString() }
-                    }).ToList();
-
-                if (newImages.Any())
+                        ReduceWaste = request.DesignFeatures.ReduceWaste ?? false,
+                        LowImpactDyes = request.DesignFeatures.LowImpactDyes ?? false,
+                        Durable = request.DesignFeatures.Durable ?? false,
+                        EthicallyManufactured = request.DesignFeatures.EthicallyManufactured ?? false
+                    };
+                }
+                else
                 {
-                    await _designImageRepository.AddRangeAsync(newImages);
+                    if (request.DesignFeatures.ReduceWaste.HasValue)
+                        design.DesignFeatures.ReduceWaste = request.DesignFeatures.ReduceWaste.Value;
+
+                    if (request.DesignFeatures.LowImpactDyes.HasValue)
+                        design.DesignFeatures.LowImpactDyes = request.DesignFeatures.LowImpactDyes.Value;
+
+                    if (request.DesignFeatures.Durable.HasValue)
+                        design.DesignFeatures.Durable = request.DesignFeatures.Durable.Value;
+
+                    if (request.DesignFeatures.EthicallyManufactured.HasValue)
+                        design.DesignFeatures.EthicallyManufactured = request.DesignFeatures.EthicallyManufactured.Value;
+                }
+            }
+
+            if (request.DesignImages != null)
+            {
+                if (request.DesignImages.Any())
+                {
+                    // Xóa ảnh cũ
+                    var oldImages = _designImageRepository.GetAll().Where(s => s.DesignId == request.DesignId);
+                    _designImageRepository.RemoveRange(oldImages);
+                    await _designImageRepository.Commit();
+
+                    // Upload ảnh mới
+                    var uploadResults = await _cloudService.UploadImagesAsync(request.DesignImages);
+                    var newImages = uploadResults
+                        .Where(u => !string.IsNullOrWhiteSpace(u?.SecureUrl?.ToString()))
+                        .Select(u => new DesignImage
+                        {
+                            DesignId = request.DesignId,
+                            Image = new Image { ImageUrl = u.SecureUrl.ToString() }
+                        }).ToList();
+
+                    if (newImages.Any())
+                    {
+                        await _designImageRepository.AddRangeAsync(newImages);
+                        await _designImageRepository.Commit();
+                    }
+                }
+                else
+                {
+                    // Nếu client gửi DesignImages nhưng rỗng => nghĩa là muốn xoá hết ảnh
+                    var oldImages = _designImageRepository.GetAll().Where(s => s.DesignId == request.DesignId);
+                    _designImageRepository.RemoveRange(oldImages);
                     await _designImageRepository.Commit();
                 }
             }
 
             // Lưu thay đổi vào cơ sở dữ liệu
             _designRepository.Update(design);
+            await _designRepository.Commit();
             return true;
         }
 

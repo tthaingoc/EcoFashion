@@ -173,11 +173,11 @@ namespace EcoFashionBackEnd.Services
                 {
                     var materialId = orderDetail.MaterialId!.Value;
                     var quantity = orderDetail.Quantity;
-                    var supplierId = orderDetail.SupplierId;
+                    var supplierId = orderDetail.Material!.SupplierId;
 
-                    // Tìm warehouse mặc định của supplier
+                    // Tìm warehouse mặc định của supplier (đúng loại kho Material)
                     var warehouse = await _context.Warehouses
-                        .FirstOrDefaultAsync(w => w.SupplierId == supplierId && w.IsDefault && w.IsActive);
+                        .FirstOrDefaultAsync(w => w.SupplierId == supplierId && w.IsDefault && w.IsActive && w.WarehouseType == "Material");
 
                     if (warehouse == null)
                     {

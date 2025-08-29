@@ -9,5 +9,7 @@ namespace EcoFashionBackEnd.Dtos.DesignDraft
         public float Width { get; set; }
         public int Quantity { get; set; }
         public int MaterialId { get; set; }
+        public string MaterialName { get; set; }
+        public string MaterialStatus { get; set; }
     }
 }

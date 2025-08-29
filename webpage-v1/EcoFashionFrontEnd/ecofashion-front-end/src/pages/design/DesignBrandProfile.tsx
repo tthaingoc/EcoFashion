@@ -45,6 +45,9 @@ import { DesignerService } from "../../services/api";
 import { DesignerPublic } from "../../services/api/designerService";
 import DesignService, { Design } from "../../services/api/designService";
 
+//picture
+import Vnpay from "../../assets/pictures/vnpay.jpg";
+
 const sustainabilityItems = [
   {
     image: linen,
@@ -424,16 +427,6 @@ export default function DesingBrandProfile() {
             >
               {designer.designerName}
             </Typography>
-
-            {/* <Typography
-              sx={{ width: "100%", fontSize: "15px", opacity: "50%" }}
-            >
-              Online 3 phút trước
-            </Typography>
-            <Stack direction="row" spacing={2} sx={{ mt: 1 }}>
-              <Button variant="outlined">+ Theo dõi</Button>
-              <Button variant="outlined">Chat</Button>
-            </Stack> */}
           </Box>
         </Grid>
         <Grid
@@ -461,13 +454,12 @@ export default function DesingBrandProfile() {
                     Tham Gia:
                   </Typography>
                   <Typography sx={{ fontSize: "20px" }}>
-                    {" "}
                     {(() => {
                       const yearsAgo =
                         new Date().getFullYear() -
                         new Date(designer.createdAt).getFullYear();
                       return yearsAgo === 0
-                        ? "Mới năm nay"
+                        ? "Năm nay"
                         : `${yearsAgo} năm trước`;
                     })()}
                   </Typography>
@@ -738,47 +730,6 @@ export default function DesingBrandProfile() {
                 </Box>
 
                 {/* Filter Sections */}
-                <Accordion
-                  disableGutters
-                  elevation={0}
-                  sx={{ boxShadow: "none" }}
-                >
-                  <AccordionSummary expandIcon={<GridExpandMoreIcon />}>
-                    <Typography fontSize={16}>Màu Sắc</Typography>
-                  </AccordionSummary>
-                  <AccordionDetails>
-                    <FormGroup>
-                      {dynamicColorFilterOptions.map((item, index) => (
-                        <FormControlLabel
-                          key={index}
-                          control={
-                            <Checkbox
-                              checked={selectedColors.includes(item.label)}
-                              onChange={() => handleColorChange(item.label)}
-                            />
-                          }
-                          label={
-                            <Box display="flex" alignItems="center">
-                              <Box
-                                sx={{
-                                  width: 14,
-                                  height: 14,
-                                  borderRadius: "50%",
-                                  backgroundColor: colorToHex(item.label),
-                                  border: "1px solid #ccc",
-                                  mr: 1,
-                                }}
-                              />
-                              {`${item.label} (${item.count})`}
-                            </Box>
-                          }
-                          sx={{ mb: 0.5, alignItems: "center" }}
-                        />
-                      ))}
-                    </FormGroup>
-                  </AccordionDetails>
-                </Accordion>
-                <Divider />
                 {/* Filter By Type */}
                 <Accordion
                   disableGutters
@@ -1018,8 +969,8 @@ export default function DesingBrandProfile() {
                   <Box display="flex" gap={1} mt={1}>
                     <CardMedia
                       component="img"
-                      alt="Visa"
-                      image="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQTlp4qW2M8xPofmuZHwEfGi9mNMWUG0zs53A&s"
+                      alt="Vnpay"
+                      image={Vnpay}
                       sx={{ height: 100, width: "auto" }}
                     />
                   </Box>

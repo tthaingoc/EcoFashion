@@ -6,6 +6,9 @@ namespace EcoFashionBackEnd.Dtos.DesignShow
     {
         public int DesignId { get; set; }
         public string Name { get; set; }
+        public string Description { get; set; }
+
+        public string CareInstruction { get; set; }
         public float RecycledPercentage { get; set; }
         public string? ItemTypeName { get; set; }
         public decimal? SalePrice { get; set; }
@@ -14,5 +17,6 @@ namespace EcoFashionBackEnd.Dtos.DesignShow
         public int ProductCount { get; set; }// bỏ chưa cần 
         public DesignerPublicDto Designer { get; set; }
         public List<ProductDto> Products { get; set; }
+        public DesignFeatureDto DesignFeatures { get; set; }
     }
 }

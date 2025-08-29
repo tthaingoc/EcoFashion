@@ -22,7 +22,7 @@ namespace EcoFashionBackEnd.Controllers
             _designerService = designerService;
         }
 
-        [HttpPost("CreateByNewVariant")]
+        [HttpPost("CreateByNewVariant")]// sẽ tạo product theo json truyền vào có check theo sku nếu trùng thêm quantity k thì tạo mới 
         public async Task<IActionResult> CreateProducts([FromForm] ProductCreateRequest request)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);

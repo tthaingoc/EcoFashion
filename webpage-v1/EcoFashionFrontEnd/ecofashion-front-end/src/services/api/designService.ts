@@ -2,11 +2,10 @@
 import {
   CreateDesignDraftFormValues,
   CreateDesignDraftModelResponse,
-} from "../../schemas/createDesignDraftTesting";
+} from "../../schemas/createDesignDraftSchema";
 import {
   CreateDesignFormValues,
   CreateDesignModelResponse,
-  createDesignModelResponseSchema,
 } from "../../schemas/designSchema";
 import { apiClient, handleApiResponse, handleApiError } from "./baseApi";
 import type { BaseApiResponse } from "./baseApi";
@@ -67,6 +66,7 @@ export interface MaterialInStored {
   meterUsed: number;
   name: string;
   materialTypeName: string;
+  quantityAvailable: number;
   sustainabilityCriteria: SustainabilityCriterion[];
   materialDescription: string;
   sustainabilityScore: number;
@@ -126,21 +126,35 @@ export interface Feature {
 export interface DesignsVariants {
   id: number;
   designId: number;
+  quantity: number;
+  ratio: number;
+  sizeName: string;
+  colorCode: string;
+}
+
+export interface DesignFeatures {
+  reduceWaste: boolean;
+  lowImpactDyes: boolean;
+  durable: boolean;
+  ethicallyManufactured: boolean;
 }
 
 export interface Design {
   designId: number;
   name: string;
   recycledPercentage: number;
+  description: string;
+  careInstruction: string;
   itemTypeName: string;
   salePrice: number;
   designImageUrls: string[];
-  drafSketches: string[];
+  drafSketches: string;
   materials: Material[];
   productCount: number;
   designer: Designer;
   createAt: string;
   designsVariants: DesignsVariants[];
+  designFeatures: DesignFeatures;
 }
 
 export interface Products {
@@ -227,6 +241,66 @@ export const designDraftFieldMapping = {
 
   sketchImages: "SketchImages", // multi-file upload
 };
+
+export interface DesignFeature {
+  reduceWaste: boolean;
+  lowImpactDyes: boolean;
+  durable: boolean;
+  ethicallyManufactured: boolean;
+}
+
+export interface DraftParts {
+  name: string;
+  length: number;
+  width: number;
+  quantity: number;
+  materialId: number;
+  materialName: string;
+  materialStatus: string;
+}
+
+export interface DraftMaterial {
+  materialId: number;
+  materialName: string;
+  meterUsed: number;
+  price: number;
+}
+
+export interface DesignDraftDetails {
+  designId: number;
+  name: string;
+  description: string;
+  recycledPercentage: number;
+  designTypeId: number;
+  createdAt: string;
+  unitPrice: number;
+  salePrice: number;
+  laborHours: number;
+  laborCostPerHour: number;
+  totalCarbon: number;
+  totalWater: number;
+  totalWaste: number;
+  designFeature: DesignFeature;
+  draftParts: DraftParts[];
+  materials: DraftMaterial[];
+  sketchImageUrls: string;
+}
+
+export interface UpdateProductDetail {
+  designId: number;
+  productName: string;
+  description: string;
+  careInstruction: string;
+  designFeatures: {
+    ReduceWaste: boolean;
+    LowImpactDyes: boolean;
+    Durable: boolean;
+    EthicallyManufactured: boolean;
+  };
+  designImages?: string[];
+  files?: File[];
+}
+
 /**
  * Design Service
  * Handles all designer-related API calls
@@ -620,5 +694,93 @@ export class DesignService {
       return handleApiError(error);
     }
   }
+
+  /**
+   * Delete design without product
+   */
+  static async deleteDesign(designId: number) {
+    try {
+      const response = await apiClient.delete(`/DesignDraft/${designId}`);
+
+      return handleApiResponse(response);
+    } catch (error) {
+      return handleApiError(error);
+    }
+  }
+
+  /**
+   * Get Design Draft Detai
+   */
+  static async getDesignDraftDetailAsync(
+    designId: number
+  ): Promise<DesignDraftDetails> {
+    try {
+      const response = await apiClient.get(`/DesignDraft/drafts/${designId}`);
+
+      return handleApiResponse(response);
+    } catch (error) {
+      return handleApiError(error);
+    }
+  }
+
+  private static updateProductDetailFormData(
+    productInfo: UpdateProductDetail
+  ): FormData {
+    const formData = new FormData();
+    formData.append("DesignId", productInfo.designId.toString());
+    formData.append("Name", productInfo.productName);
+    formData.append("Description", productInfo.description);
+    formData.append("CareInstruction", productInfo.careInstruction);
+
+    // append design features
+    formData.append(
+      "DesignFeatures.ReduceWaste",
+      productInfo.designFeatures.ReduceWaste.toString()
+    );
+    formData.append(
+      "DesignFeatures.LowImpactDyes",
+      productInfo.designFeatures.LowImpactDyes.toString()
+    );
+    formData.append(
+      "DesignFeatures.Durable",
+      productInfo.designFeatures.Durable.toString()
+    );
+    formData.append(
+      "DesignFeatures.EthicallyManufactured",
+      productInfo.designFeatures.EthicallyManufactured.toString()
+    );
+    // append images (nếu có)
+    if (productInfo.files && productInfo.files.length > 0) {
+      productInfo.files.forEach((file) => {
+        formData.append("DesignImages", file); // backend nhận file thật
+      });
+    }
+
+    return formData;
+  }
+  /**
+   * Update Product Detail
+   */
+  static updateProductDetailAsync = async (
+    updateProductDetail: UpdateProductDetail
+  ) => {
+    try {
+      const formData = this.updateProductDetailFormData(updateProductDetail);
+
+      const response = await apiClient.put(
+        `${this.API_BASE}/update-basic-info`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      return handleApiResponse(response);
+    } catch (error) {
+      return handleApiError(error);
+    }
+  };
 }
 export default DesignService;

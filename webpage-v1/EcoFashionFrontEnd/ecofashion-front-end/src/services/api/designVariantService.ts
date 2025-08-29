@@ -12,6 +12,7 @@ export interface FullDesignVariant {
   quantity: number;
   ratio: number;
   sizeId: number;
+  meterUsed?: number;
 }
 
 export interface AddVariant {
@@ -19,6 +20,13 @@ export interface AddVariant {
   colorCode: string;
   quantity: number;
 }
+
+export interface UpdateVariant {
+  sizeId?: number;
+  colorCode?: string;
+  quantity?: number;
+}
+
 export class DesignVariantService {
   private static readonly API_BASE = "DesignsVariant";
 
@@ -61,5 +69,32 @@ export class DesignVariantService {
       return handleApiError(error);
     }
   }
+  static deleteVariant = async (variantId: number) => {
+    try {
+      const response = await apiClient.delete(
+        `${this.API_BASE}/variants/${variantId}`
+      );
+
+      return handleApiResponse(response);
+    } catch (error) {
+      return handleApiError(error);
+    }
+  };
+
+  static updateVariantAsync = async (
+    variantId: number,
+    updatedVariant: UpdateVariant
+  ) => {
+    try {
+      const response = await apiClient.put(
+        `${this.API_BASE}/variants/${variantId}`,
+        updatedVariant
+      );
+
+      return handleApiResponse(response);
+    } catch (error) {
+      return handleApiError(error);
+    }
+  };
 }
 export default DesignVariantService;

@@ -7,7 +7,7 @@ namespace EcoFashionBackEnd.Dtos.DesignerMaterialInventory
     {
         public int InventoryId { get; set; }
         public int MaterialId { get; set; }
-        public int? Quantity { get; set; }
+        public decimal? Quantity { get; set; }
         public decimal Cost { get; set; }
         public string Status { get; set; } = "out_of_stock";
         public DateTime LastBuyDate { get; set; }

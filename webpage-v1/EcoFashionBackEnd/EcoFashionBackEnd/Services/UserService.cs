@@ -123,7 +123,21 @@ namespace EcoFashionBackEnd.Services
             };
 
             await _userRepository.AddAsync(newUser);
+            await _dbContext.SaveChangesAsync();
+
+            var wallet = new Wallet
+            {
+                UserId = newUser.UserId,
+                Balance = 0,
+                Status = WalletStatus.Active,
+                CreatedAt = DateTime.UtcNow,
+                LastUpdatedAt = DateTime.UtcNow
+            };
+
+            await _dbContext.Wallets.AddAsync(wallet);
             var res = await _dbContext.SaveChangesAsync();
+
+
 
             if (res <= 0)
             {

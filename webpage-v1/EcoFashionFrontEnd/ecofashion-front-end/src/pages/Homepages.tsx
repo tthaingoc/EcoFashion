@@ -163,11 +163,13 @@ export default function Homepage() {
               <span style={{ color: "#32e087" }}>Thời Trang Bền Vững</span>
             </Typography>
           </Box>
-          <Typography sx={{ width: "60% ", margin: "auto", fontSize: "25px" }}>
+          <Typography
+            sx={{ width: "60% ", margin: "auto", fontSize: "25px", mb: 10 }}
+          >
             Cùng Tham Gia Thay Đổi Ngành Thời Trang Với Vật Liệu Tái Chế Và
             Thiết Kế Thân Thiện Với Môi Trường
           </Typography>
-          <Box
+          {/* <Box
             sx={{
               display: "flex",
               alignItems: "center",
@@ -216,7 +218,7 @@ export default function Homepage() {
               />
               <SearchIcon sx={{ color: "black", margin: "auto" }} />
             </Box>
-          </Box>
+          </Box> */}
           {user ? (
             <Stack
               direction="row"
@@ -485,8 +487,12 @@ export default function Homepage() {
         <FashionsSection
           products={designs}
           title="SẢN PHẨM NỔI BẬT"
-          type="special"          
-          onProductClick={(design) => navigate(`/detail/${design.designId}/${design.designer?.designerId}`)} // Navigate to Detail page with designerId
+          type="special"
+          onProductClick={(design) =>
+            navigate(
+              `/detail/${design.designId}/${design.designer?.designerId}`
+            )
+          } // Navigate to Detail page with designerId
           onViewMore={() => "/fashion"}
         />
         <Divider
@@ -640,19 +646,6 @@ export default function Homepage() {
                 Đăng Ký
               </Button>
             )}
-            <Button
-              variant="outlined"
-              sx={{
-                color: "white",
-                borderColor: "white",
-                "&:hover": {
-                  borderColor: "#ddd",
-                },
-              }}
-              onClick={() => navigate("/explore")}
-            >
-              Khám Phá
-            </Button>
             <Button
               variant="outlined"
               sx={{

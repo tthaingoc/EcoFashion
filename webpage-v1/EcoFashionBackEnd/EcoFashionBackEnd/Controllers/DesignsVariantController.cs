@@ -4,6 +4,7 @@ using EcoFashionBackEnd.Entities;
 using EcoFashionBackEnd.Services;
 using Microsoft.AspNetCore.Mvc;
 using EcoFashionBackEnd.Dtos.DesignDraft;
+using Microsoft.AspNetCore.Authorization;
 
 namespace EcoFashionBackEnd.Controllers
 {
@@ -37,6 +38,7 @@ namespace EcoFashionBackEnd.Controllers
         }
 
         [HttpPost("{designId}/variants")]
+        [Authorize(Roles = "designer")]
         public async Task<ActionResult<ApiResult<bool>>> CreateVariant(int designId, [FromBody] DesignsVariantCreateRequest request)
         {
             try
@@ -56,6 +58,7 @@ namespace EcoFashionBackEnd.Controllers
 
 
         [HttpPut("variants/{variantId}")]
+        [Authorize(Roles = "designer")]
         public async Task<ActionResult<ApiResult<bool>>> UpdateVariant(int variantId, [FromBody] DesignsVariantUpdateRequest request)
         {
             try
@@ -71,6 +74,7 @@ namespace EcoFashionBackEnd.Controllers
         }
 
         [HttpDelete("variants/{variantId}")]
+        [Authorize(Roles = "designer")]
         public async Task<ActionResult<ApiResult<bool>>> DeleteVariant(int variantId)
         {
             var deleted = await _variantService.DeleteVariantAsync(variantId);

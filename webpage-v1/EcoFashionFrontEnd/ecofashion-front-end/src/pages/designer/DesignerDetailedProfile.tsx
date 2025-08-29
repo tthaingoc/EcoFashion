@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import {
   DesignerService,
-  type DesignerModel,
+  // type DesignerModel,
 } from "../../services/api/designerService";
 import bg from "../../assets/pictures/homepage/banner.jpg";
 import AccountTab from "../../components/account/account-tab";
@@ -35,7 +35,7 @@ import { useQuery } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 
 // Component cho thông tin chi tiết từ backend
-function DesignerDetailedInfo({ designer }: { designer: DesignerModel }) {
+function DesignerDetailedInfo({ designer }: { designer: any }) {
   const [showSensitiveInfo, setShowSensitiveInfo] = useState(false);
 
   return (

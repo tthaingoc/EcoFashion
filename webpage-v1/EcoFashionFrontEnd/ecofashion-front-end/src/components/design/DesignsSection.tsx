@@ -74,15 +74,15 @@ const DesignsSection: React.FC<ProductsSectionProps> = ({
   // const productsPerPage = 12; // 9 rows * 4 per row
   const [page, setPage] = useState(currentPage);
 
-  const getCategoryColor = (category: Design["itemTypeName"]) => {
-    const colors = {
-      Áo: "#2196f3",
-      Quần: "#ff9800",
-      Đầm: "#4caf50",
-      Váy: "#9c27b0",
-    };
-    return colors[category] || "#9e9e9e";
-  };
+  // const getCategoryColor = (category: Design["designTypeName"]) => {
+  //   const colors = {
+  //     Áo: "#2196f3",
+  //     Quần: "#ff9800",
+  //     Đầm: "#4caf50",
+  //     Váy: "#9c27b0",
+  //   };
+  //   return colors[category] || "#9e9e9e";
+  // };
 
   const handlePageScrollChange = (id: string, value: number) => {
     setPage(value);

@@ -6,9 +6,10 @@
 
         public int DesignId { get; set; }
 
-        //public int SizeId { get; set; }
-        //public string SizeName { get; set; }
-        //public string ColorCode { get; set; }
-        //public int Quantity { get; set; }
+        public int SizeId { get; set; }
+        public string SizeName { get; set; }
+        public string ColorCode { get; set; }
+        public float Ratio { get; set; }
+        public int Quantity { get; set; }
     }
 }

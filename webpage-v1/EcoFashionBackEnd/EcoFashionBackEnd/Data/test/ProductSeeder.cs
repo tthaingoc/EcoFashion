@@ -1,4 +1,5 @@
 ﻿using EcoFashionBackEnd.Entities;
+using EcoFashionBackEnd.Helpers;
 using Microsoft.EntityFrameworkCore;
 
 namespace EcoFashionBackEnd.Data.test
@@ -30,11 +31,12 @@ namespace EcoFashionBackEnd.Data.test
                     var variant = variants.FirstOrDefault(v => v.DesignId == design.DesignId && v.SizeId == size.SizeId);
 
                     // Màu sắc mẫu
-                    var colors = new[] { "RED", "BLK", "WHT" };
+                    var colors = new[] { "#FF0000", "#000000", "#FFFFFF" };
 
                     foreach (var color in colors)
                     {
-                        var sku = $"D{design.DesignId}-S{size.SizeId}-C{color}";
+                        var basicColorName = ColorExchange.ClassifyColorAdvanced(color);
+                        var sku = $"D{design.DesignId}-S{size.SizeId}-C{basicColorName.Replace(" ", "").ToUpper()}";
                         var price = design.SalePrice ?? 500000m + random.Next(0, 200000);
 
                         var product = new Product

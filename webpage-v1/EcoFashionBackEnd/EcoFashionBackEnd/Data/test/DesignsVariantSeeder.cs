@@ -12,7 +12,8 @@ namespace EcoFashionBackEnd.Data.test
             var designs = await context.Designs.ToListAsync();
             var sizes = await context.Sizes.ToListAsync();
 
-            var colors = new[] { "RED", "BLK", "WHT", "BLU", "GRN" }; // Màu demo
+            var colors = new[] { "#FF0000", "#000000", "#FFFFFF", "#008000", "#0000FF" }; // Màu demo
+
 
             var variants = new List<DesignsVariant>();
             var random = new Random();

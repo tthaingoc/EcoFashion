@@ -17,18 +17,18 @@ namespace EcoFashionBackEnd.Entities
         public Guid? OrderGroupId { get; set; }
         [ForeignKey("OrderGroupId")]
         public virtual OrderGroup? OrderGroup { get; set; }
-        
+
         // Link to checkout session for flexible checkout
         public Guid? CheckoutSessionId { get; set; }
         [ForeignKey("CheckoutSessionId")]
         public virtual CheckoutSession? CheckoutSession { get; set; }
-        
+
         // Provider info for this order (single provider per order)
         public Guid? SupplierId { get; set; }
         public Guid? DesignerId { get; set; }
         public string? ProviderName { get; set; }
         public string? ProviderType { get; set; } // "Supplier" or "Designer"
-        
+
         [ForeignKey("SupplierId")]
         public virtual Supplier? Supplier { get; set; }
         [ForeignKey("DesignerId")]

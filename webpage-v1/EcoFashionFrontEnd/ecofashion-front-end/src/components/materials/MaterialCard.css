@@ -2,7 +2,7 @@
 .card {
   width: 300px;
   height: 400px;
-  background: #07182e;
+  background: #ffffff;
   position: relative;
   display: flex;
   place-content: center;
@@ -53,4 +53,4 @@
   transition: 0.6s;
 }
 
-/* Card content */ 
+/* Card content */

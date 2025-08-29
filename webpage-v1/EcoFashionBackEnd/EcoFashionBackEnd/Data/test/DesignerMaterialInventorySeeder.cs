@@ -21,14 +21,14 @@ namespace EcoFashionBackEnd.Data.test
 
             foreach (var material in materials)
             {
-                var quantity = random.Next(50, 201);
+                var quantity = random.Next(6000, 9000);
                 inventoryList.Add(new DesignerMaterialInventory
                 {
                     WarehouseId = materialWarehouse.WarehouseId, // Assign the correct WarehouseId
                     MaterialId = material.MaterialId,
                     Quantity = quantity,
-                    Cost = (decimal)material.PricePerUnit * 1000 * quantity,
-                    LastBuyDate = DateTime.UtcNow.AddDays(-random.Next(600, 900)),
+                    Cost = (decimal)material.PricePerUnit * quantity,
+                    LastBuyDate = DateTime.UtcNow.AddDays(-random.Next(6000, 9000)),
                     Status = "In Stock"
                 });
             }

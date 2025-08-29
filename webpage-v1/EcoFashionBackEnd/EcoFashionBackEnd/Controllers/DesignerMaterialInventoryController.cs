@@ -2,6 +2,7 @@
 using EcoFashionBackEnd.Common.Payloads.Requests;
 using EcoFashionBackEnd.Dtos;
 using EcoFashionBackEnd.Dtos.DesignerMaterialInventory;
+using EcoFashionBackEnd.Exceptions;
 using EcoFashionBackEnd.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -13,10 +14,13 @@ namespace EcoFashionBackEnd.Controllers
     public class DesignerMaterialInventoryController : ControllerBase
     {
         private readonly DesignerMaterialInventoryService _inventoryService;
+        private readonly DesignerService _designerService;
 
-        public DesignerMaterialInventoryController(DesignerMaterialInventoryService inventoryService)
+
+        public DesignerMaterialInventoryController(DesignerMaterialInventoryService inventoryService, DesignerService designerService )
         {
             _inventoryService = inventoryService;
+            _designerService = designerService;
         }
 
         [HttpGet]
@@ -74,6 +78,35 @@ namespace EcoFashionBackEnd.Controllers
                 return BadRequest(ApiResult<object>.Fail($"Lỗi khi tạo kho vật liệu: {ex.Message}"));
             }
         }
+
+
+        [HttpGet("GetStoredMaterial")]
+        public async Task<IActionResult> GetDesignerMaterialInventoryByDesignerId()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+            {
+                throw new UnauthorizedException("Không thể xác định người dùng.");
+            }
+
+            var designerId = await _designerService.GetDesignerIdByUserId(userId);
+            if (designerId == Guid.Empty)
+            {
+                throw new NotFoundException("Không tìm thấy Designer tương ứng.");
+            }
+
+            var inventories = await _inventoryService.GetDesignerMaterialInventoryOfDesigner((Guid)designerId);
+            if (inventories == null || !inventories.Any())
+            {
+                throw new NotFoundException("Không tìm thấy kho vật liệu.");
+            }
+
+            return Ok(ApiResult<List<DesignerMaterialInventorySummaryDto>>.Succeed(inventories));
+        }
+
+
+
+
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateDesignerMaterialInventory(int id, [FromBody] UpdateDesignerMaterialInventoryRequest request)
         {
@@ -98,6 +131,7 @@ namespace EcoFashionBackEnd.Controllers
                 return BadRequest(ApiResult<object>.Fail($"Lỗi khi cập nhật kho vật liệu: {ex.Message}"));
             }
         }
+        
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteDesignerMaterialInventory(int id)
         {

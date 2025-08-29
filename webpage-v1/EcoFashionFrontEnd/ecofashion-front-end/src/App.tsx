@@ -37,7 +37,6 @@ import ExploreDesigners from "./pages/explore/ExploreDesigners";
 import ExploreSuppliers from "./pages/explore/ExploreSuppliers";
 import DesignerLandingPage from "./pages/explore/DesignerLandingPage";
 import SupplierLandingPage from "./pages/explore/SupplierLandingPage";
-import AddDesign from "./pages/design/AddDesign";
 import DashboardHome from "./pages/admin/DashboardHome";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import ApplicationManagement from "./pages/admin/ApplicationManagement";
@@ -62,8 +61,8 @@ import WalletPageTailwind from "./pages/wallet/WalletPageTailwind";
 import VNPaySuccess from "./pages/payment/VNPaySuccess";
 import { useAuthStore } from "./store/authStore";
 import { useCartStore } from "./store/cartStore";
+import { ConfirmProvider } from "material-ui-confirm";
 
-import CountryCitySelect from "./pages/design/tesitng";
 //import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
@@ -143,7 +142,9 @@ function App() {
         <Route
           path="/orders"
           element={
-            <ProtectedRoute allowedRoles={["customer", "supplier", "designer", "admin"]}>
+            <ProtectedRoute
+              allowedRoles={["customer", "supplier", "designer", "admin"]}
+            >
               <OrdersPage />
             </ProtectedRoute>
           }
@@ -167,7 +168,9 @@ function App() {
         <Route
           path="/wallet"
           element={
-            <ProtectedRoute allowedRoles={["customer", "supplier", "designer", "admin"]}>
+            <ProtectedRoute
+              allowedRoles={["customer", "supplier", "designer", "admin"]}
+            >
               <WalletPageTailwind />
             </ProtectedRoute>
           }
@@ -175,7 +178,9 @@ function App() {
         <Route
           path="/payment/vnpay-success"
           element={
-            <ProtectedRoute allowedRoles={["customer", "supplier", "designer", "admin"]}>
+            <ProtectedRoute
+              allowedRoles={["customer", "supplier", "designer", "admin"]}
+            >
               <VNPaySuccess />
             </ProtectedRoute>
           }
@@ -237,14 +242,7 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/designer/dashboard/add"
-          element={
-            <ProtectedRoute requiredRole={"designer"}>
-              <AddDesign />
-            </ProtectedRoute>
-          }
-        />
+
         <Route
           path="/designer/dashboard/create"
           element={
@@ -253,14 +251,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-        {/* <Route
-          path="/designer/dashboard/testing"
-          element={
-            <ProtectedRoute allowedRoles={["designer"]}>
-              <TestingCreate />
-            </ProtectedRoute>
-          }
-        /> */}
         <Route
           path="/designer/detailed-profile"
           element={
@@ -317,7 +307,10 @@ function App() {
           <Route path="materials/inventory" element={<SupplierInventory />} />
           <Route path="orders" element={<SupplierOrders />} />
           <Route path="orders/pending" element={<SupplierOrdersPending />} />
-          <Route path="orders/completed" element={<SupplierOrdersCompleted />} />
+          <Route
+            path="orders/completed"
+            element={<SupplierOrdersCompleted />}
+          />
         </Route>
 
         {/* ===== EXPLORE ROUTES ===== */}
@@ -366,16 +359,6 @@ function App() {
           element={
             <ProtectedRoute requiredRole="customer">
               <CustomerProfile />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* ===== DESIGN ROUTES ===== */}
-        <Route
-          path="/design/add"
-          element={
-            <ProtectedRoute requiredRole="designer">
-              <AddDesign />
             </ProtectedRoute>
           }
         />
