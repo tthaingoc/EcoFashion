@@ -10,6 +10,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import VerifyOTP from "./components/VerifyOTP";
 import FashionList from "./pages/design/FashionList";
+import MaterialList from "./pages/material/MaterialList";
 import DesignDetail from "./pages/design/DesignDetail";
 import DesingBrandProfile from "./pages/design/DesignBrandProfile";
 import ApplyDesigner from "./pages/apply/ApplyDesigner";
@@ -23,6 +24,7 @@ import SupplierDetailedProfile from "./pages/supplier/SupplierDetailedProfile";
 import SupplierDashboard from "./pages/supplier/SupplierDashboard";
 import SupplierDashboardHome from "./pages/supplier/SupplierDashboardHome";
 import SupplierMaterials from "./pages/supplier/SupplierMaterials";
+import SupplierMaterialTypes from "./pages/supplier/SupplierMaterialTypes";
 import SupplierInventory from "./pages/supplier/SupplierInventory";
 import SupplierOrders from "./pages/supplier/SupplierOrders";
 import SupplierOrdersPending from "./pages/supplier/SupplierOrdersPending";
@@ -192,6 +194,7 @@ function App() {
 
         {/* ===== DESIGN and MATERIAL ROUTES ===== */}
         <Route path="/fashion" element={<FashionList />} />
+        <Route path="/materials" element={<MaterialList />} />
         <Route path="/detail/:id/:designerId" element={<DesignDetail />} />
         <Route path="/brand/:id" element={<DesingBrandProfile />} />
         <Route path="/material/:id" element={<MaterialDetailPage />} />
@@ -302,6 +305,7 @@ function App() {
           }
         >
           <Route index element={<SupplierDashboardHome />} />
+          <Route path="material-types" element={<SupplierMaterialTypes />} />
           <Route path="materials" element={<SupplierMaterials />} />
           <Route path="materials/add" element={<AddMaterial />} />
           <Route path="materials/inventory" element={<SupplierInventory />} />

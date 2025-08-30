@@ -5,10 +5,12 @@ import { shipmentService, ShipmentTrackingResponse } from '../../services/api/sh
 import { formatViDateTime } from '../../utils/date';
 import { paymentsService } from '../../services/api/paymentsService';
 import { Button, Box, Chip, Dialog, DialogTitle, DialogContent, DialogActions, Typography } from '@mui/material';
-import { LocalShipping, Visibility, AccessTime, CheckCircle, Store } from '@mui/icons-material';
+import { LocalShipping, Visibility, AccessTime, CheckCircle, Store, Person, Phone, LocationOn } from '@mui/icons-material';
+import { useAuthStore } from '../../store/authStore';
 
 export default function OrdersDetails() {
   const navigate = useNavigate();
+  const { user } = useAuthStore(); // Get current user info
   const [payLoading, setPayLoading] = useState(false);
   const [payError, setPayError] = useState<string | null>(null);
   
@@ -137,7 +139,7 @@ export default function OrdersDetails() {
   if (loading) return <div className="max-w-[1120px] mx-auto p-6">Đang tải chi tiết đơn...</div>;
   if (error) return <div className="max-w-[1120px] mx-auto p-6 text-red-600">{error}</div>;
   if (!data) return null;
-  // No more x1000 multiplier since backend has correct VND prices
+  // No  x1000 multiplier
   const subtotal = details.reduce((s, d) => s + Number(d.unitPrice || 0) * Number(d.quantity || 0), 0);
   const shipping = Number((data as any).shippingFee ?? 0);
   const discount = Number((data as any).discount ?? 0);
@@ -175,6 +177,85 @@ export default function OrdersDetails() {
           <Link to="/orders" className="text-green-700 hover:underline">Danh sách đơn</Link>
         </div>
       </div>
+      
+      {/* Thông tin người mua hàng */}
+      <div className="bg-white border rounded-md p-4">
+        <div className="flex items-center gap-2 mb-4">
+          <Person sx={{ color: '#3b82f6' }} />
+          <h3 className="text-lg font-medium text-gray-900">Thông tin người mua</h3>
+        </div>
+        
+        <div className="grid md:grid-cols-2 gap-6">
+          {/* Thông tin người dùng */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                <Person sx={{ color: '#3b82f6', fontSize: 20 }} />
+              </div>
+              <div>
+                <div className="text-sm text-gray-500">Tên khách hàng</div>
+                <div className="font-medium text-gray-900">
+                  {data.userName || user?.fullName || user?.email || 'Khách hàng'}
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                <Phone sx={{ color: '#16a34a', fontSize: 20 }} />
+              </div>
+              <div>
+                <div className="text-sm text-gray-500">Số điện thoại</div>
+                <div className="font-medium text-gray-900">
+                  {data.personalPhoneNumber || user?.phone || 'Chưa cập nhật'}
+                </div>
+              </div>
+            </div>
+            
+            {/* Hiển thị User ID để admin/supplier/designer có thể tra cứu */}
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                <span className="text-purple-600 font-mono text-xs font-bold">#</span>
+              </div>
+              <div>
+                <div className="text-sm text-gray-500">Mã khách hàng</div>
+                <div className="font-medium text-gray-900 font-mono">
+                  ID: {data.userId || user?.userId || 'N/A'}
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Địa chỉ giao hàng */}
+          <div className="space-y-3">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                <LocationOn sx={{ color: '#ea580c', fontSize: 20 }} />
+              </div>
+              <div>
+                <div className="text-sm text-gray-500">Địa chỉ giao hàng</div>
+                <div className="font-medium text-gray-900 leading-relaxed">
+                  {data.shippingAddress || 'Chưa cập nhật địa chỉ'}
+                </div>
+              </div>
+            </div>
+            
+            {/* Thời gian đặt hàng */}
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
+                <AccessTime sx={{ color: '#4f46e5', fontSize: 20 }} />
+              </div>
+              <div>
+                <div className="text-sm text-gray-500">Thời gian đặt hàng</div>
+                <div className="font-medium text-gray-900">
+                  {data.orderDate ? formatViDateTime(data.orderDate) : 'Chưa xác định'}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="bg-white border rounded-md p-4 grid md:grid-cols-3 gap-4">
         <div>
           <div className="text-sm text-gray-500">Trạng thái</div>

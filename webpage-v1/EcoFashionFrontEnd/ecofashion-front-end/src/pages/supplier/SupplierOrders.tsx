@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   ClockIcon,
   TruckIcon,
@@ -11,6 +12,9 @@ import {
   MapPinIcon,
   CalendarIcon,
   CubeIcon,
+  ArrowTopRightOnSquareIcon,
+  PhoneIcon,
+  IdentificationIcon,
 } from '@heroicons/react/24/outline';
 import { ordersService, OrderModel, UpdateFulfillmentStatusRequest, ShipOrderRequest } from '../../services/api/ordersService';
 import { useAuthStore } from '../../store/authStore';
@@ -209,6 +213,7 @@ interface SupplierOrdersProps {
 }
 
 const SupplierOrders: React.FC<SupplierOrdersProps> = ({ defaultFilter = 'all' }) => {
+  const navigate = useNavigate();
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [filter, setFilter] = useState<'all' | 'processing' | 'shipped' | 'delivered'>(defaultFilter);
   const [isLoading, setIsLoading] = useState(true);
@@ -523,55 +528,116 @@ const SupplierOrders: React.FC<SupplierOrdersProps> = ({ defaultFilter = 'all' }
 
               {/* Customer & Order Info */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="font-medium text-gray-900 mb-3">Thông tin khách hàng</h3>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex items-center gap-2">
-                      <UserIcon className="w-4 h-4 text-gray-400" />
-                      <span className="text-gray-600">Tên:</span>
-                      <span className="font-medium">{selectedOrder.userName}</span>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                      <UserIcon className="w-4 h-4 text-white" />
                     </div>
-                    <div className="flex items-start gap-2">
-                      <MapPinIcon className="w-4 h-4 text-gray-400 mt-0.5" />
-                      <span className="text-gray-600">Địa chỉ:</span>
-                      <span className="font-medium">{splitAddressPhone(selectedOrder.shippingAddress).address}</span>
-                    </div>
-                    {splitAddressPhone(selectedOrder.shippingAddress).phone && (
-                      <div className="flex items-start gap-2">
-                        <span className="text-gray-600">SĐT:</span>
-                        <span className="font-medium">{splitAddressPhone(selectedOrder.shippingAddress).phone}</span>
+                    <h3 className="font-semibold text-blue-900">Thông tin khách hàng</h3>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                        <UserIcon className="w-3 h-3 text-blue-600" />
                       </div>
-                    )}
+                      <div>
+                        <div className="text-xs text-blue-600 font-medium">Tên khách hàng</div>
+                        <div className="text-sm font-semibold text-blue-900">{selectedOrder.userName || 'Chưa cập nhật'}</div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-3">
+                      <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                        <PhoneIcon className="w-3 h-3 text-blue-600" />
+                      </div>
+                      <div>
+                        <div className="text-xs text-blue-600 font-medium">Số điện thoại</div>
+                        <div className="text-sm font-semibold text-blue-900">
+                          {selectedOrder.personalPhoneNumber || splitAddressPhone(selectedOrder.shippingAddress).phone || 'Chưa cập nhật'}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-3">
+                      <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                        <IdentificationIcon className="w-3 h-3 text-blue-600" />
+                      </div>
+                      <div>
+                        <div className="text-xs text-blue-600 font-medium">Mã khách hàng</div>
+                        <div className="text-sm font-semibold text-blue-900 font-mono">ID: {selectedOrder.userId}</div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mt-0.5">
+                        <MapPinIcon className="w-3 h-3 text-blue-600" />
+                      </div>
+                      <div>
+                        <div className="text-xs text-blue-600 font-medium">Địa chỉ giao hàng</div>
+                        <div className="text-sm font-semibold text-blue-900 leading-relaxed">
+                          {splitAddressPhone(selectedOrder.shippingAddress).address || selectedOrder.shippingAddress}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                <div>
-                  <h3 className="font-medium text-gray-900 mb-3">Thông tin đơn hàng</h3>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex items-center gap-2">
-                      <CalendarIcon className="w-4 h-4 text-gray-400" />
-                      <span className="text-gray-600">Ngày đặt:</span>
-                      <span className="font-medium">
-                        {new Date(selectedOrder.orderDate).toLocaleDateString('vi-VN')}
-                      </span>
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
+                      <CubeIcon className="w-4 h-4 text-white" />
                     </div>
-                    <div className="flex items-center gap-2">
-                      <CurrencyDollarIcon className="w-4 h-4 text-gray-400" />
-                      <span className="text-gray-600">Tổng tiền:</span>
-                      <span className="font-semibold text-blue-600">
-                        {selectedOrder.totalPrice.toLocaleString('vi-VN')} VND
-                      </span>
+                    <h3 className="font-semibold text-green-900">Thông tin đơn hàng</h3>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
+                        <CalendarIcon className="w-3 h-3 text-green-600" />
+                      </div>
+                      <div>
+                        <div className="text-xs text-green-600 font-medium">Ngày đặt hàng</div>
+                        <div className="text-sm font-semibold text-green-900">
+                          {new Date(selectedOrder.orderDate).toLocaleDateString('vi-VN')}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-3">
+                      <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
+                        <CurrencyDollarIcon className="w-3 h-3 text-green-600" />
+                      </div>
+                      <div>
+                        <div className="text-xs text-green-600 font-medium">Tổng giá trị</div>
+                        <div className="text-sm font-bold text-green-900">
+                          {selectedOrder.totalPrice.toLocaleString('vi-VN')} VND
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Order Items - This would be populated from API */}
-              <div>
-                <h3 className="font-medium text-gray-900 mb-3">Sản phẩm đã đặt</h3>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <div className="text-sm text-gray-600">
-                    Chi tiết sản phẩm sẽ được hiển thị khi tích hợp với API
+              {/* Order Items */}
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-8 h-8 bg-orange-600 rounded-full flex items-center justify-center">
+                    <CubeIcon className="w-4 h-4 text-white" />
+                  </div>
+                  <h3 className="font-semibold text-orange-900">Sản phẩm đã đặt</h3>
+                </div>
+                <div className="bg-white rounded-lg p-4 border border-orange-200">
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm text-orange-700">
+                      <p className="font-medium">📦 Chi tiết sản phẩm</p>
+                      <p className="text-xs mt-1">Xem danh sách sản phẩm, số lượng và giá tiền chi tiết</p>
+                    </div>
+                    <button
+                      onClick={() => navigate(`/orders/${selectedOrder.orderId}`)}
+                      className="flex items-center gap-2 px-3 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm font-medium"
+                    >
+                      <ArrowTopRightOnSquareIcon className="w-4 h-4" />
+                      Xem chi tiết đầy đủ
+                    </button>
                   </div>
                 </div>
               </div>

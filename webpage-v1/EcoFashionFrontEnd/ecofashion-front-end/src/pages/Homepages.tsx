@@ -519,8 +519,7 @@ export default function Homepage() {
             navigate(`/material/${material.materialId}`);
           }}
           onViewMore={() => {
-            console.log("View more materials");
-            // TODO: Navigate to materials page
+            navigate("/materials");
           }}
         />
       </Box>

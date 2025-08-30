@@ -10,6 +10,7 @@ export interface UserAddress {
   personalPhoneNumber?: string;
   country?: string;
   isDefault: boolean;
+  // Note: fullName không có trong UserAddress table, sẽ dùng User.fullName làm fallback ở UI
 }
 
 export interface CreateAddressRequest {
@@ -40,6 +41,7 @@ export interface AddressFormData {
   personalPhoneNumber: string;
   country: string;
   isDefault: boolean;
+  // Note: fullName để trong form UI nhưng không lưu vào UserAddress table
 }
 
 export const userAddressService = {

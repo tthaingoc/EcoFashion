@@ -33,6 +33,7 @@ const navItems: NavItem[] = [
     icon: <BoxCubeIcon />,
     name: "Vật Liệu",
     subItems: [
+      { name: "Tất Cả Loại Vật Liệu", path: "/supplier/dashboard/material-types", pro: false },
       { name: "Tất Cả Vật Liệu", path: "/supplier/dashboard/materials", pro: false },
       { name: "Thêm Vật Liệu", path: "/supplier/dashboard/materials/add", pro: false, new: true },
       { name: "Quản Lý Kho", path: "/supplier/dashboard/materials/inventory", pro: false },

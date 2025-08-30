@@ -1,0 +1,418 @@
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import materialService from '../../services/api/materialService';
+import type { MaterialDetailDto, MaterialTypeModel } from '../../schemas/materialSchema';
+
+// Banner image - you can create a specific material banner
+import materialBanner from '../../assets/pictures/fashion/Fashion.png';
+
+const MaterialList: React.FC = () => {
+  // State management
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [sortBy, setSortBy] = useState<'name' | 'price' | 'sustainability'>('name');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const pageSize = 12;
+
+  // Fetch materials
+  const { data: materials = [], isLoading: materialsLoading, error: materialsError } = useQuery<MaterialDetailDto[]>({
+    queryKey: ['publicMaterials'],
+    queryFn: () => materialService.getAllMaterials(),
+  });
+
+  // Filter and sort materials
+  const filteredMaterials = React.useMemo(() => {
+    const filtered = materials.filter(material => {
+      // Filter by selected types
+      if (selectedTypes.length > 0 && !selectedTypes.includes(material.materialTypeName || '')) {
+        return false;
+      }
+      
+      // Filter by search term
+      if (searchTerm && !material.name?.toLowerCase().includes(searchTerm.toLowerCase())) {
+        return false;
+      }
+      
+      // Only show approved and available materials
+      return material.approvalStatus === 'Approved' && material.isAvailable;
+    });
+
+    // Sort materials
+    filtered.sort((a, b) => {
+      let valueA: string | number, valueB: string | number;
+      
+      switch (sortBy) {
+        case 'name':
+          valueA = a.name?.toLowerCase() || '';
+          valueB = b.name?.toLowerCase() || '';
+          break;
+        case 'price':
+          valueA = a.pricePerUnit || 0;
+          valueB = b.pricePerUnit || 0;
+          break;
+        case 'sustainability':
+          valueA = a.sustainabilityScore || 0;
+          valueB = b.sustainabilityScore || 0;
+          break;
+        default:
+          return 0;
+      }
+      
+      if (sortOrder === 'asc') {
+        return valueA > valueB ? 1 : -1;
+      } else {
+        return valueA < valueB ? 1 : -1;
+      }
+    });
+
+    return filtered;
+  }, [materials, selectedTypes, searchTerm, sortBy, sortOrder]);
+
+  // Pagination
+  const totalPages = Math.ceil(filteredMaterials.length / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const paginatedMaterials = filteredMaterials.slice(startIndex, startIndex + pageSize);
+
+  // Count materials by type
+  const typeCounts = React.useMemo(() => {
+    const counts: Record<string, number> = {};
+    materials.forEach(material => {
+      if (material.approvalStatus === 'Approved' && material.isAvailable) {
+        const typeName = material.materialTypeName || 'Khác';
+        counts[typeName] = (counts[typeName] || 0) + 1;
+      }
+    });
+    return counts;
+  }, [materials]);
+
+  // Handle type filter change
+  const handleTypeChange = (typeName: string, checked: boolean) => {
+    if (checked) {
+      setSelectedTypes([...selectedTypes, typeName]);
+    } else {
+      setSelectedTypes(selectedTypes.filter(t => t !== typeName));
+    }
+    setCurrentPage(1); // Reset to first page
+  };
+
+  // Reset filters
+  const resetFilters = () => {
+    setSelectedTypes([]);
+    setSearchTerm('');
+    setCurrentPage(1);
+  };
+
+  // Format price
+  const formatPrice = (price: number) => {
+    return `${(price * 1000).toLocaleString('vi-VN')} ₫/mét`;
+  };
+
+  // Get sustainability badge
+  const getSustainabilityBadge = (score?: number) => {
+    if (typeof score !== 'number') return null;
+    if (score >= 80) return { label: 'Xuất sắc', color: 'bg-green-100 text-green-800' };
+    if (score >= 60) return { label: 'Tốt', color: 'bg-blue-100 text-blue-800' };
+    if (score >= 40) return { label: 'Trung bình', color: 'bg-yellow-100 text-yellow-800' };
+    return { label: 'Cần cải thiện', color: 'bg-red-100 text-red-800' };
+  };
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [currentPage]);
+
+  if (materialsError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Lỗi tải dữ liệu</h2>
+          <p className="text-gray-600">Không thể tải danh sách vật liệu. Vui lòng thử lại sau.</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Full Screen Hero Banner */}
+      <div className="relative h-screen w-full overflow-hidden">
+        <img
+          src={materialBanner}
+          alt="Vật Liệu Bền Vững"
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-black bg-opacity-40" />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="text-center text-white px-4 max-w-4xl">
+            <nav className="text-sm breadcrumbs mb-6">
+              <ul className="flex justify-center space-x-2">
+                <li><Link to="/" className="hover:text-green-300 transition-colors">Trang chủ</Link></li>
+                <li className="opacity-70">›</li>
+                <li className="opacity-70">Vật liệu</li>
+              </ul>
+            </nav>
+            <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-wide">
+              Vật Liệu Bền Vững
+            </h1>
+            <p className="text-xl md:text-2xl max-w-3xl mx-auto leading-relaxed">
+              Khám phá bộ sưu tập vật liệu thân thiện với môi trường từ các nhà cung cấp uy tín trên toàn thế giới
+            </p>
+            <div className="mt-8">
+              <button 
+                onClick={() => document.getElementById('materials-section')?.scrollIntoView({ behavior: 'smooth' })}
+                className="bg-green-600 hover:bg-green-700 text-white font-semibold px-8 py-4 rounded-full text-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
+              >
+                Khám Phá Ngay
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        {/* Scroll indicator */}
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+          <svg className="w-6 h-6 text-white opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+          </svg>
+        </div>
+      </div>
+
+      <div id="materials-section" className="container mx-auto px-4 py-8">
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Sidebar Filters */}
+          <div className="lg:w-1/4">
+            <div className="bg-white rounded-lg shadow-md p-6 sticky top-8">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold text-gray-900">Bộ lọc</h3>
+                <button
+                  onClick={resetFilters}
+                  className="text-sm text-blue-600 hover:text-blue-800"
+                >
+                  Xóa bộ lọc
+                </button>
+              </div>
+
+              {/* Search */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Tìm kiếm
+                </label>
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Tìm tên vật liệu..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              {/* Material Types Filter */}
+              <div className="mb-6">
+                <h4 className="text-sm font-medium text-gray-700 mb-3">Loại vật liệu</h4>
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {Object.entries(typeCounts)
+                    .sort(([,a], [,b]) => b - a)
+                    .map(([typeName, count]) => (
+                    <label key={typeName} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={selectedTypes.includes(typeName)}
+                        onChange={(e) => handleTypeChange(typeName, e.target.checked)}
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="ml-2 text-sm text-gray-700 flex-1">{typeName}</span>
+                      <span className="text-xs text-gray-500">({count})</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Sort Options */}
+              <div>
+                <h4 className="text-sm font-medium text-gray-700 mb-3">Sắp xếp</h4>
+                <select
+                  value={`${sortBy}-${sortOrder}`}
+                  onChange={(e) => {
+                    const [newSortBy, newSortOrder] = e.target.value.split('-') as ['name' | 'price' | 'sustainability', 'asc' | 'desc'];
+                    setSortBy(newSortBy);
+                    setSortOrder(newSortOrder);
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="name-asc">Tên A-Z</option>
+                  <option value="name-desc">Tên Z-A</option>
+                  <option value="price-asc">Giá thấp đến cao</option>
+                  <option value="price-desc">Giá cao đến thấp</option>
+                  <option value="sustainability-desc">Bền vững cao nhất</option>
+                  <option value="sustainability-asc">Bền vững thấp nhất</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Main Content */}
+          <div className="lg:w-3/4">
+            {/* Results Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2 sm:mb-0">
+                Vật liệu ({filteredMaterials.length})
+              </h2>
+              <div className="text-sm text-gray-600">
+                Trang {currentPage} / {totalPages || 1}
+              </div>
+            </div>
+
+            {/* Loading State */}
+            {materialsLoading && (
+              <div className="flex justify-center items-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                <span className="ml-3 text-gray-600">Đang tải vật liệu...</span>
+              </div>
+            )}
+
+            {/* No Results */}
+            {!materialsLoading && filteredMaterials.length === 0 && (
+              <div className="text-center py-12">
+                <div className="text-6xl text-gray-300 mb-4">🔍</div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Không tìm thấy vật liệu</h3>
+                <p className="text-gray-600 mb-4">Thử thay đổi bộ lọc để xem thêm kết quả</p>
+                <button
+                  onClick={resetFilters}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                >
+                  Xóa bộ lọc
+                </button>
+              </div>
+            )}
+
+            {/* Materials Grid */}
+            {!materialsLoading && paginatedMaterials.length > 0 && (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                  {paginatedMaterials.map((material) => {
+                    const sustainability = getSustainabilityBadge(material.sustainabilityScore);
+                    return (
+                      <Link
+                        key={material.materialId}
+                        to={`/material/${material.materialId}`}
+                        className="group bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300"
+                      >
+                        {/* Material Image */}
+                        <div className="relative aspect-square overflow-hidden">
+                          <img
+                            src={material.imageUrls?.[0] || '/assets/default-material.jpg'}
+                            alt={material.name || 'Material'}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = '/assets/default-material.jpg';
+                            }}
+                          />
+                          {sustainability && (
+                            <div className="absolute top-2 right-2">
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${sustainability.color}`}>
+                                {sustainability.label}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Material Info */}
+                        <div className="p-4">
+                          <h3 className="font-semibold text-gray-900 mb-1 group-hover:text-blue-600">
+                            {material.name || 'Unnamed Material'}
+                          </h3>
+                          <p className="text-sm text-gray-600 mb-2">{material.materialTypeName}</p>
+                          
+                          {material.pricePerUnit && (
+                            <p className="text-lg font-bold text-green-600 mb-2">
+                              {formatPrice(material.pricePerUnit)}
+                            </p>
+                          )}
+
+                          {material.productionCountry && (
+                            <p className="text-xs text-gray-500 flex items-center">
+                              <span className="mr-1">🌍</span>
+                              {material.productionCountry}
+                            </p>
+                          )}
+
+                          {material.sustainabilityScore && (
+                            <div className="mt-2 flex items-center">
+                              <div className="flex-1 bg-gray-200 rounded-full h-2">
+                                <div
+                                  className="bg-green-500 h-2 rounded-full transition-all"
+                                  style={{ width: `${material.sustainabilityScore}%` }}
+                                />
+                              </div>
+                              <span className="ml-2 text-xs text-gray-600">
+                                {Math.round(material.sustainabilityScore)}%
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="flex justify-center">
+                    <nav className="flex items-center space-x-2">
+                      <button
+                        onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                        disabled={currentPage === 1}
+                        className="px-3 py-2 rounded-md bg-white border border-gray-300 text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Trước
+                      </button>
+                      
+                      {[...Array(totalPages)].map((_, index) => {
+                        const page = index + 1;
+                        if (
+                          page === 1 ||
+                          page === totalPages ||
+                          (page >= currentPage - 2 && page <= currentPage + 2)
+                        ) {
+                          return (
+                            <button
+                              key={page}
+                              onClick={() => setCurrentPage(page)}
+                              className={`px-3 py-2 rounded-md ${
+                                page === currentPage
+                                  ? 'bg-blue-600 text-white'
+                                  : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                              }`}
+                            >
+                              {page}
+                            </button>
+                          );
+                        } else if (
+                          page === currentPage - 3 ||
+                          page === currentPage + 3
+                        ) {
+                          return <span key={page} className="px-2">...</span>;
+                        }
+                        return null;
+                      })}
+
+                      <button
+                        onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                        disabled={currentPage === totalPages}
+                        className="px-3 py-2 rounded-md bg-white border border-gray-300 text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Sau
+                      </button>
+                    </nav>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default MaterialList;

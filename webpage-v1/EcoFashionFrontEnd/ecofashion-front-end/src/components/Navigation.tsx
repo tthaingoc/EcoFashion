@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import CartWithPopup from "./cart/CartWithPopup";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -247,6 +247,7 @@ const Navigation: React.FC = () => {
   const [exploreMenuOpen, setExploreMenuOpen] = useState(false);
   const [exploreDropdownVisible, setExploreDropdownVisible] = useState(false);
   const exploreDropdownTimer = React.useRef<NodeJS.Timeout | null>(null);
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
   // Scroll effect
   useEffect(() => {
@@ -255,6 +256,22 @@ const Navigation: React.FC = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, [isHome]);
+
+  // Handle click outside user menu
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        if (userMenu.isOpen) {
+          userMenu.toggle();
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [userMenu]);
 
   // Handle logout
   const handleLogout = async () => {
@@ -315,6 +332,9 @@ const Navigation: React.FC = () => {
         break;
       case "fashion":
         navigate("/fashion");
+        break;
+      case "material":
+        navigate("/materials");
         break;
     }
   };
@@ -688,7 +708,7 @@ const Navigation: React.FC = () => {
                 </div>
 
                 {/* User Menu */}
-                <div className="relative">
+                <div className="relative" ref={userMenuRef}>
                   <button
                     onClick={userMenu.toggle}
                     className={`p-2 rounded-lg hover:bg-gray-100 transition-colors ${
