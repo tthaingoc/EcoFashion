@@ -3,8 +3,12 @@
   "WorkspaceRootPath": "D:\\testprogram\\EcoFashion-v1\\EcoFashionBackEnd\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{5CF53F9F-7A99-4D0F-BD67-7CB2740651BE}|EcoFashionBackEnd\\EcoFashionBackEnd.csproj|d:\\testprogram\\ecofashion-v1\\ecofashionbackend\\ecofashionbackend\\services\\orderpaymentservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{5CF53F9F-7A99-4D0F-BD67-7CB2740651BE}|EcoFashionBackEnd\\EcoFashionBackEnd.csproj|solutionrelative:ecofashionbackend\\services\\orderpaymentservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{5CF53F9F-7A99-4D0F-BD67-7CB2740651BE}|EcoFashionBackEnd\\EcoFashionBackEnd.csproj|d:\\testprogram\\ecofashion-v1\\ecofashionbackend\\ecofashionbackend\\data\\test\\materialimageseeder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5CF53F9F-7A99-4D0F-BD67-7CB2740651BE}|EcoFashionBackEnd\\EcoFashionBackEnd.csproj|solutionrelative:ecofashionbackend\\data\\test\\materialimageseeder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5CF53F9F-7A99-4D0F-BD67-7CB2740651BE}|EcoFashionBackEnd\\EcoFashionBackEnd.csproj|d:\\testprogram\\ecofashion-v1\\ecofashionbackend\\ecofashionbackend\\data\\test\\materialseeder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5CF53F9F-7A99-4D0F-BD67-7CB2740651BE}|EcoFashionBackEnd\\EcoFashionBackEnd.csproj|solutionrelative:ecofashionbackend\\data\\test\\materialseeder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -23,14 +27,27 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "OrderPaymentService.cs",
-              "DocumentMoniker": "D:\\testprogram\\EcoFashion-v1\\EcoFashionBackEnd\\EcoFashionBackEnd\\Services\\OrderPaymentService.cs",
-              "RelativeDocumentMoniker": "EcoFashionBackEnd\\Services\\OrderPaymentService.cs",
-              "ToolTip": "D:\\testprogram\\EcoFashion-v1\\EcoFashionBackEnd\\EcoFashionBackEnd\\Services\\OrderPaymentService.cs",
-              "RelativeToolTip": "EcoFashionBackEnd\\Services\\OrderPaymentService.cs",
-              "ViewState": "AgIAANQAAAAAAAAAAAAiwAcBAAAVAAAAAAAAAA==",
+              "Title": "MaterialImageSeeder.cs",
+              "DocumentMoniker": "D:\\testprogram\\EcoFashion-v1\\EcoFashionBackEnd\\EcoFashionBackEnd\\Data\\test\\MaterialImageSeeder.cs",
+              "RelativeDocumentMoniker": "EcoFashionBackEnd\\Data\\test\\MaterialImageSeeder.cs",
+              "ToolTip": "D:\\testprogram\\EcoFashion-v1\\EcoFashionBackEnd\\EcoFashionBackEnd\\Data\\test\\MaterialImageSeeder.cs",
+              "RelativeToolTip": "EcoFashionBackEnd\\Data\\test\\MaterialImageSeeder.cs",
+              "ViewState": "AgIAAFsAAAAAAAAAAAAowFoAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-30T16:54:30.646Z",
+              "WhenOpened": "2025-08-31T10:23:36.512Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "MaterialSeeder.cs",
+              "DocumentMoniker": "D:\\testprogram\\EcoFashion-v1\\EcoFashionBackEnd\\EcoFashionBackEnd\\Data\\test\\MaterialSeeder.cs",
+              "RelativeDocumentMoniker": "EcoFashionBackEnd\\Data\\test\\MaterialSeeder.cs",
+              "ToolTip": "D:\\testprogram\\EcoFashion-v1\\EcoFashionBackEnd\\EcoFashionBackEnd\\Data\\test\\MaterialSeeder.cs",
+              "RelativeToolTip": "EcoFashionBackEnd\\Data\\test\\MaterialSeeder.cs",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-31T10:23:32.052Z",
               "EditorCaption": ""
             }
           ]
