@@ -20,8 +20,10 @@ import { ordersService, OrderModel, UpdateFulfillmentStatusRequest, ShipOrderReq
 import { useAuthStore } from '../../store/authStore';
 import { toast } from 'react-toastify';
 
+
 // Use OrderModel from API service
 type Order = OrderModel;
+
 
 interface OrderDetail {
   orderDetailId: number;
@@ -31,6 +33,7 @@ interface OrderDetail {
   unitPrice: number;
   type: 'material' | 'design' | 'product';
 }
+
 
 // Helper: tách SĐT (PersonalPhoneNumber) được append ở cuối địa chỉ bởi BE
 const splitAddressPhone = (full: string): { address: string; phone?: string } => {
@@ -46,9 +49,10 @@ const splitAddressPhone = (full: string): { address: string; phone?: string } =>
   return { address: full };
 };
 
-const OrderStatusBadge: React.FC<{ status: string; type?: 'order' | 'payment' | 'fulfillment' }> = ({ 
-  status, 
-  type = 'fulfillment' 
+
+const OrderStatusBadge: React.FC<{ status: string; type?: 'order' | 'payment' | 'fulfillment' }> = ({
+  status,
+  type = 'fulfillment'
 }) => {
   const getStatusConfig = (status: string, type: string) => {
     if (type === 'payment') {
@@ -63,7 +67,7 @@ const OrderStatusBadge: React.FC<{ status: string; type?: 'order' | 'payment' | 
           return { color: 'bg-gray-100 text-gray-800', icon: ExclamationTriangleIcon, text: status };
       }
     }
-    
+
     // Fulfillment status
     switch (status) {
       case 'None':
@@ -81,8 +85,10 @@ const OrderStatusBadge: React.FC<{ status: string; type?: 'order' | 'payment' | 
     }
   };
 
+
   const config = getStatusConfig(status, type);
   const Icon = config.icon;
+
 
   return (
     <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${config.color}`}>
@@ -91,6 +97,7 @@ const OrderStatusBadge: React.FC<{ status: string; type?: 'order' | 'payment' | 
     </span>
   );
 };
+
 
 const OrderCard: React.FC<{
   order: Order;
@@ -102,6 +109,7 @@ const OrderCard: React.FC<{
   const canConfirm = order.paymentStatus === 'Paid' && (order.fulfillmentStatus === 'None' || !order.fulfillmentStatus);
   const canShip = order.paymentStatus === 'Paid' && order.fulfillmentStatus === 'Processing';
   const canComplete = order.paymentStatus === 'Paid' && order.fulfillmentStatus === 'Shipped';
+
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
@@ -119,6 +127,7 @@ const OrderCard: React.FC<{
         <OrderStatusBadge status={order.fulfillmentStatus} />
       </div>
 
+
       {/* Order Info */}
       <div className="space-y-3 mb-4">
         <div className="flex items-center justify-between">
@@ -128,7 +137,7 @@ const OrderCard: React.FC<{
           </div>
           <span className="text-sm font-medium text-gray-900">{order.userName}</span>
         </div>
-        
+
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <CurrencyDollarIcon className="w-4 h-4 text-gray-400" />
@@ -138,7 +147,7 @@ const OrderCard: React.FC<{
             {order.totalPrice.toLocaleString('vi-VN')} VND
           </span>
         </div>
-        
+
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2">
             <MapPinIcon className="w-4 h-4 text-gray-400" />
@@ -155,11 +164,13 @@ const OrderCard: React.FC<{
           </div>
         )}
 
+
         <div className="flex items-center justify-between">
           <span className="text-sm text-gray-600">Thanh toán:</span>
           <OrderStatusBadge status={order.paymentStatus} type="payment" />
         </div>
       </div>
+
 
       {/* Actions */}
       <div className="flex gap-2">
@@ -170,6 +181,7 @@ const OrderCard: React.FC<{
           <EyeIcon className="w-4 h-4" />
           Chi tiết
         </button>
+
 
         {canConfirm && (
           <button
@@ -182,6 +194,7 @@ const OrderCard: React.FC<{
           </button>
         )}
 
+
         {canShip && (
           <button
             onClick={() => onUpdateStatus(order.orderId, 'Shipped')}
@@ -192,6 +205,7 @@ const OrderCard: React.FC<{
             {isUpdating ? 'Đang cập nhật...' : 'Xác nhận vận chuyển'}
           </button>
         )}
+
 
         {canComplete && (
           <button
@@ -208,9 +222,11 @@ const OrderCard: React.FC<{
   );
 };
 
+
 interface SupplierOrdersProps {
   defaultFilter?: 'all' | 'processing' | 'shipped' | 'delivered';
 }
+
 
 const SupplierOrders: React.FC<SupplierOrdersProps> = ({ defaultFilter = 'all' }) => {
   const navigate = useNavigate();
@@ -221,15 +237,18 @@ const SupplierOrders: React.FC<SupplierOrdersProps> = ({ defaultFilter = 'all' }
   const [orders, setOrders] = useState<Order[]>([]);
   const [error, setError] = useState<string | null>(null);
 
+
   const { supplierProfile } = useAuthStore();
 
+
   // Không tách chuỗi nữa: đọc trực tiếp order.personalPhoneNumber nếu có
+
 
   // Fetch orders on component mount
   useEffect(() => {
     const fetchOrders = async () => {
       if (!supplierProfile?.supplierId) return;
-      
+
       try {
         setIsLoading(true);
         setError(null);
@@ -243,11 +262,14 @@ const SupplierOrders: React.FC<SupplierOrdersProps> = ({ defaultFilter = 'all' }
       }
     };
 
+
     fetchOrders();
   }, [supplierProfile?.supplierId]);
 
+
   // Replace mock data with real data
   const realOrders: Order[] = orders;
+
 
   // Filter orders based on selected filter
   const filteredOrders = realOrders.filter(order => {
@@ -255,43 +277,45 @@ const SupplierOrders: React.FC<SupplierOrdersProps> = ({ defaultFilter = 'all' }
     return order.fulfillmentStatus.toLowerCase() === filter;
   });
 
+
   const handleViewDetails = (orderId: number) => {
     const order = realOrders.find(o => o.orderId === orderId);
     setSelectedOrder(order || null);
   };
 
+
   const handleConfirmOrder = async (orderId: number) => {
     setIsUpdating(true);
-    
+
     // Optimistic update - immediately update UI
-    setOrders(prevOrders => 
-      prevOrders.map(order => 
-        order.orderId === orderId 
+    setOrders(prevOrders =>
+      prevOrders.map(order =>
+        order.orderId === orderId
           ? { ...order, fulfillmentStatus: 'Processing', status: 'processing' }
           : order
       )
     );
-    
+
     try {
       // Call API to confirm on server
       await ordersService.updateFulfillmentStatus(orderId, {
         fulfillmentStatus: 'Processing',
         notes: 'Đơn hàng đã được xác nhận bởi người bán'
       });
-      
+
       // Success feedback with toast notification
       toast.success(`✅ Đơn hàng #${orderId} đã được xác nhận thành công!`);
     } catch (error: any) {
       console.error('❌ Error confirming order:', error);
       // Rollback optimistic update on error
-      setOrders(prevOrders => 
-        prevOrders.map(order => 
-          order.orderId === orderId 
+      setOrders(prevOrders =>
+        prevOrders.map(order =>
+          order.orderId === orderId
             ? { ...order, fulfillmentStatus: 'None', status: 'pending' }
             : order
         )
       );
-      
+
       // More specific error handling
       const errorMsg = error?.response?.data?.message || error.message || 'Có lỗi xảy ra khi xác nhận đơn hàng';
       toast.error(`❌ Lỗi xác nhận: ${errorMsg}`);
@@ -300,24 +324,25 @@ const SupplierOrders: React.FC<SupplierOrdersProps> = ({ defaultFilter = 'all' }
     }
   };
 
+
   const handleUpdateStatus = async (orderId: number, newStatus: string) => {
     setIsUpdating(true);
-    
+
     // Optimistic update - immediately update UI
     const statusMapping: Record<string, string> = {
       'Shipped': 'shipped',
       'Delivered': 'delivered',
       'Processing': 'processing'
     };
-    
-    setOrders(prevOrders => 
-      prevOrders.map(order => 
-        order.orderId === orderId 
+
+    setOrders(prevOrders =>
+      prevOrders.map(order =>
+        order.orderId === orderId
           ? { ...order, fulfillmentStatus: newStatus, status: statusMapping[newStatus] || 'processing' }
           : order
       )
     );
-    
+
     try {
       if (newStatus === 'Shipped') {
         // Use ship API for better tracking
@@ -335,25 +360,25 @@ const SupplierOrders: React.FC<SupplierOrdersProps> = ({ defaultFilter = 'all' }
           notes: `Cập nhật trạng thái: ${newStatus}`
         });
       }
-      
+
       // Success feedback with toast notifications and status-specific messages
       const statusMessages: Record<string, string> = {
         'Shipped': '🚚 Đơn hàng đã được chuyển cho đơn vị vận chuyển',
         'Delivered': '✅ Đơn hàng đã hoàn thành và kích hoạt thanh toán cho người bán',
         'Processing': '⏳ Đơn hàng đang được xử lý',
       };
-      
+
       const successMsg = statusMessages[newStatus] || `Đơn hàng #${orderId} đã được cập nhật: ${newStatus}`;
       toast.success(successMsg);
     } catch (error: any) {
       console.error('❌ Error updating order status:', error);
-      
+
       // Rollback optimistic update on error - restore previous state
       if (supplierProfile?.supplierId) {
         const updatedOrders = await ordersService.getOrdersBySeller(supplierProfile.supplierId);
         setOrders(updatedOrders || []);
       }
-      
+
       // More specific error handling
       const errorMsg = error?.response?.data?.message || error.message || 'Có lỗi xảy ra khi cập nhật trạng thái đơn hàng';
       toast.error(`❌ Lỗi cập nhật: ${errorMsg}`);
@@ -361,6 +386,7 @@ const SupplierOrders: React.FC<SupplierOrdersProps> = ({ defaultFilter = 'all' }
       setIsUpdating(false);
     }
   };
+
 
   const getOrderCounts = () => {
     return {
@@ -371,7 +397,9 @@ const SupplierOrders: React.FC<SupplierOrdersProps> = ({ defaultFilter = 'all' }
     };
   };
 
+
   const counts = getOrderCounts();
+
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -381,6 +409,7 @@ const SupplierOrders: React.FC<SupplierOrdersProps> = ({ defaultFilter = 'all' }
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Quản lý đơn hàng</h1>
           <p className="text-gray-600">Theo dõi và xử lý các đơn hàng từ khách hàng</p>
         </div>
+
 
         {/* Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -394,6 +423,7 @@ const SupplierOrders: React.FC<SupplierOrdersProps> = ({ defaultFilter = 'all' }
             </div>
           </div>
 
+
           <div className="bg-white p-6 rounded-lg border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
@@ -403,6 +433,7 @@ const SupplierOrders: React.FC<SupplierOrdersProps> = ({ defaultFilter = 'all' }
               <ClockIcon className="w-8 h-8 text-blue-600" />
             </div>
           </div>
+
 
           <div className="bg-white p-6 rounded-lg border border-gray-200">
             <div className="flex items-center justify-between">
@@ -414,6 +445,7 @@ const SupplierOrders: React.FC<SupplierOrdersProps> = ({ defaultFilter = 'all' }
             </div>
           </div>
 
+
           <div className="bg-white p-6 rounded-lg border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
@@ -424,6 +456,7 @@ const SupplierOrders: React.FC<SupplierOrdersProps> = ({ defaultFilter = 'all' }
             </div>
           </div>
         </div>
+
 
         {/* Filter Tabs */}
         <div className="mb-6">
@@ -438,11 +471,10 @@ const SupplierOrders: React.FC<SupplierOrdersProps> = ({ defaultFilter = 'all' }
                 <button
                   key={tab.key}
                   onClick={() => setFilter(tab.key as any)}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
-                    filter === tab.key
+                  className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${filter === tab.key
                       ? 'border-blue-500 text-blue-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
+                    }`}
                 >
                   {tab.label} ({tab.count})
                 </button>
@@ -450,6 +482,7 @@ const SupplierOrders: React.FC<SupplierOrdersProps> = ({ defaultFilter = 'all' }
             </nav>
           </div>
         </div>
+
 
         {/* Error Message */}
         {error && (
@@ -461,6 +494,7 @@ const SupplierOrders: React.FC<SupplierOrdersProps> = ({ defaultFilter = 'all' }
           </div>
         )}
 
+
         {/* Loading State */}
         {isLoading && (
           <div className="flex items-center justify-center py-12">
@@ -469,6 +503,7 @@ const SupplierOrders: React.FC<SupplierOrdersProps> = ({ defaultFilter = 'all' }
           </div>
         )}
 
+
         {/* Updating State */}
         {isUpdating && (
           <div className="fixed top-4 right-4 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg z-50">
@@ -476,32 +511,34 @@ const SupplierOrders: React.FC<SupplierOrdersProps> = ({ defaultFilter = 'all' }
           </div>
         )}
 
+
         {/* Orders List */}
         {!isLoading && (
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-          {filteredOrders.length === 0 ? (
-            <div className="col-span-full text-center py-12">
+            {filteredOrders.length === 0 ? (
+              <div className="col-span-full text-center py-12">
                 <CubeIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Không có đơn hàng nào</h3>
-              <p className="text-gray-600">
-                {filter === 'all' ? 'Chưa có đơn hàng nào' : `Không có đơn hàng ${filter === 'processing' ? 'đang xử lý' : filter === 'shipped' ? 'đang vận chuyển' : 'đã giao'}`}
-              </p>
-            </div>
-          ) : (
-            filteredOrders.map(order => (
-              <OrderCard
-                key={order.orderId}
-                order={order}
-                onViewDetails={handleViewDetails}
-                onConfirmOrder={handleConfirmOrder}
-                onUpdateStatus={handleUpdateStatus}
-                isUpdating={isUpdating}
-              />
-            ))
-          )}
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Không có đơn hàng nào</h3>
+                <p className="text-gray-600">
+                  {filter === 'all' ? 'Chưa có đơn hàng nào' : `Không có đơn hàng ${filter === 'processing' ? 'đang xử lý' : filter === 'shipped' ? 'đang vận chuyển' : 'đã giao'}`}
+                </p>
+              </div>
+            ) : (
+              filteredOrders.map(order => (
+                <OrderCard
+                  key={order.orderId}
+                  order={order}
+                  onViewDetails={handleViewDetails}
+                  onConfirmOrder={handleConfirmOrder}
+                  onUpdateStatus={handleUpdateStatus}
+                  isUpdating={isUpdating}
+                />
+              ))
+            )}
           </div>
         )}
       </div>
+
 
       {/* Order Details Modal */}
       {selectedOrder && (
@@ -519,12 +556,14 @@ const SupplierOrders: React.FC<SupplierOrdersProps> = ({ defaultFilter = 'all' }
               </button>
             </div>
 
+
             <div className="space-y-6">
               {/* Order Status */}
               <div className="flex items-center gap-4">
                 <OrderStatusBadge status={selectedOrder.fulfillmentStatus} />
                 <OrderStatusBadge status={selectedOrder.paymentStatus} type="payment" />
               </div>
+
 
               {/* Customer & Order Info */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -545,7 +584,7 @@ const SupplierOrders: React.FC<SupplierOrdersProps> = ({ defaultFilter = 'all' }
                         <div className="text-sm font-semibold text-blue-900">{selectedOrder.userName || 'Chưa cập nhật'}</div>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-3">
                       <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
                         <PhoneIcon className="w-3 h-3 text-blue-600" />
@@ -557,7 +596,7 @@ const SupplierOrders: React.FC<SupplierOrdersProps> = ({ defaultFilter = 'all' }
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-3">
                       <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
                         <IdentificationIcon className="w-3 h-3 text-blue-600" />
@@ -567,7 +606,7 @@ const SupplierOrders: React.FC<SupplierOrdersProps> = ({ defaultFilter = 'all' }
                         <div className="text-sm font-semibold text-blue-900 font-mono">ID: {selectedOrder.userId}</div>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-start gap-3">
                       <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mt-0.5">
                         <MapPinIcon className="w-3 h-3 text-blue-600" />
@@ -581,6 +620,7 @@ const SupplierOrders: React.FC<SupplierOrdersProps> = ({ defaultFilter = 'all' }
                     </div>
                   </div>
                 </div>
+
 
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-4">
@@ -601,7 +641,7 @@ const SupplierOrders: React.FC<SupplierOrdersProps> = ({ defaultFilter = 'all' }
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-3">
                       <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
                         <CurrencyDollarIcon className="w-3 h-3 text-green-600" />
@@ -616,6 +656,7 @@ const SupplierOrders: React.FC<SupplierOrdersProps> = ({ defaultFilter = 'all' }
                   </div>
                 </div>
               </div>
+
 
               {/* Order Items */}
               <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
@@ -642,6 +683,7 @@ const SupplierOrders: React.FC<SupplierOrdersProps> = ({ defaultFilter = 'all' }
                 </div>
               </div>
 
+
               {/* Actions */}
               <div className="flex gap-3 pt-4 border-t">
                 <button
@@ -650,7 +692,7 @@ const SupplierOrders: React.FC<SupplierOrdersProps> = ({ defaultFilter = 'all' }
                 >
                   Đóng
                 </button>
-                
+
                 {selectedOrder.paymentStatus === 'Paid' && (selectedOrder.fulfillmentStatus === 'None' || !selectedOrder.fulfillmentStatus) && (
                   <button
                     onClick={() => {
@@ -664,6 +706,7 @@ const SupplierOrders: React.FC<SupplierOrdersProps> = ({ defaultFilter = 'all' }
                   </button>
                 )}
 
+
                 {selectedOrder.paymentStatus === 'Paid' && selectedOrder.fulfillmentStatus === 'Processing' && (
                   <button
                     onClick={() => {
@@ -676,6 +719,7 @@ const SupplierOrders: React.FC<SupplierOrdersProps> = ({ defaultFilter = 'all' }
                     Xác nhận vận chuyển
                   </button>
                 )}
+
 
                 {selectedOrder.paymentStatus === 'Paid' && selectedOrder.fulfillmentStatus === 'Shipped' && (
                   <button
@@ -698,4 +742,6 @@ const SupplierOrders: React.FC<SupplierOrdersProps> = ({ defaultFilter = 'all' }
   );
 };
 
+
 export default SupplierOrders;
+

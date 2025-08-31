@@ -225,11 +225,11 @@ const SupplierMaterials: React.FC = () => {
                       </td>
                       <td className="py-3 px-4 align-top">
                         {(() => {
-                          const price = material.pricePerUnit || 0;
-                          const priceValue = (price * 1000).toLocaleString();
+                          const price = material.pricePerUnit.toLocaleString() || 0;
+                          //const priceValue = (price * 1000).toLocaleString();
                           return (
                             <>
-                              <span className="text-base font-bold text-gray-900 block">{priceValue}</span>
+                              <span className="text-base font-bold text-gray-900 block">{price}</span>
                               <span className="block text-xs text-gray-500 mt-1">đồng/mét</span>
                             </>
                           );

@@ -10,7 +10,6 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import VerifyOTP from "./components/VerifyOTP";
 import FashionList from "./pages/design/FashionList";
-import MaterialList from "./pages/material/MaterialList";
 import DesignDetail from "./pages/design/DesignDetail";
 import DesingBrandProfile from "./pages/design/DesignBrandProfile";
 import ApplyDesigner from "./pages/apply/ApplyDesigner";
@@ -64,6 +63,8 @@ import VNPaySuccess from "./pages/payment/VNPaySuccess";
 import { useAuthStore } from "./store/authStore";
 import { useCartStore } from "./store/cartStore";
 import { ConfirmProvider } from "material-ui-confirm";
+import MaterialList from "./pages/material/MaterialList";
+
 
 //import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -194,10 +195,10 @@ function App() {
 
         {/* ===== DESIGN and MATERIAL ROUTES ===== */}
         <Route path="/fashion" element={<FashionList />} />
-        <Route path="/materials" element={<MaterialList />} />
         <Route path="/detail/:id/:designerId" element={<DesignDetail />} />
         <Route path="/brand/:id" element={<DesingBrandProfile />} />
         <Route path="/material/:id" element={<MaterialDetailPage />} />
+        <Route path="/materials" element={<MaterialList />} />
 
         {/* ===== APPLICATION ROUTES ===== */}
         <Route path="/businessinfor" element={<BusinessInfor />} />

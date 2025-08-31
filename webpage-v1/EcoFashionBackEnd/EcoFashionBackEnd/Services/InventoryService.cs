@@ -194,14 +194,118 @@ namespace EcoFashionBackEnd.Services
                     TransactionType = "Usage",
                     Notes = $"Trừ vật liệu cho sản phẩm",
                 };
-                _materialInventoryTransactionRepository.AddAsync(transaction);
+                await _materialInventoryTransactionRepository.AddAsync(transaction);
 
                 _designerMaterialInventory.Update(inventory);
             }
 
 
             await _designerMaterialInventory.Commit();
+            await _materialInventoryTransactionRepository.Commit();
         }
 
+        //Cộng kho khi mua vật liệu
+        public async Task AddDesignerMaterialsAsync(Guid designerId, Dictionary<int, decimal> addMap)
+        {
+            var userIdString = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userIdString))
+            {
+                throw new UnauthorizedAccessException("Người dùng không được xác thực.");
+            }
+
+            if (!int.TryParse(userIdString, out int userId))
+            {
+                throw new InvalidOperationException("ID người dùng không hợp lệ.");
+            }
+
+            if (addMap == null || addMap.Count == 0)
+            {
+                return;
+            }
+
+            var warehouse = await _warehouseRepository
+             .FindByCondition(w => w.DesignerId == designerId && w.WarehouseType == "Material")
+                .FirstOrDefaultAsync();
+
+            if (warehouse == null)
+            {
+                throw new Exception($"Không tìm thấy kho vật liệu cho designerId={designerId}");
+            }
+
+            var materialIds = addMap.Keys.ToList();
+
+            var inventories = await _designerMaterialInventory.GetAll()
+                .Where(i => i.WarehouseId == warehouse.WarehouseId && materialIds.Contains(i.MaterialId))
+                .Include(i => i.Material)
+                .ToDictionaryAsync(i => i.MaterialId);
+
+            foreach (var materialId in addMap.Keys)
+            {
+                var addQty = addMap[materialId];
+
+                if (addQty <= 0)
+                {
+                    continue;
+                }
+
+                if (!inventories.TryGetValue(materialId, out var inventory))
+                {
+                    inventory = new DesignerMaterialInventory
+                    {
+                        WarehouseId = warehouse.WarehouseId,
+                        MaterialId = materialId,
+                        Quantity = addQty,
+                        LastBuyDate = DateTime.UtcNow,
+                        Status = addQty > 0 ? "In Stock" : "Out of Stock"
+                    };
+
+                    await _designerMaterialInventory.AddAsync(inventory);
+                    await _designerMaterialInventory.Commit();
+
+                    var transactionNew = new MaterialInventoryTransaction
+                    {
+                        InventoryId = inventory.InventoryId,
+                        QuantityChanged = addQty,
+                        BeforeQty = 0,
+                        AfterQty = addQty,
+                        PerformedByUserId = userId,
+                        TransactionType = "Import",
+                        TransactionDate = DateTime.UtcNow,
+                        Notes = "Nhập kho vật liệu cho Designer"
+                    };
+
+                    await _materialInventoryTransactionRepository.AddAsync(transactionNew);
+                }
+                else
+                {
+                    var beforeQty = inventory.Quantity ?? 0;
+                    var afterQty = beforeQty + addQty;
+
+                    inventory.Quantity = afterQty;
+                    inventory.LastBuyDate = DateTime.UtcNow;
+                    inventory.Status = afterQty > 0 ? "In Stock" : "Out of Stock";
+
+                    _designerMaterialInventory.Update(inventory);
+                    await _designerMaterialInventory.Commit();
+
+                    var transaction = new MaterialInventoryTransaction
+                    {
+                        InventoryId = inventory.InventoryId,
+                        QuantityChanged = addQty,
+                        BeforeQty = beforeQty,
+                        AfterQty = afterQty,
+                        PerformedByUserId = userId,
+                        TransactionType = "Import",
+                        TransactionDate = DateTime.UtcNow,
+                        Notes = "Nhập kho vật liệu cho Designer"
+                    };
+
+                    await _materialInventoryTransactionRepository.AddAsync(transaction);
+                }
+            }
+
+            await _materialInventoryTransactionRepository.Commit();
+        }
     }
 }

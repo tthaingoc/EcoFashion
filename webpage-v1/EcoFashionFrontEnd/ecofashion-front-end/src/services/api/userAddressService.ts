@@ -1,4 +1,4 @@
-import apiClient from './baseApi';
+import apiClient from "./baseApi";
 
 export interface UserAddress {
   addressId: number;
@@ -47,7 +47,7 @@ export interface AddressFormData {
 export const userAddressService = {
   // Get all addresses for current user
   getAll: async (): Promise<UserAddress[]> => {
-    const { data } = await apiClient.get('/useraddress');
+    const { data } = await apiClient.get("/useraddress");
     return data?.result || data || [];
   },
 
@@ -59,19 +59,25 @@ export const userAddressService = {
 
   // Get default address
   getDefault: async (): Promise<UserAddress> => {
-    const { data } = await apiClient.get('/useraddress/default');
+    const { data } = await apiClient.get("/useraddress/default");
     return data?.result || data;
   },
 
   // Create new address
   create: async (addressData: CreateAddressRequest): Promise<UserAddress> => {
-    const { data } = await apiClient.post('/useraddress', addressData);
+    const { data } = await apiClient.post("/useraddress", addressData);
     return data?.result || data;
   },
 
   // Update existing address
-  update: async (addressId: number, addressData: UpdateAddressRequest): Promise<UserAddress> => {
-    const { data } = await apiClient.put(`/useraddress/${addressId}`, addressData);
+  update: async (
+    addressId: number,
+    addressData: UpdateAddressRequest
+  ): Promise<UserAddress> => {
+    const { data } = await apiClient.put(
+      `/useraddress/${addressId}`,
+      addressData
+    );
     return data?.result || data;
   },
 
@@ -82,20 +88,22 @@ export const userAddressService = {
 
   // Set address as default
   setDefault: async (addressId: number): Promise<UserAddress> => {
-    const { data } = await apiClient.put(`/useraddress/${addressId}/set-default`);
+    const { data } = await apiClient.put(
+      `/useraddress/${addressId}/set-default`
+    );
     return data?.result || data;
   },
 
   // Get formatted address string
   getFormatted: async (addressId: number): Promise<string> => {
     const { data } = await apiClient.get(`/useraddress/${addressId}/formatted`);
-    return data?.formattedAddress || '';
+    return data?.formattedAddress || "";
   },
 
   // Get default formatted address string
   getDefaultFormatted: async (): Promise<string> => {
-    const { data } = await apiClient.get('/useraddress/default/formatted');
-    return data?.formattedAddress || '';
+    const { data } = await apiClient.get("/useraddress/default/formatted");
+    return data?.formattedAddress || "";
   },
 
   // Helper function to format address client-side
@@ -109,7 +117,7 @@ export const userAddressService = {
     if (address.personalPhoneNumber) parts.push(address.personalPhoneNumber);
     if (address.country) parts.push(address.country);
 
-    return parts.join(', ');
+    return parts.join(", ");
   },
 
   // Helper function to validate address data
@@ -117,15 +125,15 @@ export const userAddressService = {
     const errors: string[] = [];
 
     if (!address.addressLine?.trim()) {
-      errors.push('Địa chỉ cụ thể là bắt buộc');
+      errors.push("Địa chỉ cụ thể là bắt buộc");
     }
 
     if (!address.city?.trim()) {
-      errors.push('Thành phố là bắt buộc');
+      errors.push("Thành phố là bắt buộc");
     }
 
     if (!address.district?.trim()) {
-      errors.push('Quận/Huyện là bắt buộc');
+      errors.push("Quận/Huyện là bắt buộc");
     }
 
     return errors;
@@ -134,7 +142,7 @@ export const userAddressService = {
   // Helper function to check if address is complete
   isAddressComplete: (address: UserAddress): boolean => {
     return !!(address.addressLine && address.city && address.district);
-  }
+  },
 };
 
 export default userAddressService;

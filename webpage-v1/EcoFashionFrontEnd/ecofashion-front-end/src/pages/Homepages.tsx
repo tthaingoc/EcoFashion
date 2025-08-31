@@ -519,7 +519,7 @@ export default function Homepage() {
             navigate(`/material/${material.materialId}`);
           }}
           onViewMore={() => {
-            navigate("/materials");
+            navigate("/materials")
           }}
         />
       </Box>

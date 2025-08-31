@@ -204,6 +204,44 @@ export default function DesignDetail() {
     setCurrentIndex(0);
   }, [designDetail]);
 
+  // Auto-refresh product stock on window focus (place BEFORE early returns and compute selected product inside)
+  useEffect(() => {
+    const onFocus = async () => {
+      try {
+        if (!id || !designerId) return;
+        const product = designDetail?.products?.find(
+          (p) => p.colorCode === selectedColor && p.sizeId === selectedSize
+        );
+        if (!product) return;
+
+        const items = await DesignService.getDesignProductDetailsAsync(
+          Number(id),
+          designerId
+        );
+        const found = items.find((p) => p.productId === product.productId);
+        if (!found) return;
+
+        setDesignDetail((prev) =>
+          prev
+            ? {
+                ...prev,
+                products: prev.products.map((p) =>
+                  p.productId === found.productId
+                    ? { ...p, quantityAvailable: found.quantityAvailable }
+                    : p
+                ),
+              }
+            : prev
+        );
+      } catch (err) {
+        console.error("Failed to refresh product quantity", err);
+      }
+    };
+
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [id, designerId, designDetail?.products, selectedColor, selectedSize]);
+
   if (loading) return <div className="designer-loading">Đang tải...</div>;
   if (error || !designDetail)
     return (
@@ -375,6 +413,8 @@ export default function DesignDetail() {
   const handleIncrease = () => {
     setQuantity((prev) => prev + 1);
   };
+
+  
 
   return (
     <Box

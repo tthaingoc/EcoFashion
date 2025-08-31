@@ -3,17 +3,17 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ordersService } from '../../services/api/ordersService';
 import { shipmentService, ShipmentTrackingResponse } from '../../services/api/shipmentService';
 import { formatViDateTime } from '../../utils/date';
-import { paymentsService } from '../../services/api/paymentsService';
+//import { paymentsService } from '../../services/api/paymentsService';
 import { Button, Box, Chip, Dialog, DialogTitle, DialogContent, DialogActions, Typography } from '@mui/material';
 import { LocalShipping, Visibility, AccessTime, CheckCircle, Store, Person, Phone, LocationOn } from '@mui/icons-material';
 import { useAuthStore } from '../../store/authStore';
+
 
 export default function OrdersDetails() {
   const navigate = useNavigate();
   const { user } = useAuthStore(); // Get current user info
   const [payLoading, setPayLoading] = useState(false);
   const [payError, setPayError] = useState<string | null>(null);
-  
   const handlePayWithWallet = async () => {
     setPayLoading(true);
     setPayError(null);
@@ -27,7 +27,6 @@ export default function OrdersDetails() {
       setPayLoading(false);
     }
   };
-  
   const { orderId } = useParams();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -37,6 +36,7 @@ export default function OrdersDetails() {
   const [trackingInfo, setTrackingInfo] = useState<ShipmentTrackingResponse | null>(null);
   const [trackingLoading, setTrackingLoading] = useState(false);
   const [trackingError, setTrackingError] = useState<string | null>(null);
+
 
   useEffect(() => {
     const load = async () => {
@@ -56,12 +56,13 @@ export default function OrdersDetails() {
     load();
   }, [orderId]);
 
+
   // Function to handle tracking click based on order status
   const handleTrackingClick = async () => {
     const isPaid = data.paymentStatus === 'Paid' || data.paymentStatus === 'paid';
     const isProcessing = data.status === 'processing';
     const fulfillmentStatus = data.fulfillmentStatus || 'None';
-    
+
     // If order is paid but fulfillment is None/Processing, show waiting dialog
     if (isPaid && isProcessing && (fulfillmentStatus === 'None' || fulfillmentStatus === 'Processing')) {
       setShowTrackingDialog(true);
@@ -82,10 +83,11 @@ export default function OrdersDetails() {
     }
   };
 
+
   const renderTrackingStatus = () => {
     const isPaid = data.paymentStatus === 'Paid' || data.paymentStatus === 'paid';
     const fulfillmentStatus = data.fulfillmentStatus || 'None';
-    
+
     if (!isPaid) {
       return (
         <div className="font-medium text-gray-500">
@@ -93,7 +95,7 @@ export default function OrdersDetails() {
         </div>
       );
     }
-    
+
     // Map fulfillment status to Vietnamese and colors
     const getStatusInfo = (status: string) => {
       switch (status.toLowerCase()) {
@@ -108,10 +110,10 @@ export default function OrdersDetails() {
           return { text: '⏳ Chờ xác nhận', color: '#d97706', bgColor: '#fef3c7' };
       }
     };
-    
+
     const statusInfo = getStatusInfo(fulfillmentStatus);
     const showWaitingDialog = fulfillmentStatus === 'None' || fulfillmentStatus === 'Processing';
-    
+
     return (
       <div className="font-medium flex items-center gap-2">
         <span style={{ color: statusInfo.color }}>
@@ -122,11 +124,11 @@ export default function OrdersDetails() {
           size="small"
           icon={showWaitingDialog ? <AccessTime /> : <LocalShipping />}
           onClick={handleTrackingClick}
-          sx={{ 
-            bgcolor: statusInfo.bgColor, 
+          sx={{
+            bgcolor: statusInfo.bgColor,
             color: statusInfo.color,
             cursor: 'pointer',
-            '&:hover': { 
+            '&:hover': {
               bgcolor: statusInfo.bgColor,
               opacity: 0.8
             }
@@ -136,6 +138,7 @@ export default function OrdersDetails() {
     );
   };
 
+
   if (loading) return <div className="max-w-[1120px] mx-auto p-6">Đang tải chi tiết đơn...</div>;
   if (error) return <div className="max-w-[1120px] mx-auto p-6 text-red-600">{error}</div>;
   if (!data) return null;
@@ -144,6 +147,7 @@ export default function OrdersDetails() {
   const shipping = Number((data as any).shippingFee ?? 0);
   const discount = Number((data as any).discount ?? 0);
   const total = Number((data as any).totalPrice ?? (subtotal + shipping - discount));
+
 
   return (
     <div className="max-w-[1120px] mx-auto px-4 py-6 space-y-4">
@@ -177,14 +181,14 @@ export default function OrdersDetails() {
           <Link to="/orders" className="text-green-700 hover:underline">Danh sách đơn</Link>
         </div>
       </div>
-      
+
       {/* Thông tin người mua hàng */}
       <div className="bg-white border rounded-md p-4">
         <div className="flex items-center gap-2 mb-4">
           <Person sx={{ color: '#3b82f6' }} />
           <h3 className="text-lg font-medium text-gray-900">Thông tin người mua</h3>
         </div>
-        
+
         <div className="grid md:grid-cols-2 gap-6">
           {/* Thông tin người dùng */}
           <div className="space-y-3">
@@ -199,7 +203,7 @@ export default function OrdersDetails() {
                 </div>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
                 <Phone sx={{ color: '#16a34a', fontSize: 20 }} />
@@ -211,7 +215,7 @@ export default function OrdersDetails() {
                 </div>
               </div>
             </div>
-            
+
             {/* Hiển thị User ID để admin/supplier/designer có thể tra cứu */}
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
@@ -225,7 +229,7 @@ export default function OrdersDetails() {
               </div>
             </div>
           </div>
-          
+
           {/* Địa chỉ giao hàng */}
           <div className="space-y-3">
             <div className="flex items-start gap-3">
@@ -239,7 +243,7 @@ export default function OrdersDetails() {
                 </div>
               </div>
             </div>
-            
+
             {/* Thời gian đặt hàng */}
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
@@ -255,6 +259,7 @@ export default function OrdersDetails() {
           </div>
         </div>
       </div>
+
 
       <div className="bg-white border rounded-md p-4 grid md:grid-cols-3 gap-4">
         <div>
@@ -278,6 +283,7 @@ export default function OrdersDetails() {
           <div className="font-medium">{(data as any).orderDate ? formatViDateTime((data as any).orderDate) : '-'}</div>
         </div>
       </div>
+
 
       <div className="bg-white border rounded-md">
         <div className="px-4 py-3 border-b font-medium">Sản phẩm</div>
@@ -306,6 +312,7 @@ export default function OrdersDetails() {
         </div>
       </div>
 
+
       <div className="bg-white border rounded-md p-4 grid md:grid-cols-2 gap-4">
         <div className="text-sm text-gray-600">Tổng số dòng: <b>{details.length}</b></div>
         <div className="space-y-2 text-right">
@@ -326,15 +333,16 @@ export default function OrdersDetails() {
         </div>
       </div>
 
+
       {/* Tracking Status Dialog */}
-      <Dialog 
-        open={showTrackingDialog} 
+      <Dialog
+        open={showTrackingDialog}
         onClose={() => setShowTrackingDialog(false)}
         maxWidth="md"
         fullWidth
       >
         <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          {(['shipped','delivered'].includes(String(data.fulfillmentStatus || '').toLowerCase()))
+          {(['shipped', 'delivered'].includes(String(data.fulfillmentStatus || '').toLowerCase()))
             ? <LocalShipping sx={{ color: '#7c3aed' }} />
             : <AccessTime sx={{ color: '#d97706' }} />}
           Trạng thái đơn hàng #{data.orderId}
@@ -356,6 +364,7 @@ export default function OrdersDetails() {
                   </div>
                 </div>
 
+
                 <div className="space-y-4">
                   <div className="flex items-center gap-4">
                     <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
@@ -367,33 +376,33 @@ export default function OrdersDetails() {
                     </div>
                   </div>
 
+
                   <div className="flex items-center gap-4">
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                      data.fulfillmentStatus === 'Processing' 
-                        ? 'bg-blue-500' 
-                        : 'bg-amber-500'
-                    }`}>
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center ${data.fulfillmentStatus === 'Processing'
+                      ? 'bg-blue-500'
+                      : 'bg-amber-500'
+                      }`}>
                       <AccessTime sx={{ color: 'white', fontSize: 14 }} />
                     </div>
                     <div className="flex-1">
-                      <div className={`font-medium ${
-                        data.fulfillmentStatus === 'Processing' 
-                          ? 'text-blue-700' 
-                          : 'text-amber-700'
-                      }`}>
-                        {data.fulfillmentStatus === 'Processing' 
-                          ? 'Đang xử lý' 
+                      <div className={`font-medium ${data.fulfillmentStatus === 'Processing'
+                        ? 'text-blue-700'
+                        : 'text-amber-700'
+                        }`}>
+                        {data.fulfillmentStatus === 'Processing'
+                          ? 'Đang xử lý'
                           : 'Chờ xác nhận từ người bán'
                         }
                       </div>
                       <div className="text-sm text-gray-600">
-                        {data.fulfillmentStatus === 'Processing' 
+                        {data.fulfillmentStatus === 'Processing'
                           ? 'Người bán đang chuẩn bị và đóng gói đơn hàng của bạn'
                           : 'Người bán đang xem xét và chuẩn bị đơn hàng của bạn'
                         }
                       </div>
                     </div>
                   </div>
+
 
                   <div className="flex items-center gap-4 opacity-40">
                     <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center">
@@ -405,6 +414,7 @@ export default function OrdersDetails() {
                     </div>
                   </div>
 
+
                   <div className="flex items-center gap-4 opacity-40">
                     <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center">
                       <CheckCircle sx={{ color: 'white', fontSize: 14 }} />
@@ -415,6 +425,7 @@ export default function OrdersDetails() {
                     </div>
                   </div>
                 </div>
+
 
                 {details.length > 0 && (
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -432,16 +443,18 @@ export default function OrdersDetails() {
                   </div>
                 )}
 
+
                 <div className="bg-gray-50 border rounded-lg p-4">
                   <div className="font-medium text-gray-800 mb-2">Thời gian dự kiến</div>
                   <div className="text-sm text-gray-600">
-                    • Xác nhận từ người bán: 1-2 ngày làm việc<br/>
-                    • Vận chuyển: 3-7 ngày làm việc<br/>
+                    • Xác nhận từ người bán: 1-2 ngày làm việc<br />
+                    • Vận chuyển: 3-7 ngày làm việc<br />
                     • Tổng thời gian: 4-9 ngày làm việc
                   </div>
                 </div>
               </>
             )}
+
 
             {/* Tracking info for Shipped/Delivered */}
             {(String(data.fulfillmentStatus || '').toLowerCase() === 'shipped' || String(data.fulfillmentStatus || '').toLowerCase() === 'delivered') && (
@@ -449,7 +462,7 @@ export default function OrdersDetails() {
                 <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
-                      {String(data.fulfillmentStatus || '').toLowerCase() === 'delivered' ? 
+                      {String(data.fulfillmentStatus || '').toLowerCase() === 'delivered' ?
                         <CheckCircle sx={{ color: 'white', fontSize: 16 }} /> :
                         <LocalShipping sx={{ color: 'white', fontSize: 16 }} />
                       }
@@ -457,7 +470,7 @@ export default function OrdersDetails() {
                     <div>
                       <div className="font-semibold text-purple-800">{String(data.fulfillmentStatus || '').toLowerCase() === 'delivered' ? 'Đã giao hàng' : 'Đang vận chuyển'}</div>
                       <div className="text-sm text-purple-600">
-                        {String(data.fulfillmentStatus || '').toLowerCase() === 'delivered' ? 
+                        {String(data.fulfillmentStatus || '').toLowerCase() === 'delivered' ?
                           'Đơn hàng của bạn đã được giao thành công' :
                           'Đơn hàng đang được vận chuyển đến địa chỉ của bạn'
                         }
@@ -465,6 +478,7 @@ export default function OrdersDetails() {
                     </div>
                   </div>
                 </div>
+
 
                 {/* Progress Timeline */}
                 <div className="space-y-4">
@@ -478,6 +492,7 @@ export default function OrdersDetails() {
                     </div>
                   </div>
 
+
                   <div className="flex items-center gap-4">
                     <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
                       <CheckCircle sx={{ color: 'white', fontSize: 14 }} />
@@ -488,6 +503,7 @@ export default function OrdersDetails() {
                     </div>
                   </div>
 
+
                   <div className={`flex items-center gap-4 ${String(data.fulfillmentStatus || '').toLowerCase() === 'delivered' ? '' : ''}`}>
                     <div className="w-6 h-6 bg-purple-600 rounded-full flex items-center justify-center">
                       <LocalShipping sx={{ color: 'white', fontSize: 14 }} />
@@ -495,7 +511,7 @@ export default function OrdersDetails() {
                     <div className="flex-1">
                       <div className="font-medium text-purple-700">Đang vận chuyển</div>
                       <div className="text-sm text-gray-600">
-                        {trackingInfo ? 
+                        {trackingInfo ?
                           `Mã vận đơn: ${trackingInfo.trackingNumber || 'Đang cập nhật'} • ${trackingInfo.carrier || 'Vận chuyển tiêu chuẩn'}` :
                           'Đơn hàng đang được vận chuyển bởi đối tác vận chuyển'
                         }
@@ -509,22 +525,20 @@ export default function OrdersDetails() {
                     </div>
                   </div>
 
+
                   <div className={`flex items-center gap-4 ${String(data.fulfillmentStatus || '').toLowerCase() === 'delivered' ? '' : 'opacity-40'}`}>
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                      String(data.fulfillmentStatus || '').toLowerCase() === 'delivered' ? 'bg-green-500' : 'bg-gray-300'
-                    }`}>
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center ${String(data.fulfillmentStatus || '').toLowerCase() === 'delivered' ? 'bg-green-500' : 'bg-gray-300'
+                      }`}>
                       <CheckCircle sx={{ color: 'white', fontSize: 14 }} />
                     </div>
                     <div className="flex-1">
-                      <div className={`font-medium ${
-                        String(data.fulfillmentStatus || '').toLowerCase() === 'delivered' ? 'text-green-700' : 'text-gray-500'
-                      }`}>
+                      <div className={`font-medium ${String(data.fulfillmentStatus || '').toLowerCase() === 'delivered' ? 'text-green-700' : 'text-gray-500'
+                        }`}>
                         Hoàn thành
                       </div>
-                      <div className={`text-sm ${
-                        String(data.fulfillmentStatus || '').toLowerCase() === 'delivered' ? 'text-gray-600' : 'text-gray-400'
-                      }`}>
-                        {String(data.fulfillmentStatus || '').toLowerCase() === 'delivered' ? 
+                      <div className={`text-sm ${String(data.fulfillmentStatus || '').toLowerCase() === 'delivered' ? 'text-gray-600' : 'text-gray-400'
+                        }`}>
+                        {String(data.fulfillmentStatus || '').toLowerCase() === 'delivered' ?
                           'Đơn hàng đã được giao thành công và kích hoạt thanh toán cho người bán' :
                           'Đơn hàng sẽ được đánh dấu hoàn thành sau khi giao thành công'
                         }
@@ -535,6 +549,7 @@ export default function OrdersDetails() {
                     </div>
                   </div>
                 </div>
+
 
                 {/* Seller Info */}
                 {details.length > 0 && (
@@ -553,6 +568,7 @@ export default function OrdersDetails() {
                   </div>
                 )}
 
+
                 {/* Estimated Time Info */}
                 <div className="bg-gray-50 border rounded-lg p-4">
                   <div className="font-medium text-gray-800 mb-2">
@@ -561,19 +577,20 @@ export default function OrdersDetails() {
                   <div className="text-sm text-gray-600">
                     {String(data.fulfillmentStatus || '').toLowerCase() === 'delivered' ? (
                       <>
-                        • Đơn hàng đã được giao thành công<br/>
-                        • Thanh toán đã được chuyển cho người bán<br/>
+                        • Đơn hàng đã được giao thành công<br />
+                        • Thanh toán đã được chuyển cho người bán<br />
                         • Cảm ơn bạn đã mua sắm tại EcoFashion
                       </>
                     ) : (
                       <>
-                        • Vận chuyển: 2-5 ngày làm việc<br/>
-                        • Giao hàng trong khu vực nội thành<br/>
+                        • Vận chuyển: 2-5 ngày làm việc<br />
+                        • Giao hàng trong khu vực nội thành<br />
                         • Liên hệ hotline nếu cần hỗ trợ
                       </>
                     )}
                   </div>
                 </div>
+
 
                 {/* Loading and Error States */}
                 {trackingLoading && (
@@ -582,6 +599,7 @@ export default function OrdersDetails() {
                   </div>
                 )}
 
+
                 {trackingError && (
                   <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
                     <div className="text-sm text-orange-800">
@@ -589,6 +607,7 @@ export default function OrdersDetails() {
                     </div>
                   </div>
                 )}
+
 
                 {/* Tracking History (if available) */}
                 {trackingInfo && Array.isArray(trackingInfo.statusHistory) && trackingInfo.statusHistory.length > 0 && (
@@ -619,8 +638,14 @@ export default function OrdersDetails() {
         </DialogActions>
       </Dialog>
 
+
     </div>
   );
 }
+
+
+
+
+
 
 

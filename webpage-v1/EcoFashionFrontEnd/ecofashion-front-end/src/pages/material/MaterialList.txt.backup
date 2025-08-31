@@ -5,8 +5,8 @@ import materialService from '../../services/api/materialService';
 import type { MaterialDetailDto, MaterialTypeModel } from '../../schemas/materialSchema';
 
 
-// Banner image - you can create a specific material banner
-import materialBanner from '../../assets/img/gallery/velvet-fabric-art-deco-fans-petrol-blue-(3)-3018-p.jpg';
+// Banner image (you can replace with actual material banner)
+import materialBanner from '../../assets/pictures/fashion/Fashion.png';
 
 
 const MaterialList: React.FC = () => {
@@ -26,9 +26,16 @@ const MaterialList: React.FC = () => {
     });
 
 
+    // Fetch material types
+    const { data: materialTypes = [] } = useQuery<MaterialTypeModel[]>({
+        queryKey: ['materialTypes'],
+        queryFn: () => materialService.getAllMaterialTypes(),
+    });
+
+
     // Filter and sort materials
     const filteredMaterials = React.useMemo(() => {
-        const filtered = materials.filter(material => {
+        let filtered = materials.filter(material => {
             // Filter by selected types
             if (selectedTypes.length > 0 && !selectedTypes.includes(material.materialTypeName || '')) {
                 return false;
@@ -46,7 +53,7 @@ const MaterialList: React.FC = () => {
 
         // Sort materials
         filtered.sort((a, b) => {
-            let valueA: string | number, valueB: string | number;
+            let valueA: any, valueB: any;
 
             switch (sortBy) {
                 case 'name':
@@ -150,50 +157,32 @@ const MaterialList: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            {/* Full Screen Hero Banner */}
-            <div className="relative h-screen w-full overflow-hidden">
-                <img
-                    src={materialBanner}
-                    alt="Vật Liệu Bền Vững"
-                    className="w-full h-full object-cover"
+            {/* Hero Banner */}
+            <div className="relative h-64 md:h-80 bg-gradient-to-r from-green-600 to-blue-600">
+                <div
+                    className="absolute inset-0 bg-cover bg-center bg-blend-overlay"
+                    style={{ backgroundImage: `url(${materialBanner})` }}
                 />
                 <div className="absolute inset-0 bg-black bg-opacity-40" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center text-white px-4 max-w-4xl">
-                        <nav className="text-sm breadcrumbs mb-6">
-                            <ul className="flex justify-center space-x-2">
-                                <li><Link to="/" className="hover:text-green-300 transition-colors">Trang chủ</Link></li>
+                <div className="relative container mx-auto px-4 h-full flex items-center">
+                    <div className="text-white">
+                        <nav className="text-sm breadcrumbs mb-4">
+                            <ul className="flex space-x-2">
+                                <li><Link to="/" className="hover:text-green-300">Trang chủ</Link></li>
                                 <li className="opacity-70">›</li>
                                 <li className="opacity-70">Vật liệu</li>
                             </ul>
                         </nav>
-                        <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-wide">
-                            Vật Liệu Vải Bền Vững
-                        </h1>
-                        <p className="text-xl md:text-2xl max-w-3xl mx-auto leading-relaxed">
-                            Khám phá bộ sưu tập vật liệu vải thân thiện với môi trường từ các nhà cung cấp uy tín đến từ nhiều nơi trên thế giới.
+                        <h1 className="text-4xl md:text-5xl font-bold mb-4">Vật Liệu Bền Vững</h1>
+                        <p className="text-lg md:text-xl max-w-2xl">
+                            Khám phá bộ sưu tập vật liệu thân thiện với môi trường từ các nhà cung cấp uy tín
                         </p>
-                        <div className="mt-8">
-                            <button
-                                onClick={() => document.getElementById('materials-section')?.scrollIntoView({ behavior: 'smooth' })}
-                                className="bg-green-600 hover:bg-green-700 text-white font-semibold px-8 py-4 rounded-full text-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
-                            >
-                                Khám Phá Ngay
-                            </button>
-                        </div>
                     </div>
-                </div>
-
-                {/* Scroll indicator */}
-                <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-                    <svg className="w-6 h-6 text-white opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                    </svg>
                 </div>
             </div>
 
 
-            <div id="materials-section" className="container mx-auto px-4 py-8">
+            <div className="container mx-auto px-4 py-8">
                 <div className="flex flex-col lg:flex-row gap-8">
                     {/* Sidebar Filters */}
                     <div className="lg:w-1/4">
@@ -230,7 +219,7 @@ const MaterialList: React.FC = () => {
                                 <div className="space-y-2 max-h-64 overflow-y-auto">
                                     {Object.entries(typeCounts)
                                         .sort(([, a], [, b]) => b - a)
-                                        .map(([typeName]) => (
+                                        .map(([typeName, count]) => (
                                             <label key={typeName} className="flex items-center">
                                                 <input
                                                     type="checkbox"
@@ -239,7 +228,7 @@ const MaterialList: React.FC = () => {
                                                     className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                                                 />
                                                 <span className="ml-2 text-sm text-gray-700 flex-1">{typeName}</span>
-                                                <span className="text-xs text-gray-500"></span>
+                                                <span className="text-xs text-gray-500">({count})</span>
                                             </label>
                                         ))}
                                 </div>

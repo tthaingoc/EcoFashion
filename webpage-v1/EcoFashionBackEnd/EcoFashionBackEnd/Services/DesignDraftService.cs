@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using EcoFashionBackEnd.Common;
 using EcoFashionBackEnd.Common.Payloads.Requests;
 using EcoFashionBackEnd.Common.Payloads.Requests.DessignDraft;
 using EcoFashionBackEnd.Common.Payloads.Responses;
@@ -27,8 +26,7 @@ namespace EcoFashionBackEnd.Services
         private readonly IRepository<ItemTypeSizeRatio, int> _itemTypeSizeRatioRepository;
         private readonly IRepository<ItemType, int> _itemTypeRepository;
         private readonly IRepository<DesignFeature, int> _designFeatureRepository;
-
-
+        private readonly IRepository<MaterialStock, int> _materialStockRepository;
         private readonly CloudService _cloudService;
         private readonly IMapper _mapper;
 
@@ -38,14 +36,14 @@ namespace EcoFashionBackEnd.Services
             IRepository<DesignsMaterial, int> designMaterialRepository,
             IRepository<Material, int> MaterialRepository,
             IRepository<DesignsVariant, int> designVariantRepository,
+            IRepository<DesignerMaterialInventory, int> designerMaterialInventoryRepository,
             IRepository<DraftPart, int> draftPartRepository,
             IRepository<DraftSketch, int> draftSketchRepository,
             IRepository<Image, int> imageRepository,
             IRepository<ItemTypeSizeRatio, int> itemTypeSizeRatioRepository,
             IRepository<ItemType, int> itemTypeRepository,
             IRepository<DesignFeature, int> designFeatureRepository,
-
-
+            IRepository<MaterialStock, int> materialStockRepository,
             CloudService cloudService,
             IMapper mapper)
         {
@@ -54,12 +52,14 @@ namespace EcoFashionBackEnd.Services
             _designMaterialRepository = designMaterialRepository;
             _MaterialRepository = MaterialRepository;
             _designVariantRepository = designVariantRepository;
+            _designerMaterialInventoryRepository = designerMaterialInventoryRepository;
             _draftPartRepository = draftPartRepository;
             _draftSketchRepository = draftSketchRepository;
             _imageRepository = imageRepository;
             _itemTypeSizeRatioRepository = itemTypeSizeRatioRepository;
             _itemTypeRepository = itemTypeRepository;
             _designFeatureRepository = designFeatureRepository;
+            _materialStockRepository = materialStockRepository;
             _cloudService = cloudService;
             _mapper = mapper;
         }
@@ -146,7 +146,7 @@ namespace EcoFashionBackEnd.Services
                     {
                         DesignId = design.DesignId,
                         MaterialId = m.MaterialId,
-                        MeterUsed =(decimal) m.MeterUsed
+                        MeterUsed = (decimal)m.MeterUsed
                     }).ToList();
 
                     await _designMaterialRepository.AddRangeAsync(newMaterials);
@@ -176,16 +176,16 @@ namespace EcoFashionBackEnd.Services
                     DesignId = d.DesignId,
                     Name = d.Name,
                     CreatedAt = d.CreatedAt,
-                    Description= d.Description,
+                    Description = d.Description,
                     UnitPrice = d.UnitPrice,
                     SalePrice = d.SalePrice,
-                    LaborCostPerHour = d.LaborCostPerHour,  
-                    LaborHours  = d.LaborHours,
+                    LaborCostPerHour = d.LaborCostPerHour,
+                    LaborHours = d.LaborHours,
                     RecycledPercentage = d.RecycledPercentage,
                     TotalCarbon = (float)d.CarbonFootprint,
                     TotalWaste = (float)d.WasteDiverted,
                     TotalWater = (float)d.WasteDiverted,
- 
+
                     // Ảnh sketch
                     SketchImageUrls = d.DraftSketches
                         .Select(ds => ds.Image.ImageUrl)
@@ -224,7 +224,7 @@ namespace EcoFashionBackEnd.Services
                 .Where(d => d.DesignId == designId && d.DesignerId == designerId)
                 .Include(d => d.DraftParts)
                     .ThenInclude(dm => dm.Material)
-                .Include(d =>d.DesignFeatures)
+                .Include(d => d.DesignFeatures)
                 .Include(d => d.DesignsMaterials)
                     .ThenInclude(dm => dm.Materials)
                 .Include(d => d.DraftSketches)
@@ -275,9 +275,9 @@ namespace EcoFashionBackEnd.Services
             };
         }
 
-        public async Task UpdateDraftDesignAsync(  DraftDesignUpdateRequest request, Guid designerId)
+        public async Task UpdateDraftDesignAsync(DraftDesignUpdateRequest request, Guid designerId)
         {
-         
+
             // 1. Update Design info
             var design = new Design
             {
@@ -429,7 +429,107 @@ namespace EcoFashionBackEnd.Services
             };
         }
 
+        //public async Task<List<MaterialFabricUsageDetailDto>> CalculateFabricForOneProductAsync(int designId)
+        //{
+        //    // 1. Lấy list material cơ bản từ bảng DesignsMaterials
+        //    var materials = await _designMaterialRepository
+        //        .GetAll()
+        //        .Where(dm => dm.DesignId == designId)
+        //        .Select(dm => new
+        //        {
+        //            dm.MaterialId,
+        //            dm.MeterUsed,
+        //            MaterialName = dm.Materials.Name
+        //        })
+        //        .ToListAsync();
 
+        //    if (!materials.Any())
+        //        return new List<MaterialFabricUsageDetailDto>();
+
+        //    // 2. Lấy DesignerId từ design
+        //    var design = await _designRepository.GetByIdAsync(designId);
+        //    if (design == null) throw new Exception("Design không tồn tại.");
+
+        //    // 3. Lấy tồn kho designer
+        //    var designerStocks = await _designerMaterialInventoryRepository
+        //        .GetAll()
+        //        .Where(inv => inv.DesignerId == design.DesignerId
+        //                   && materials.Select(m => m.MaterialId).Contains(inv.MaterialId))
+        //        .Select(inv => new { inv.MaterialId, inv.AvailableMeters })
+        //        .ToListAsync();
+
+        //    // 4. Lấy tồn kho supplier
+        //    var supplierStocks = await _materialStockRepository
+        //        .GetAll()
+        //        .Where(ms => materials.Select(m => m.MaterialId).Contains(ms.MaterialId))
+        //        .Select(ms => new { ms.MaterialId, ms.AvailableMeters })
+        //        .ToListAsync();
+
+        //    // 5. Gộp dữ liệu
+        //    var result = materials.Select(m => new MaterialFabricUsageDetailDto
+        //    {
+        //        MaterialId = m.MaterialId,
+        //        MaterialName = m.MaterialName,
+        //        BaseMeterUsed = m.MeterUsed,
+        //        DesignerStock = designerStocks.FirstOrDefault(ds => ds.MaterialId == m.MaterialId)?.AvailableMeters ?? 0,
+        //        SupplierStock = supplierStocks.FirstOrDefault(ss => ss.MaterialId == m.MaterialId)?.AvailableMeters ?? 0
+        //    }).ToList();
+
+        //    return result;
+        //}
+
+        public async Task<List<FabricUsageDto>> CalculateFabricForOneProductAsync(Guid designerId, int designId)
+        {
+            var designMaterials = await _designRepository.GetAll()
+                       .Where(d => d.DesignId == designId)
+                       .AsNoTracking()
+                       .Include(d => d.DesignsMaterials)
+                           .ThenInclude(dm => dm.Materials)
+                       .SelectMany(d => d.DesignsMaterials)
+                       .ToListAsync();
+
+            var fabricUsageData = new List<FabricUsageDto>();
+
+            foreach (var dm in designMaterials)
+            {
+                Console.WriteLine($"Checking MaterialId = {dm.MaterialId} for design {designId}");
+
+
+                var designerStock = await _designerMaterialInventoryRepository.GetAll()
+                    .AsNoTracking()
+                    .Include(inv => inv.Warehouse)
+                    .Where(inv => inv.MaterialId == dm.MaterialId
+                               && inv.Warehouse.WarehouseType == "Material"
+                               && inv.Warehouse.DesignerId == designerId)
+                    .Select(inv => (decimal?)inv.Quantity)
+                    .FirstOrDefaultAsync() ?? 0;
+
+
+                var supplierStock = await _materialStockRepository.GetAll()
+                    .AsNoTracking()
+                    .Include(ms => ms.Warehouse)
+                    .Where(ms => ms.MaterialId == dm.MaterialId
+                              && ms.Warehouse != null
+                              && ms.Warehouse.SupplierId != null
+                              && ms.Warehouse.WarehouseType == "Material")
+                    .Select(ms => ms.QuantityOnHand)
+                    .FirstOrDefaultAsync();
+
+
+                fabricUsageData.Add(new FabricUsageDto
+                {
+                    MaterialId = dm.MaterialId,
+                    MaterialName = dm.Materials.Name ?? "Unknown",
+                    RequiredMeters = dm.MeterUsed,
+                    DesignerStock = designerStock,
+                    SupplierStock = supplierStock
+                });
+            }
+
+            return fabricUsageData;
+        }
+
+     
         public async Task<IEnumerable<ItemTypeDto>> GetAllItemTypesAsync()
         {
             return await _itemTypeRepository

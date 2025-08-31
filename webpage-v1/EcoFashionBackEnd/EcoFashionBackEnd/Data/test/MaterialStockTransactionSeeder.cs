@@ -154,7 +154,7 @@ namespace EcoFashionBackEnd.Data.test
                         Unit = "mét",
                         ReferenceType = "Manual",
                         ReferenceId = $"ADJ-FINAL-{random.Next(1000, 9999)}",
-                        Note = "Điều chỉnh cuối để khớp tồn kho hiện tại",
+                        Note = "Điều chỉnh",
                         CreatedAt = endDate.AddDays(-1)
                     });
                 }

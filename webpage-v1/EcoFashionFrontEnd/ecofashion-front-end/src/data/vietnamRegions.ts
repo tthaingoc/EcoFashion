@@ -37,8 +37,8 @@ export const VIETNAM_PROVINCES: Province[] = [
           { code: "00011", name: "Ngọc Khánh" },
           { code: "00012", name: "Kim Mã" },
           { code: "00013", name: "Giảng Võ" },
-          { code: "00014", name: "Thành Công" }
-        ]
+          { code: "00014", name: "Thành Công" },
+        ],
       },
       {
         code: "002",
@@ -61,8 +61,8 @@ export const VIETNAM_PROVINCES: Province[] = [
           { code: "00029", name: "Tràng Tiền" },
           { code: "00030", name: "Trần Hưng Đạo" },
           { code: "00031", name: "Phan Chu Trinh" },
-          { code: "00032", name: "Hàng Bài" }
-        ]
+          { code: "00032", name: "Hàng Bài" },
+        ],
       },
       {
         code: "003",
@@ -85,10 +85,10 @@ export const VIETNAM_PROVINCES: Province[] = [
           { code: "00047", name: "Khâm Thiên" },
           { code: "00048", name: "Phương Mai" },
           { code: "00049", name: "Ngã Tư Sở" },
-          { code: "00050", name: "Khương Thượng" }
-        ]
-      }
-    ]
+          { code: "00050", name: "Khương Thượng" },
+        ],
+      },
+    ],
   },
   {
     code: "79",
@@ -107,8 +107,8 @@ export const VIETNAM_PROVINCES: Province[] = [
           { code: "26752", name: "Cầu Ông Lãnh" },
           { code: "26755", name: "Cô Giang" },
           { code: "26758", name: "Nguyễn Cư Trinh" },
-          { code: "26761", name: "Cầu Kho" }
-        ]
+          { code: "26761", name: "Cầu Kho" },
+        ],
       },
       {
         code: "761",
@@ -123,8 +123,8 @@ export const VIETNAM_PROVINCES: Province[] = [
           { code: "26782", name: "Bình Trưng Tây" },
           { code: "26785", name: "Cát Lái" },
           { code: "26788", name: "Thạnh Mỹ Lợi" },
-          { code: "26791", name: "Thảo Điền" }
-        ]
+          { code: "26791", name: "Thảo Điền" },
+        ],
       },
       {
         code: "769",
@@ -140,10 +140,10 @@ export const VIETNAM_PROVINCES: Province[] = [
           { code: "26878", name: "Hiệp Bình Chánh" },
           { code: "26881", name: "Hiệp Bình Phước" },
           { code: "26884", name: "Tam Bình" },
-          { code: "26887", name: "Tam Phú" }
-        ]
-      }
-    ]
+          { code: "26887", name: "Tam Phú" },
+        ],
+      },
+    ],
   },
   {
     code: "48",
@@ -165,10 +165,10 @@ export const VIETNAM_PROVINCES: Province[] = [
           { code: "20218", name: "Hòa Cường Bắc" },
           { code: "20221", name: "Hòa Cường Nam" },
           { code: "20224", name: "Thanh Bình" },
-          { code: "20225", name: "Thuận Phước" }
-        ]
-      }
-    ]
+          { code: "20225", name: "Thuận Phước" },
+        ],
+      },
+    ],
   },
   {
     code: "92",
@@ -186,10 +186,10 @@ export const VIETNAM_PROVINCES: Province[] = [
           { code: "31132", name: "Tân An" },
           { code: "31135", name: "An Phú" },
           { code: "31138", name: "Xuân Khánh" },
-          { code: "31141", name: "Hưng Lợi" }
-        ]
-      }
-    ]
+          { code: "31141", name: "Hưng Lợi" },
+        ],
+      },
+    ],
   },
   {
     code: "31",
@@ -205,42 +205,48 @@ export const VIETNAM_PROVINCES: Province[] = [
           { code: "11629", name: "Thượng Lý" },
           { code: "11632", name: "Hạ Lý" },
           { code: "11635", name: "Minh Khai" },
-          { code: "11638", name: "Trại Chuối" }
-        ]
-      }
-    ]
-  }
+          { code: "11638", name: "Trại Chuối" },
+        ],
+      },
+    ],
+  },
 ];
 
 // Helper functions
 export const findProvinceByName = (name: string): Province | undefined => {
-  return VIETNAM_PROVINCES.find(province => 
+  return VIETNAM_PROVINCES.find((province) =>
     province.name.toLowerCase().includes(name.toLowerCase())
   );
 };
 
 export const findDistrictsByProvince = (provinceCode: string): District[] => {
-  const province = VIETNAM_PROVINCES.find(p => p.code === provinceCode);
+  const province = VIETNAM_PROVINCES.find((p) => p.code === provinceCode);
   return province?.districts || [];
 };
 
-export const findWardsByDistrict = (provinceCode: string, districtCode: string): Ward[] => {
-  const province = VIETNAM_PROVINCES.find(p => p.code === provinceCode);
-  const district = province?.districts.find(d => d.code === districtCode);
+export const findWardsByDistrict = (
+  provinceCode: string,
+  districtCode: string
+): Ward[] => {
+  const province = VIETNAM_PROVINCES.find((p) => p.code === provinceCode);
+  const district = province?.districts.find((d) => d.code === districtCode);
   return district?.wards || [];
 };
 
 export const getAllProvinces = (): Province[] => VIETNAM_PROVINCES;
 
-export const getProvinceNames = (): string[] => 
-  VIETNAM_PROVINCES.map(province => province.name);
+export const getProvinceNames = (): string[] =>
+  VIETNAM_PROVINCES.map((province) => province.name);
 
 export const getDistrictNames = (provinceCode: string): string[] => {
   const districts = findDistrictsByProvince(provinceCode);
-  return districts.map(district => district.name);
+  return districts.map((district) => district.name);
 };
 
-export const getWardNames = (provinceCode: string, districtCode: string): string[] => {
+export const getWardNames = (
+  provinceCode: string,
+  districtCode: string
+): string[] => {
   const wards = findWardsByDistrict(provinceCode, districtCode);
-  return wards.map(ward => ward.name);
+  return wards.map((ward) => ward.name);
 };

@@ -135,7 +135,47 @@ public class DesignDraftController : ControllerBase
     }
 
 
-    
+    //[HttpGet("{designId}/fabric-usage")]
+    //public async Task<IActionResult> GetFabricUsageForOneProduct(int designId)
+    //{
+    //    try
+    //    {
+    //        var result = await _designDraftService.CalculateFabricForOneProductAsync(designId);
+    //        return Ok(result);
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        return BadRequest(new { message = ex.Message });
+    //    }
+    //}
+
+    [HttpGet("/fabric-usage-each-Design")]
+    public async Task<IActionResult> GetFabricUsage(int designId)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+        {
+            return Unauthorized(ApiResult<object>.Fail("Không xác định được user."));
+        }
+
+        var designerId = await _designerService.GetDesignerIdByUserId(userId);
+        if (designerId == Guid.Empty)
+        {
+            return BadRequest(ApiResult<object>.Fail("Designer không tồn tại."));
+        }
+
+        var usage = await _designDraftService.CalculateFabricForOneProductAsync((Guid)designerId, designId);
+        if (usage == null || !usage.Any())
+        {
+            return NotFound(ApiResult<object>.Fail($"Không tìm thấy thiết kế có ID {designId} hoặc không có vật liệu."));
+        }
+
+        return Ok(ApiResult<List<FabricUsageDto>>.Succeed(usage));
+    }
+
+
+
+
     [HttpGet("types")]
    
     public async Task<IActionResult> GetAllItemTypes()

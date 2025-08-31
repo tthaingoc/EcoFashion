@@ -70,7 +70,8 @@ public static class ServicesExtensions
 
         services.AddDbContext<AppDbContext>(opt =>
         {
-            opt.UseSqlServer(configuration.GetConnectionString("SqlDbConnection"));
+            opt.UseSqlServer(configuration.GetConnectionString("SqlDbConnection")).LogTo(Console.WriteLine, LogLevel.Information) // 👈 log SQL
+           .EnableSensitiveDataLogging();
         });
 
         services.AddScoped(typeof(IRepository<,>), typeof(GenericRepository<,>));
