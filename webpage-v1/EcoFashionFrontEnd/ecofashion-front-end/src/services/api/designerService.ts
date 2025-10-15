@@ -89,6 +89,11 @@ export interface FollowedSupplierResponse {
   portfolioUrl?: string;
 }
 
+export interface MaterialUsage {
+  typeId: number;
+  materialTypeName: string;
+  totalUsedMeters: number;
+}
 /**
  * Designer Service
  * Handles all designer-related API calls
@@ -256,6 +261,16 @@ export class DesignerService {
         `${this.API_BASE}/follow/${supplierId}`
       );
       handleApiResponse(response);
+    } catch (error) {
+      return handleApiError(error);
+    }
+  }
+  static async getMaterialUsage(designerId: string): Promise<MaterialUsage[]> {
+    try {
+      const response = await apiClient.get<BaseApiResponse<MaterialUsage[]>>(
+        `/${this.API_BASE}/designers/${designerId}/material-usage`
+      );
+      return handleApiResponse(response);
     } catch (error) {
       return handleApiError(error);
     }

@@ -135,7 +135,9 @@ const OrderCard: React.FC<{
             <UserIcon className="w-4 h-4 text-gray-400" />
             <span className="text-sm text-gray-600">Khách hàng:</span>
           </div>
-          <span className="text-sm font-medium text-gray-900">{order.userName}</span>
+          <span className="text-sm font-medium text-gray-900">
+            {order.userName || "Khách hàng"}
+          </span>
         </div>
 
         <div className="flex items-center justify-between">
@@ -236,10 +238,7 @@ const SupplierOrders: React.FC<SupplierOrdersProps> = ({ defaultFilter = 'all' }
   const [isUpdating, setIsUpdating] = useState(false);
   const [orders, setOrders] = useState<Order[]>([]);
   const [error, setError] = useState<string | null>(null);
-
-
   const { supplierProfile } = useAuthStore();
-
 
   // Không tách chuỗi nữa: đọc trực tiếp order.personalPhoneNumber nếu có
 
@@ -581,7 +580,9 @@ const SupplierOrders: React.FC<SupplierOrdersProps> = ({ defaultFilter = 'all' }
                       </div>
                       <div>
                         <div className="text-xs text-blue-600 font-medium">Tên khách hàng</div>
-                        <div className="text-sm font-semibold text-blue-900">{selectedOrder.userName || 'Chưa cập nhật'}</div>
+                        <div className="text-sm font-semibold text-blue-900">
+                          {selectedOrder.userName || 'Chưa cập nhật'}
+                        </div>
                       </div>
                     </div>
 

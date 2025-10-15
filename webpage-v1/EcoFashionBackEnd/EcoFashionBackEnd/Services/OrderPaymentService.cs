@@ -1,25 +1,25 @@
 using EcoFashionBackEnd.Entities;
-using Microsoft.EntityFrameworkCore;
+using EcoFashionBackEnd.Repositories;
 using Microsoft.Extensions.Configuration;
 
 namespace EcoFashionBackEnd.Services
 {
     public class OrderPaymentService
     {
-        private readonly AppDbContext _context;
+        private readonly IOrderRepository _orderRepository;
         private readonly WalletService _walletService;
         private readonly IConfiguration _configuration;
         private readonly MaterialInventoryService _materialInventoryService;
         private readonly SettlementService _settlementService;
 
         public OrderPaymentService(
-            AppDbContext context,
+            IOrderRepository orderRepository,
             WalletService walletService,
             IConfiguration configuration,
             MaterialInventoryService materialInventoryService,
             SettlementService settlementService)
         {
-            _context = context;
+            _orderRepository = orderRepository;
             _walletService = walletService;
             _configuration = configuration;
             _materialInventoryService = materialInventoryService;
@@ -28,12 +28,11 @@ namespace EcoFashionBackEnd.Services
 
         public async Task<bool> PayWithWalletAsync(int orderId, int userId)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            using var transaction = await _orderRepository.BeginTransactionAsync();
 
             try
             {
-                var order = await _context.Orders
-                    .FirstOrDefaultAsync(o => o.OrderId == orderId && o.UserId == userId);
+                var order = await _orderRepository.GetOrderByIdAndUserIdAsync(orderId, userId);
 
                 if (order == null || order.PaymentStatus == PaymentStatus.Paid)
                     return false;
@@ -59,7 +58,7 @@ namespace EcoFashionBackEnd.Services
                 order.Status = OrderStatus.processing;
 
                 // Lưu thay đổi trước khi trừ kho
-                await _context.SaveChangesAsync();
+                await _orderRepository.SaveChangesAsync();
 
                 // TRỪ KHO NGAY SAU KHI CHUYỂN SANG PROCESSING
                 await DeductInventoryForOrderAsync(orderId);
@@ -77,13 +76,11 @@ namespace EcoFashionBackEnd.Services
 
         public async Task<bool> PayGroupWithWalletAsync(Guid orderGroupId, int userId)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            using var transaction = await _orderRepository.BeginTransactionAsync();
 
             try
             {
-                var orders = await _context.Orders
-                    .Where(o => o.OrderGroupId == orderGroupId && o.UserId == userId && o.PaymentStatus != PaymentStatus.Paid)
-                    .ToListAsync();
+                var orders = await _orderRepository.GetUnpaidOrdersByGroupIdAndUserIdAsync(orderGroupId, userId);
 
                 if (!orders.Any())
                     return false;
@@ -119,7 +116,7 @@ namespace EcoFashionBackEnd.Services
                 }
 
                 // Lưu thay đổi trước khi trừ kho
-                await _context.SaveChangesAsync();
+                await _orderRepository.SaveChangesAsync();
 
                 // TRỪ KHO CHO TẤT CẢ ORDERS TRONG NHÓM
                 foreach (var order in orders)
@@ -148,28 +145,21 @@ namespace EcoFashionBackEnd.Services
             try
             {
                 // Kiểm tra xem đã trừ kho cho order này chưa (tránh trùng lập)
-                var existingDeduction = await _context.MaterialStockTransactions
-                    .AnyAsync(t => t.ReferenceId == orderId.ToString() &&
-                                  t.TransactionType == MaterialTransactionType.CustomerSale &&
-                                  (t.ReferenceType == "WalletPayment" || t.ReferenceType == "OrderPayment"));
+                var existingDeduction = await _orderRepository.HasMaterialStockTransactionAsync(orderId);
 
                 if (existingDeduction)
                 {
                     Console.WriteLine($"⚠️ Inventory already deducted for OrderId {orderId}. Skipping duplicate deduction.");
-                    return true;
+                    //return true;
                 }
 
                 // Lấy tất cả order details có MaterialId (loại material, không phải design)
-                var materialOrderDetails = await _context.OrderDetails
-                    .Include(od => od.Material)
-                    .ThenInclude(m => m.Supplier)
-                    .Where(od => od.OrderId == orderId && od.Type == OrderDetailType.material && od.MaterialId.HasValue)
-                    .ToListAsync();
+                var materialOrderDetails = await _orderRepository.GetMaterialOrderDetailsWithIncludesAsync(orderId);
 
                 if (!materialOrderDetails.Any())
                 {
                     Console.WriteLine($"No material order details found for OrderId {orderId}. Skipping inventory deduction.");
-                    return true; // Không có material nào cần trừ
+                    //return true; // Không có material nào cần trừ
                 }
 
                 foreach (var orderDetail in materialOrderDetails)
@@ -179,8 +169,7 @@ namespace EcoFashionBackEnd.Services
                     var supplierId = orderDetail.Material!.SupplierId;
 
                     // Tìm warehouse mặc định của supplier (đúng loại kho Material)
-                    var warehouse = await _context.Warehouses
-                        .FirstOrDefaultAsync(w => w.SupplierId == supplierId && w.IsDefault && w.IsActive && w.WarehouseType == "Material");
+                    var warehouse = await _orderRepository.GetDefaultMaterialWarehouseAsync(supplierId);
 
                     if (warehouse == null)
                     {
@@ -205,11 +194,7 @@ namespace EcoFashionBackEnd.Services
                 }
 
                 // Tiếp tục: Trừ kho sản phẩm của Designer (OrderDetail.Type == product)
-                var productOrderDetails = await _context.OrderDetails
-                    .Include(od => od.Product)
-                        .ThenInclude(p => p.Design)
-                    .Where(od => od.OrderId == orderId && od.Type == OrderDetailType.product && od.ProductId.HasValue)
-                    .ToListAsync();
+                var productOrderDetails = await _orderRepository.GetProductOrderDetailsWithIncludesAsync(orderId);
 
                 if (productOrderDetails.Any())
                 {
@@ -220,8 +205,7 @@ namespace EcoFashionBackEnd.Services
                         var designerId = orderDetail.Product!.Design.DesignerId;
 
                         // Tìm warehouse mặc định của designer cho sản phẩm
-                        var productWarehouse = await _context.Warehouses
-                            .FirstOrDefaultAsync(w => w.DesignerId == designerId && w.IsDefault && w.IsActive && w.WarehouseType == "Product");
+                        var productWarehouse = await _orderRepository.GetProductWarehouseAsync(designerId);
 
                         if (productWarehouse == null)
                         {
@@ -229,8 +213,7 @@ namespace EcoFashionBackEnd.Services
                             continue;
                         }
 
-                        var productInventory = await _context.ProductInventories
-                            .FirstOrDefaultAsync(pi => pi.ProductId == productId && pi.WarehouseId == productWarehouse.WarehouseId);
+                        var productInventory = await _orderRepository.GetProductInventoryAsync(productId, productWarehouse.WarehouseId);
 
                         if (productInventory == null)
                         {
@@ -245,7 +228,7 @@ namespace EcoFashionBackEnd.Services
                         productInventory.QuantityAvailable = afterQtyInt;
                         productInventory.LastUpdated = DateTime.UtcNow;
 
-                        await _context.SaveChangesAsync();
+                        await _orderRepository.UpdateProductInventoryAsync(productInventory);
 
                         var productTxn = new ProductInventoryTransaction
                         {
@@ -255,12 +238,11 @@ namespace EcoFashionBackEnd.Services
                             BeforeQty = beforeQtyInt,
                             AfterQty = afterQtyInt,
                             TransactionType = "Export",
-                            TransactionDate = DateTime.UtcNow,
+                            TransactionDate = DateTime.Now,
                             Notes = $"Trừ kho sản phẩm cho đơn hàng #{orderId} - Thanh toán ví thành công"
                         };
 
-                        _context.ProductInventoryTransactions.Add(productTxn);
-                        await _context.SaveChangesAsync();
+                        await _orderRepository.AddProductInventoryTransactionAsync(productTxn);
                     }
                 }
 

@@ -1,14 +1,5 @@
 import React, { useRef, useState } from "react";
-import {
-  Box,
-  Container,
-  Typography,
-  Button,
-  IconButton,
-  Grid,
-  CircularProgress,
-  Chip,
-} from "@mui/material";
+import { Box, Container, Typography, Button, IconButton, CircularProgress, Chip } from "@mui/material";
 import MaterialCard from "./MaterialCard";
 import type { MaterialDetailDto } from "../../schemas/materialSchema";
 import { ArrowBack, ArrowForward } from "@mui/icons-material";
@@ -169,13 +160,23 @@ const MaterialsSection: React.FC<MaterialsSectionProps> = ({
           </IconButton>
         </Box>
       </Box>
-      
+
       {/* Sustainability Stats removed as requested */}
-      
-      <Box sx={{ width: "100%", gap: 2 }}>
-        <Grid container spacing={2}>
+
+      <Box sx={{ width: "100%" }}>
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: {
+              xs: "1fr",
+              sm: "repeat(2, 1fr)",
+              md: "repeat(4, 1fr)",
+            },
+            gap: 2,
+          }}
+        >
           {visibleMaterials.map((material) => (
-            <Grid key={material.materialId} size={3}>
+            <Box key={material.materialId}>
               {type === "special" ? (
                 <div className="card">
                   <MaterialCard
@@ -191,9 +192,9 @@ const MaterialsSection: React.FC<MaterialsSectionProps> = ({
                   onSelect={onMaterialSelect}
                 />
               )}
-            </Grid>
+            </Box>
           ))}
-        </Grid>
+        </Box>
       </Box>
 
       <Box sx={{ textAlign: "center", paddingTop: 2, paddingBottom: 2 }}>

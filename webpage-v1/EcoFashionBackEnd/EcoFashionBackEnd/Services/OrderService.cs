@@ -10,23 +10,20 @@ namespace EcoFashionBackEnd.Services
 {
     public class OrderService
     {
-        private readonly IRepository<Order, int> _orderRepository;
-        private readonly AppDbContext _dbContext;
+        private readonly IOrderRepository _orderRepository;
         private readonly IMapper _mapper;
         private readonly WalletService _walletService;
         private readonly InventoryService _inventoryService;
         private readonly IConfiguration _configuration;
 
         public OrderService(
-            IRepository<Order, int> repository, 
-            AppDbContext dbContext, 
+            IOrderRepository orderRepository,
             IMapper mapper,
             WalletService walletService,
             InventoryService inventoryService,
             IConfiguration configuration)
         {
-            _orderRepository = repository;
-            _dbContext = dbContext;
+            _orderRepository = orderRepository;
             _mapper = mapper;
             _walletService = walletService;
             _inventoryService = inventoryService;
@@ -36,17 +33,18 @@ namespace EcoFashionBackEnd.Services
         private async Task AddMaterialsToDesignerInventoryAsync(int orderId, int buyerUserId)
         {
             // Check if buyer is a designer
-            var designer = await _dbContext.Designers.FirstOrDefaultAsync(d => d.UserId == buyerUserId);
+            var designer = await _orderRepository.GetDesignerByUserIdAsync(buyerUserId);
             if (designer == null)
             {
                 return; // buyer is not a designer
             }
 
             // Get material order details
-            var materialDetails = await _dbContext.OrderDetails
-                .Where(od => od.OrderId == orderId && od.Type == OrderDetailType.material && od.MaterialId.HasValue)
+            var orderDetails = await _orderRepository.GetOrderDetailsByOrderIdAsync(orderId);
+            var materialDetails = orderDetails
+                .Where(od => od.Type == OrderDetailType.material && od.MaterialId.HasValue)
                 .Select(od => new { od.MaterialId, od.Quantity })
-                .ToListAsync();
+                .ToList();
 
             if (!materialDetails.Any())
             {
@@ -58,16 +56,13 @@ namespace EcoFashionBackEnd.Services
                 .GroupBy(x => x.MaterialId!.Value)
                 .ToDictionary(g => g.Key, g => g.Sum(x => (decimal)x.Quantity));
 
-            await _inventoryService.AddDesignerMaterialsAsync(designer.DesignerId, addMap);
+            await _inventoryService.AddDesignerMaterialsAsync(designer.DesignerId, addMap, orderId);
         }
 
         private OrderModel MapOrderToModel(Order order)
         {
             // Get seller info from OrderDetails since orders can have mixed items
-            var orderDetailsInfo = _dbContext.OrderDetails
-                .Where(od => od.OrderId == order.OrderId)
-                .Select(od => new { od.SupplierId, od.DesignerId })
-                .ToList();
+            var orderDetailsInfo = _orderRepository.GetOrderDetailsByOrderIdAsync(order.OrderId).Result;
 
             // Determine primary seller - if mixed, show appropriate info
             var suppliers = orderDetailsInfo.Where(od => od.SupplierId.HasValue).Select(od => od.SupplierId!.Value).Distinct().ToList();
@@ -80,10 +75,7 @@ namespace EcoFashionBackEnd.Services
             if (suppliers.Count == 1 && designers.Count == 0)
             {
                 // Single supplier order
-                var supplier = _dbContext.Suppliers
-                    .Where(s => s.SupplierId == suppliers.First())
-                    .Select(s => new { s.SupplierName, s.AvatarUrl })
-                    .FirstOrDefault();
+                var supplier = _orderRepository.GetSupplierByIdAsync(suppliers.First()).Result;
                 if (supplier != null)
                 {
                     sellerName = supplier.SupplierName;
@@ -94,10 +86,7 @@ namespace EcoFashionBackEnd.Services
             else if (designers.Count == 1 && suppliers.Count == 0)
             {
                 // Single designer order
-                var designer = _dbContext.Designers
-                    .Where(d => d.DesignerId == designers.First())
-                    .Select(d => new { d.DesignerName, d.AvatarUrl })
-                    .FirstOrDefault();
+                var designer = _orderRepository.GetDesignerByIdAsync(designers.First()).Result;
                 if (designer != null)
                 {
                     sellerName = designer.DesignerName;
@@ -121,16 +110,39 @@ namespace EcoFashionBackEnd.Services
                 sellerType = "Designer";
             }
 
-            // Lấy SĐT từ địa chỉ mặc định của user nếu có
+            // Lấy SenderName và SĐT từ UserAddress phù hợp với ShippingAddress
             string? personalPhone = null;
+            string? senderName = null;
             try
             {
-                var defaultAddr = _dbContext.UserAddresses
-                    .AsNoTracking()
-                    .FirstOrDefault(ua => ua.UserId == order.UserId && ua.IsDefault);
-                if (defaultAddr != null)
+                // Tìm UserAddress phù hợp với ShippingAddress
+                var userAddresses = _orderRepository.GetUserAddressesByUserIdAsync(order.UserId).Result;
+
+                UserAddress? matchingAddress = null;
+
+                // Tìm địa chỉ khớp với ShippingAddress
+                foreach (var addr in userAddresses)
                 {
-                    personalPhone = defaultAddr.PersonalPhoneNumber;
+                    var formattedAddr = $"{addr.AddressLine}, {addr.District}, {addr.City}";
+                    if (order.ShippingAddress.Contains(addr.AddressLine ?? "") ||
+                        formattedAddr == order.ShippingAddress ||
+                        order.ShippingAddress.Contains(formattedAddr))
+                    {
+                        matchingAddress = addr;
+                        break;
+                    }
+                }
+
+                // Nếu không tìm thấy, dùng địa chỉ mặc định
+                if (matchingAddress == null)
+                {
+                    matchingAddress = userAddresses.FirstOrDefault(ua => ua.IsDefault);
+                }
+
+                if (matchingAddress != null)
+                {
+                    personalPhone = matchingAddress.PersonalPhoneNumber;
+                    senderName = matchingAddress.SenderName;
                 }
             }
             catch { }
@@ -139,7 +151,7 @@ namespace EcoFashionBackEnd.Services
             {
                 OrderId = order.OrderId,
                 UserId = order.UserId,
-                UserName = order.User?.FullName ?? "Unknown User",
+                UserName = senderName ?? order.User?.FullName ?? "Unknown User",
                 ShippingAddress = order.ShippingAddress,
                 PersonalPhoneNumber = personalPhone,
                 TotalPrice = order.TotalPrice,
@@ -155,31 +167,20 @@ namespace EcoFashionBackEnd.Services
 
         public async Task<IEnumerable<OrderModel>> GetAllOrdersAsync()
         {
-            var orders = await _dbContext.Orders
-                .Include(o => o.User)
-                .ToListAsync();
-            
+            var orders = await _orderRepository.GetAllOrdersWithUserAsync();
             return orders.Select(MapOrderToModel);
         }
 
         public async Task<IEnumerable<OrderModel>> GetOrdersByUserIdAsync(int userId)
         {
-            var orders = await _dbContext.Orders
-                .Where(o => o.UserId == userId)
-                .Include(o => o.User)
-                .ToListAsync();
-            
+            var orders = await _orderRepository.GetOrdersByUserIdWithUserAsync(userId);
             return orders.Select(MapOrderToModel);
         }
 
         public async Task<OrderModel?> GetOrderByIdAsync(int id)
         {
-            var order = await _dbContext.Orders
-                .Include(o => o.User)
-                .FirstOrDefaultAsync(o => o.OrderId == id);
-                
+            var order = await _orderRepository.GetOrderByIdWithUserAsync(id);
             if (order == null) return null;
-            
             return MapOrderToModel(order);
         }
 
@@ -195,13 +196,13 @@ namespace EcoFashionBackEnd.Services
             order.Status = OrderStatus.pending;
             order.OrderDate = DateTime.UtcNow;
             await _orderRepository.AddAsync(order);
-            await _dbContext.SaveChangesAsync();
+            await _orderRepository.SaveChangesAsync();
             return order.OrderId;
         }
 
         public async Task<bool> UpdateOrderAsync(int orderId, UpdateOrderRequest request)
         {
-            var order = await _dbContext.Orders.FindAsync(orderId);
+            var order = await _orderRepository.GetOrderByIdAsync(orderId);
             if (order == null) return false;
 
             if (!string.IsNullOrWhiteSpace(request.ShippingAddress))
@@ -213,24 +214,24 @@ namespace EcoFashionBackEnd.Services
             if (request.Status.HasValue)
                 order.Status = request.Status.Value;
 
-            await _dbContext.SaveChangesAsync();
+            await _orderRepository.SaveChangesAsync();
             return true;
         }
 
         public async Task<bool> DeleteOrderAsync(int id)
         {
             var result = _orderRepository.Remove(id);
-            await _dbContext.SaveChangesAsync();
+            await _orderRepository.SaveChangesAsync();
             return result != null;
         }
 
         public async Task<bool> UpdateFulfillmentStatusAsync(int orderId, FulfillmentStatus fulfillmentStatus)
         {
-            var order = await _dbContext.Orders.FindAsync(orderId);
+            var order = await _orderRepository.GetOrderByIdAsync(orderId);
             if (order == null) return false;
 
             order.FulfillmentStatus = fulfillmentStatus;
-            
+
             // Update main status based on fulfillment status
             switch (fulfillmentStatus)
             {
@@ -252,7 +253,7 @@ namespace EcoFashionBackEnd.Services
                     break;
             }
 
-            await _dbContext.SaveChangesAsync();
+            await _orderRepository.SaveChangesAsync();
             return true;
         }
 
@@ -261,48 +262,41 @@ namespace EcoFashionBackEnd.Services
         public async Task<IEnumerable<OrderModel>> GetOrdersBySellerIdAsync(Guid sellerId)
         {
             // Since we removed sellerId, we need to find orders through OrderDetails
-            var orderIds = await _dbContext.OrderDetails
-                .Where(od => od.SupplierId == sellerId || od.DesignerId == sellerId)
-                .Select(od => od.OrderId)
-                .Distinct()
-                .ToListAsync();
+            var orderIds = await _orderRepository.GetOrderIdsBySellerIdAsync(sellerId);
 
-            var orders = await _dbContext.Orders
-                .Where(o => orderIds.Contains(o.OrderId) && o.PaymentStatus == PaymentStatus.Paid)
-                .Include(o => o.User)
-                .OrderByDescending(o => o.OrderDate)
-                .ToListAsync();
+            var orders = await _orderRepository.GetOrdersByIdsWithUserAsync(orderIds);
+            var paidOrders = orders.Where(o => o.PaymentStatus == PaymentStatus.Paid).ToList();
 
-            return orders.Select(MapOrderToModel);
+            return paidOrders.Select(MapOrderToModel);
         }
 
         // Mark order as shipped
         public async Task<bool> MarkOrderShippedAsync(int orderId, ShipOrderRequest request)
         {
-            var order = await _dbContext.Orders.FindAsync(orderId);
+            var order = await _orderRepository.GetOrderByIdAsync(orderId);
             if (order == null || order.PaymentStatus != PaymentStatus.Paid) return false;
 
             order.FulfillmentStatus = FulfillmentStatus.Shipped;
             order.Status = OrderStatus.shipped;
-            
-            await _dbContext.SaveChangesAsync();
+
+            await _orderRepository.SaveChangesAsync();
             return true;
         }
 
         // Mark order as delivered and trigger settlement
         public async Task<bool> MarkOrderDeliveredAsync(int orderId)
         {
-            var order = await _dbContext.Orders.FindAsync(orderId);
+            var order = await _orderRepository.GetOrderByIdAsync(orderId);
             if (order == null || order.PaymentStatus != PaymentStatus.Paid) return false;
 
             order.FulfillmentStatus = FulfillmentStatus.Delivered;
             order.Status = OrderStatus.delivered;
-            
+
             // Process settlement (90% to seller, 10% platform commission)
             await ProcessSettlementAsync(order);
             await AddMaterialsToDesignerInventoryAsync(order.OrderId, order.UserId);
-            
-            await _dbContext.SaveChangesAsync();
+
+            await _orderRepository.SaveChangesAsync();
             return true;
         }
 
@@ -336,14 +330,11 @@ namespace EcoFashionBackEnd.Services
                         LastUpdatedAt = DateTime.UtcNow,
                         Status = WalletStatus.Active
                     };
-                    _dbContext.Wallets.Add(adminWallet);
-                    await _dbContext.SaveChangesAsync();
+                    await _orderRepository.AddWalletAsync(adminWallet);
                 }
 
                 // Process settlements for each seller in the order
-                var orderDetails = await _dbContext.OrderDetails
-                    .Where(od => od.OrderId == order.OrderId)
-                    .ToListAsync();
+                var orderDetails = await _orderRepository.GetOrderDetailsByOrderIdAsync(order.OrderId);
 
                 var sellerSettlements = new Dictionary<int, decimal>();
 
@@ -355,14 +346,12 @@ namespace EcoFashionBackEnd.Services
                     int? sellerUserId = null;
                     if (detail.SupplierId.HasValue)
                     {
-                        var supplier = await _dbContext.Suppliers
-                            .FirstOrDefaultAsync(s => s.SupplierId == detail.SupplierId);
+                        var supplier = await _orderRepository.GetSupplierByIdAsync(detail.SupplierId.Value);
                         sellerUserId = supplier?.UserId;
                     }
                     else if (detail.DesignerId.HasValue)
                     {
-                        var designer = await _dbContext.Designers
-                            .FirstOrDefaultAsync(d => d.DesignerId == detail.DesignerId);
+                        var designer = await _orderRepository.GetDesignerByIdAsync(detail.DesignerId.Value);
                         sellerUserId = designer?.UserId;
                     }
 
@@ -394,8 +383,7 @@ namespace EcoFashionBackEnd.Services
                             LastUpdatedAt = DateTime.UtcNow,
                             Status = WalletStatus.Active
                         };
-                        _dbContext.Wallets.Add(sellerWallet);
-                        await _dbContext.SaveChangesAsync();
+                        await _orderRepository.AddWalletAsync(sellerWallet);
                     }
 
                     var amountDouble = (double)amount;
@@ -409,7 +397,7 @@ namespace EcoFashionBackEnd.Services
                         // Deduct from admin wallet
                         adminWallet.Balance -= amountDouble;
                         adminWallet.LastUpdatedAt = DateTime.UtcNow;
-                        
+
                         // Add to seller wallet
                         sellerWallet.Balance += amountDouble;
                         sellerWallet.LastUpdatedAt = DateTime.UtcNow;
@@ -441,8 +429,8 @@ namespace EcoFashionBackEnd.Services
                             CreatedAt = DateTime.UtcNow
                         };
 
-                        _dbContext.WalletTransactions.Add(adminTransaction);
-                        _dbContext.WalletTransactions.Add(sellerTransaction);
+                        await _orderRepository.AddWalletTransactionAsync(adminTransaction);
+                        await _orderRepository.AddWalletTransactionAsync(sellerTransaction);
                     }
                 }
             }

@@ -454,18 +454,16 @@ const MaterialCard: React.FC<MaterialCardProps> = ({
                 {material.name || "Unnamed Material"}
               </Typography>
               {/* Rating */}
-              {material.supplier?.rating && (
-                <Box display="flex" alignItems="center">
-                  <Rating
-                    value={material.supplier.rating}
-                    readOnly
-                    size="small"
-                  />
-                  <Typography variant="body2" ml={1}>
-                    ({material.supplier.reviewCount || 0})
-                  </Typography>
-                </Box>
-              )}
+              <Box display="flex" alignItems="center">
+                <Rating
+                  value={material.supplier?.rating || 5}
+                  readOnly
+                  size="small"
+                />
+                <Typography variant="body2" ml={1}>
+                  ({material.supplier?.reviewCount || 0})
+                </Typography>
+              </Box>
               {/* Price */}
               <Typography
                 variant="h5"
@@ -495,25 +493,22 @@ const MaterialCard: React.FC<MaterialCardProps> = ({
                   icon={<LocalShipping sx={{ fontSize: 16 }} />}
                 />
               </Box>
-              {/* Sustainability highlights */}
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mt: 1 }}>
-                {material.sustainabilityCriteria && material.sustainabilityCriteria.length > 0 && (
-                  <Chip
-                    size="small"
-                    label={`${material.sustainabilityCriteria.length} Criteria`}
-                    variant="outlined"
-                    sx={{ fontSize: "0.6rem", height: "20px" }}
-                  />
-                )}
-                {material.benchmarks && material.benchmarks.length > 0 && (
-                  <Chip
-                    size="small"
-                    label={`${material.benchmarks.length} Benchmarks`}
-                    variant="outlined"
-                    sx={{ fontSize: "0.6rem", height: "20px" }}
-                  />
-                )}
-              </Box>
+{/* Sustainability highlights */}
+<Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mt: 1 }}>
+               <Chip
+                 size="small"
+                 label="5 Criteria"
+                 variant="outlined"
+                 sx={{ fontSize: "0.6rem", height: "20px" }}
+               />
+               <Chip
+                 size="small"
+                 label="5 Benchmarks"
+                 variant="outlined"
+                 sx={{ fontSize: "0.6rem", height: "20px" }}
+               />
+             </Box>
+
             </Box>
           </Box>
         </CardContent>

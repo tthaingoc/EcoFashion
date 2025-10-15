@@ -6,7 +6,6 @@ function safeImageUrl(
   return typeof url === "string" && url.trim() ? url : fallback;
 }
 import {
-  AppBar,
   Box,
   Button,
   Grid,
@@ -15,22 +14,12 @@ import {
   ListItem,
   List,
   Container,
-  IconButton,
-  Card,
-  Chip,
-  CardMedia,
-  CardContent,
-  Rating,
-  Select,
-  MenuItem,
-  Link,
   InputBase,
   Divider,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 //Image
 import banner from "../assets/pictures/homepage/banner.jpg";
-import post from "../assets/pictures/homepage/product-post.png";
 import fashion from "../assets/pictures/homepage/fashion.png";
 import material from "../assets/pictures/homepage/material.png";
 import information from "../assets/pictures/homepage/information.png";
@@ -43,12 +32,19 @@ import { toast } from "react-toastify";
 import { AddToCart, EcoIcon, FavoriteBorderIcon } from "../assets/icons/icon";
 import { useEffect, useState } from "react";
 import SearchIcon from "@mui/icons-material/Search";
+import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
+import { Fab } from "@mui/material";
 //Card
 
 import FashionsSection from "../components/fashion/FashionsSection";
 import { useNavigate } from "react-router-dom";
 import useMaterial from "../hooks/useMaterial";
 import MaterialsSection from "../components/materials/MaterialsSection";
+import {
+  DesignerService,
+  SupplierService,
+  SupplierSummary,
+} from "../services/api";
 
 const StyledInput = styled(InputBase)({
   borderRadius: 20,
@@ -57,6 +53,19 @@ const StyledInput = styled(InputBase)({
   flex: 1,
 });
 
+type DesignerSummaryExtra = {
+  designerId: string;
+  designerName?: string;
+  avatarUrl?: string;
+  bio?: string;
+  bannerUrl?: string;
+  rating?: number;
+  reviewCount?: number;
+  createdAt: string;
+  taxNumber?: string;
+  identificationPictureOwner?: string;
+};
+
 export default function Homepage() {
   const { user } = useAuthStore();
   const navigate = useNavigate();
@@ -64,13 +73,14 @@ export default function Homepage() {
   // Materials Data using API
   const {
     materials,
-    filteredMaterials,
     loading: materialsLoading,
     error: materialsError,
   } = useMaterial();
 
   //Design Data
   const [designs, setDesigns] = useState<Design[]>([]);
+  const [designers, setDesigners] = useState<DesignerSummaryExtra[]>([]);
+  const [suppliers, setSuppliers] = useState<SupplierSummary[]>([]);
   //Loading
   const [loading, setLoading] = useState(true);
   //Error
@@ -81,6 +91,21 @@ export default function Homepage() {
   const pageSize = 12;
   const [page, setPage] = useState(currentPage);
 
+  // Scroll to top state
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 300);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   useEffect(() => {
     loadDesigners();
   }, []);
@@ -89,11 +114,24 @@ export default function Homepage() {
     try {
       setLoading(true);
       setError(null);
-      const data = await DesignService.getAllDesignPagination(
+
+      const desginData = await DesignService.getAllDesignPagination(
         currentPage,
         pageSize
       );
-      setDesigns(data);
+      setDesigns(desginData);
+
+      const designerData = await DesignerService.getPublicDesigners(
+        currentPage,
+        pageSize
+      );
+      setDesigners(designerData);
+
+      const supplierData = await SupplierService.getPublicSuppliers(
+        currentPage,
+        pageSize
+      );
+      setSuppliers(supplierData);
     } catch (error: any) {
       const errorMessage =
         error.message || "Không thể tải danh sách nhà thiết kế";
@@ -126,50 +164,73 @@ export default function Homepage() {
 
   return (
     <Box>
-      {/* Banner */}
-      <Box
-        sx={{
-          height: "100vh",
-          transition: "height 0.5s ease",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <img
-          src={banner}
-          alt="EcoFashion Banner"
-          style={{ width: "100%", height: "580", objectFit: "cover" }}
-        />
+      <Grid sx={{ display: { xs: "none", md: "block" } }}>
+        {/* Banner */}
         <Box
           sx={{
-            position: "absolute",
-            textAlign: "center",
-            color: "white",
-            width: "100%",
-            marginBottom: "100px",
+            height: "100vh",
+            transition: "height 0.5s ease",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
           }}
         >
+          <img
+            src={banner}
+            alt="EcoFashion Banner"
+            style={{ width: "100%", height: "580", objectFit: "cover" }}
+          />
           <Box
             sx={{
-              width: "60%",
-              backgroundColor: "rgba(145, 136, 136, 0.42)",
-              margin: "auto",
-              padding: 3,
+              position: "absolute",
+              textAlign: "center",
+              color: "white",
+              width: "100%",
+              marginBottom: { xs: "50px", md: "100px" },
+              px: { xs: 1, sm: 2, md: 0 },
             }}
           >
-            <Typography variant="h2" fontWeight="bold" gutterBottom>
-              Kiến Tạo Phong Cách, Gắn Kết Cộng Đồng, Hướng Tới{" "}
-              <span style={{ color: "#32e087" }}>Thời Trang Bền Vững</span>
+            <Box
+              sx={{
+                width: { xs: "95%", sm: "90%", md: "80%" },
+                backgroundColor: "rgba(145, 136, 136, 0.42)",
+                margin: "auto",
+                padding: { xs: 2, sm: 2.5, md: 3 },
+                borderRadius: { xs: 1, md: 0 },
+              }}
+            >
+              <Typography
+                variant="h2"
+                sx={{
+                  fontFamily: "'Allura', cursive",
+                  fontWeight: 400,
+                  fontSize: {
+                    xs: "1.8rem",
+                    sm: "2.5rem",
+                    md: "3.5rem",
+                    lg: "5rem",
+                  },
+                  lineHeight: { xs: 1.2, md: 1.3 },
+                }}
+              >
+                Kiến Tạo Phong Cách, Gắn Kết Cộng Đồng, Hướng Tới{" "}
+                <span style={{ color: "#32e087" }}>Thời Trang Bền Vững</span>
+              </Typography>
+            </Box>
+            <Typography
+              sx={{
+                width: { xs: "90%", sm: "80%", md: "60%" },
+                margin: "auto",
+                fontSize: { xs: "16px", sm: "20px", md: "25px" },
+                mb: { xs: 5, md: 10 },
+                mt: { xs: 2, md: 0 },
+                px: { xs: 1, md: 0 },
+              }}
+            >
+              Cùng Tham Gia Thay Đổi Ngành Thời Trang Với Vật Liệu Tái Chế Và
+              Thiết Kế Thân Thiện Với Môi Trường
             </Typography>
-          </Box>
-          <Typography
-            sx={{ width: "60% ", margin: "auto", fontSize: "25px", mb: 10 }}
-          >
-            Cùng Tham Gia Thay Đổi Ngành Thời Trang Với Vật Liệu Tái Chế Và
-            Thiết Kế Thân Thiện Với Môi Trường
-          </Typography>
-          {/* <Box
+            {/* <Box
             sx={{
               display: "flex",
               alignItems: "center",
@@ -219,197 +280,212 @@ export default function Homepage() {
               <SearchIcon sx={{ color: "black", margin: "auto" }} />
             </Box>
           </Box> */}
-          {user ? (
-            <Stack
-              direction="row"
-              spacing={2}
-              justifyContent="center"
-              width={"50%"}
-              margin={"auto"}
-            >
-              <Button
-                variant="outlined"
-                sx={{
-                  color: "white",
-                  borderColor: "white",
-                  display: "flex",
-                  alignItems: "center",
-                  textAlign: "center",
-                  justifyContent: "center",
-                  width: "50%",
-                  marginTop: "30px",
-                }}
-                href="/fashion"
+            {user ? (
+              <Stack
+                direction={{ xs: "column", sm: "row" }}
+                spacing={2}
+                justifyContent="center"
+                width={{ xs: "90%", sm: "80%", md: "50%" }}
+                margin={"auto"}
+                sx={{ px: { xs: 2, md: 0 } }}
               >
-                <Typography
+                <Button
+                  variant="outlined"
                   sx={{
                     color: "white",
-                    fontSize: "20px",
-                    fontWeight: "bold",
-                  }}
-                >
-                  THỜI TRANG
-                </Typography>
-              </Button>
-              <Button
-                variant="outlined"
-                sx={{
-                  color: "white",
-                  borderColor: "white",
-                  display: "flex",
-                  alignItems: "center",
-                  textAlign: "center",
-                  justifyContent: "center",
-                  width: "50%",
-                }}
-              >
-                <Typography
-                  sx={{
-                    color: "white",
-                    fontSize: "20px",
-                    fontWeight: "bold",
-                  }}
-                >
-                  VẬT LIỆU
-                </Typography>
-              </Button>
-            </Stack>
-          ) : (
-            <Stack direction="row" spacing={2} justifyContent="center">
-              <Button
-                variant="contained"
-                size="large"
-                sx={{
-                  bgcolor: "rgba(255,255,255,0.2)",
-                  "&:hover": { bgcolor: "rgba(255,255,255,0.3)" },
-                  px: 4,
-                  py: 1.5,
-                }}
-                href="/businessinfor?tab=designer"
-              >
-                <Typography
-                  sx={{
-                    color: "white",
-                    fontSize: "20px",
-                    fontWeight: "bold",
-                  }}
-                >
-                  Nhà Thiết Kế
-                </Typography>
-              </Button>
-              <Button
-                variant="contained"
-                size="large"
-                sx={{
-                  bgcolor: "rgba(255,255,255,0.2)",
-                  "&:hover": { bgcolor: "rgba(255,255,255,0.3)" },
-                  px: 4,
-                  py: 1.5,
-                }}
-                href="/businessinfor?tab=supplier"
-              >
-                <Typography
-                  sx={{
-                    color: "white",
-                    fontSize: "20px",
-                    fontWeight: "bold",
-                  }}
-                >
-                  Nhà Cung Cấp
-                </Typography>
-              </Button>
-
-              <Button
-                variant="outlined"
-                sx={{
-                  color: "white",
-                  borderColor: "white",
-                  display: "flex",
-                  alignItems: "center",
-                  textAlign: "center",
-                  justifyContent: "center",
-                }}
-                href="/signup"
-              >
-                <Box
-                  sx={{
+                    borderColor: "white",
                     display: "flex",
-                    width: "100%",
-                    margin: "0 auto",
                     alignItems: "center",
-                    padding: "10px 20px",
-                    fontSize: "20px",
-                    fontWeight: "bold",
+                    textAlign: "center",
+                    justifyContent: "center",
+                    width: { xs: "100%", sm: "50%" },
+                    marginTop: { xs: "20px", md: "30px" },
+                    py: { xs: 1.5, md: 1 },
                   }}
+                  href="/fashion"
                 >
-                  Đăng ký
-                </Box>
-              </Button>
-            </Stack>
-          )}
+                  <Typography
+                    sx={{
+                      color: "white",
+                      fontSize: "20px",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    THỜI TRANG
+                  </Typography>
+                </Button>
+                <Button
+                  variant="outlined"
+                  sx={{
+                    color: "white",
+                    borderColor: "white",
+                    display: "flex",
+                    alignItems: "center",
+                    textAlign: "center",
+                    justifyContent: "center",
+                    width: "50%",
+                  }}
+                  href="/materials"
+                >
+                  <Typography
+                    sx={{
+                      color: "white",
+                      fontSize: "20px",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    VẬT LIỆU
+                  </Typography>
+                </Button>
+              </Stack>
+            ) : (
+              <Stack direction="row" spacing={2} justifyContent="center">
+                <Button
+                  variant="contained"
+                  size="large"
+                  sx={{
+                    bgcolor: "rgba(255,255,255,0.2)",
+                    "&:hover": { bgcolor: "rgba(255,255,255,0.3)" },
+                    px: 4,
+                    py: 1.5,
+                  }}
+                  href="/businessinfor?tab=designer"
+                >
+                  <Typography
+                    sx={{
+                      color: "white",
+                      fontSize: "20px",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    Nhà Thiết Kế
+                  </Typography>
+                </Button>
+                <Button
+                  variant="contained"
+                  size="large"
+                  sx={{
+                    bgcolor: "rgba(255,255,255,0.2)",
+                    "&:hover": { bgcolor: "rgba(255,255,255,0.3)" },
+                    px: 4,
+                    py: 1.5,
+                  }}
+                  href="/businessinfor?tab=supplier"
+                >
+                  <Typography
+                    sx={{
+                      color: "white",
+                      fontSize: "20px",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    Nhà Cung Cấp
+                  </Typography>
+                </Button>
+
+                <Button
+                  variant="outlined"
+                  sx={{
+                    color: "white",
+                    borderColor: "white",
+                    display: "flex",
+                    alignItems: "center",
+                    textAlign: "center",
+                    justifyContent: "center",
+                  }}
+                  href="/signup"
+                >
+                  <Box
+                    sx={{
+                      display: "flex",
+                      width: "100%",
+                      margin: "0 auto",
+                      alignItems: "center",
+                      padding: "10px 20px",
+                      fontSize: "20px",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    Đăng ký
+                  </Box>
+                </Button>
+              </Stack>
+            )}
+          </Box>
         </Box>
-      </Box>
-      {/* Thông Tin Bền Vững */}
-      <Box
-        sx={{
-          padding: "40px 10px",
-          position: "relative",
-          backgroundImage: `
+        {/* Thông Tin Bền Vững */}
+        <Box
+          sx={{
+            padding: "40px 10px",
+            position: "relative",
+            backgroundImage: `
             linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.85)),
             url('${sustain}')
           `,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-        }}
-      >
-        <Grid
-          container
-          spacing={3}
-          justifyContent="space-between"
-          alignItems="center"
-          sx={{ maxWidth: 1200, margin: "0 auto" }}
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundRepeat: "no-repeat",
+          }}
         >
-          {[
-            { quantity: materials.length, unit: "+", label: "Vật Liệu" },
-            { quantity: designs.length, unit: "+", label: "Thiết Kế" },
-            { quantity: 1, unit: "+", label: "Nhà Thiết Kế" },
-            { quantity: 1, unit: "+", label: "Nhà Cung Cấp" },
-          ].map((item, index) => (
-            <Grid key={index} textAlign="center">
-              <Typography
-                variant="h3"
-                component="div"
-                sx={{ color: "rgba(52, 168, 83, 1)", fontWeight: "bold" }}
-              >
-                <CountUp end={item.quantity} />
+          <Grid
+            container
+            spacing={3}
+            justifyContent="space-between"
+            alignItems="center"
+            sx={{ maxWidth: 1200, margin: "0 auto" }}
+          >
+            {[
+              { quantity: materials.length || 0, unit: "+", label: "Vật Liệu" },
+              { quantity: designs.length || 0, unit: "+", label: "Thiết Kế" },
+              {
+                quantity: designers.length || 0,
+                unit: "+",
+                label: "Nhà Thiết Kế",
+              },
+              {
+                quantity: suppliers.length || 0,
+                unit: "+",
+                label: "Nhà Cung Cấp",
+              },
+            ].map((item, index) => (
+              <Grid key={index} textAlign="center">
                 <Typography
-                  component="span"
-                  sx={{ fontSize: "2.5rem", marginLeft: "4px" }}
+                  variant="h3"
+                  component="div"
+                  sx={{ color: "rgba(52, 168, 83, 1)", fontWeight: "bold" }}
                 >
-                  {item.unit}
+                  <CountUp end={item.quantity} />
+                  <Typography
+                    component="span"
+                    sx={{ fontSize: "2.5rem", marginLeft: "4px" }}
+                  >
+                    {item.unit}
+                  </Typography>
                 </Typography>
-              </Typography>
-              <Typography
-                variant="h5"
-                component="div"
-                sx={{ fontWeight: "bold", fontSize: "30px", color: "black" }}
-              >
-                {item.label}
-              </Typography>
-            </Grid>
-          ))}
-        </Grid>
-      </Box>
+                <Typography
+                  variant="h5"
+                  component="div"
+                  sx={{ fontWeight: "bold", fontSize: "30px", color: "black" }}
+                >
+                  {item.label}
+                </Typography>
+              </Grid>
+            ))}
+          </Grid>
+        </Box>
+      </Grid>
+
       {/* Truy Cập Nhanh  */}
       <Grid sx={{ maxWidth: 1200, margin: "30px auto" }}>
         <Box
           sx={{
             display: "flex",
-            justifyContent: "space-between",
+            flexDirection: { xs: "column", md: "row" },
+            justifyContent: { xs: "center", md: "space-between" },
             width: "100%",
             margin: "30px auto",
-            gap: 5,
+            gap: { xs: 4, md: 5 },
+            px: { xs: 2, md: 0 },
           }}
         >
           <Box>
@@ -419,7 +495,7 @@ export default function Homepage() {
               sx={{ width: "100%", height: "60%" }}
             />
             <Typography variant="h5" fontWeight="bold" sx={{ mt: 2 }}>
-              Khám phá xu hướng thời trang hiện nay
+              Khám phá xu hướng thời trang bền vững hiện nay
             </Typography>
             <Stack direction="row" alignItems="center" sx={{ mt: 1 }}>
               <Button
@@ -451,7 +527,7 @@ export default function Homepage() {
               sx={{ width: "100%", height: "60%" }}
             />
             <Typography variant="h5" fontWeight="bold" sx={{ mt: 2 }}>
-              Lựa chọn chất liệu tái chế chất lượng tuyệt vời
+              Lựa chọn vật liệu bền vững với chất lượng tuyệt vời
             </Typography>
             <Stack direction="row" alignItems="center" sx={{ mt: 1 }}>
               <Button
@@ -462,6 +538,7 @@ export default function Homepage() {
                   color: "rgba(52,168,83,1)",
                   textTransform: "none",
                 }}
+                onClick={() => navigate("/materials")}
               >
                 Khám Phá
                 <svg
@@ -476,6 +553,7 @@ export default function Homepage() {
           </Box>
         </Box>
       </Grid>
+
       {/* Bán Hàng */}
       <Box
         sx={{
@@ -519,7 +597,7 @@ export default function Homepage() {
             navigate(`/material/${material.materialId}`);
           }}
           onViewMore={() => {
-            navigate("/materials")
+            navigate("/materials");
           }}
         />
       </Box>
@@ -661,6 +739,31 @@ export default function Homepage() {
           </Stack>
         </Container>
       </Box>
+
+      {/* Scroll to Top Button */}
+      {showScrollTop && (
+        <Fab
+          size="medium"
+          onClick={scrollToTop}
+          sx={{
+            position: "fixed",
+            bottom: 32,
+            right: 32,
+            zIndex: 1000,
+            boxShadow: 3,
+            backgroundColor: "#4CAF50", // Green color for Eco theme
+            color: "white",
+            borderRadius: 2, // Square shape instead of circle
+            "&:hover": {
+              backgroundColor: "#45a049",
+              transform: "scale(1.1)",
+              transition: "transform 0.2s",
+            },
+          }}
+        >
+          <KeyboardArrowUpIcon />
+        </Fab>
+      )}
     </Box>
   );
 }

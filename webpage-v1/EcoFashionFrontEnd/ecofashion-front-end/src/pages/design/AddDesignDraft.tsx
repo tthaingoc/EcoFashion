@@ -7,6 +7,7 @@ import {
   Card,
   CardContent,
   Chip,
+  CircularProgress,
   colors,
   Divider,
   FormControl,
@@ -68,7 +69,7 @@ import FileUpload from "../../components/FileUpload";
 import { useNavigate } from "react-router-dom";
 
 export default function AddDesignDraft() {
-  const [laborCost, setLaborCost] = useState(16000);
+  const [laborCost, setLaborCost] = useState<number>(16000);
   const [laborHour, setLaborHour] = useState(1);
   const [tabIndex, setTabIndex] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -443,7 +444,7 @@ export default function AddDesignDraft() {
         (sum, item) => sum + item.totalCarbon,
         0
       ) * 10
-    ) / 10;
+    ) / 10 || 0;
 
   // Step 5.2: Calc Sum of TotalWater
   const totalWaterAll =
@@ -452,7 +453,7 @@ export default function AddDesignDraft() {
         (sum, item) => sum + item.totalWater,
         0
       ) * 10
-    ) / 10;
+    ) / 10 || 0;
 
   // Step 5.3: Calc Sum of TotalWaste
   const totalWasteAll =
@@ -461,14 +462,15 @@ export default function AddDesignDraft() {
         (sum, item) => sum + item.totalWaste,
         0
       ) * 10
-    ) / 10;
+    ) / 10 || 0;
   // Step 5.4: Calc Sum of sustainabilityScore
-  const sustainabilityScoreAll = Math.round(
-    Object.values(groupedByMaterial).reduce(
-      (sum, item) => sum + item.sustainabilityScore,
-      0
-    )
-  );
+  const sustainabilityScoreAll =
+    Math.round(
+      Object.values(groupedByMaterial).reduce(
+        (sum, item) => sum + item.sustainabilityScore,
+        0
+      )
+    ) || 0;
 
   enum MaterialStatus {
     Main = 0,
@@ -567,8 +569,8 @@ export default function AddDesignDraft() {
     const files: File[] = formData.sketchImages || [];
     for (const file of files) {
       const ext = file.name.split(".").pop()?.toLowerCase();
-      if (ext !== "jpg" && ext !== "jpeg") {
-        toast.error("Chỉ chấp nhận file JPG/JPEG");
+      if (ext !== "png" && ext !== "jpeg") {
+        toast.error("Chỉ chấp nhận file PNG/JPEG");
         return;
       }
     }
@@ -627,7 +629,7 @@ export default function AddDesignDraft() {
     try {
       setLoading(true);
       const result = await DesignService.createDesignDraft(payload);
-      toast.success("Gửi đơn thành công!");
+      toast.success("Thiết kế rập thành công!");
       navigate("/designer/dashboard?tab=design");
     } catch (err: any) {
       console.error("❌ Error submitting application:", err);
@@ -704,45 +706,25 @@ export default function AddDesignDraft() {
                 paddingBottom: 2,
               }}
             >
-              <Tooltip title="Coming soon">
-                <Button
-                  variant="outlined"
-                  startIcon={<SaveAltIcon />}
-                  sx={{
-                    color: "black",
-                    borderColor: "black",
-                    textTransform: "none",
-                  }}
-                >
-                  Mẫu
-                </Button>
-              </Tooltip>
               <Button
                 type="submit"
                 variant="outlined"
-                startIcon={<SaveOutlinedIcon />}
+                startIcon={
+                  loading ? (
+                    <CircularProgress size={20} color="inherit" />
+                  ) : (
+                    <SaveOutlinedIcon />
+                  )
+                }
                 sx={{
                   color: "black",
                   borderColor: "black",
                   textTransform: "none",
                 }}
+                disabled={loading}
               >
-                Lưu
+                {loading ? "Đang lưu..." : "Lưu"}
               </Button>
-              <Tooltip title="Coming soon">
-                <Button
-                  variant="contained"
-                  startIcon={<ShareOutlinedIcon sx={{ color: "white" }} />}
-                  sx={{
-                    backgroundColor: "rgba(22, 163, 74, 1)",
-                    color: "white",
-                    borderColor: "rgba(22, 163, 74, 1)",
-                    textTransform: "none",
-                  }}
-                >
-                  Chia Sẻ
-                </Button>
-              </Tooltip>
             </Box>
           </Box>
         </Box>
@@ -872,8 +854,8 @@ export default function AddDesignDraft() {
                           return "Cần thêm hình ảnh";
                         for (const file of files) {
                           const ext = file.name.split(".").pop()?.toLowerCase();
-                          if (ext !== "jpg" && ext !== "jpeg") {
-                            return "Chỉ chấp nhận file JPG/JPEG";
+                          if (ext !== "png" && ext !== "jpeg") {
+                            return "Chỉ chấp nhận file PNG/JPEG";
                           }
                         }
                         return true;
@@ -954,18 +936,14 @@ export default function AddDesignDraft() {
                             const value = e.target.value;
 
                             if (value === "") {
-                              setLaborCost(16000); // nếu để trống thì reset về 16000
+                              setLaborCost(16000); // reset về 16000 khi để trống
                               return;
                             }
 
                             const intValue = parseInt(value, 10);
 
                             if (!isNaN(intValue)) {
-                              if (intValue < 16000) {
-                                setLaborCost(16000); // nếu nhỏ hơn 16000 thì reset về 16000
-                              } else {
-                                setLaborCost(intValue);
-                              }
+                              setLaborCost(intValue);
                             }
                           }}
                           inputProps={{ min: 16000, step: 1 }}
@@ -979,7 +957,6 @@ export default function AddDesignDraft() {
                         type="number"
                         label="Giờ Làm"
                         value={laborHour}
-                        defaultValue={1}
                         onChange={(e) => {
                           const value = e.target.value;
 

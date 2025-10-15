@@ -35,10 +35,11 @@ import {
   Close,
 } from "@mui/icons-material";
 import { materialService } from "../../services/api/materialService";
+import { reviewService, Review } from "../../services/api/reviewService";
 import { useCartStore } from "../../store/cartStore";
 import { toast } from "react-toastify";
 import SustainabilityToolbar from "../../components/materials/SustainabilityToolbar";
-import SustainabilityCompact from "../../components/materials/SustainabilityCompact";
+//import SustainabilityCompact from "../../components/materials/SustainabilityCompact";
 import ProductionInfo from "../../components/materials/ProductionInfo";
 import {
   getSustainabilityColor,
@@ -123,6 +124,11 @@ const MaterialDetailPage: React.FC = () => {
   const [dragging, setDragging] = useState(false);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [lastPos, setLastPos] = useState({ x: 0, y: 0 });
+
+  // Review states
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [averageRating, setAverageRating] = useState<number>(0);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
   // Hover magnifier state
   const imgRef = useRef<HTMLImageElement | null>(null);
   const [hovering, setHovering] = useState(false);
@@ -173,6 +179,24 @@ const MaterialDetailPage: React.FC = () => {
             setRelatedMaterials([]);
           }
         }
+
+        // Fetch reviews for this material
+        try {
+          setReviewsLoading(true);
+          const [reviewsData, avgRating] = await Promise.all([
+            reviewService.getReviews(parseInt(id)),
+            reviewService.getAverageScore(parseInt(id), false),
+          ]);
+          setReviews(reviewsData);
+          setAverageRating(avgRating);
+        } catch (reviewError) {
+          console.error("Error fetching reviews:", reviewError);
+          // Continue without reviews
+          setReviews([]);
+          setAverageRating(0);
+        } finally {
+          setReviewsLoading(false);
+        }
       } catch (err) {
         setError("Không thể tải thông tin nguyên liệu");
         console.error("Error fetching material:", err);
@@ -184,10 +208,10 @@ const MaterialDetailPage: React.FC = () => {
     fetchMaterial();
   }, [id]);
 
-  const getTypeColor = (typeName?: string) => {
-    if (!typeName) return "#9e9e9e";
-    return getMaterialTypeColor(typeName);
-  };
+  // const getTypeColor = (typeName?: string) => {
+  //   if (!typeName) return "#9e9e9e";
+  //   return getMaterialTypeColor(typeName);
+  // };
 
   const getSustainabilityScore = () => {
     if (
@@ -258,13 +282,17 @@ const MaterialDetailPage: React.FC = () => {
     }
 
     setQuantityError("");
-    await addToCart({ materialId: material.materialId || 0, quantity });
-
-    toast.success(
-      `Đã thêm ${quantity} mét ${
-        material.name || "Nguyên liệu"
-      } vào giỏ hàng! 💡 Kiểm tra số lượng trong giỏ hàng.`
-    );
+    try {
+      await addToCart({ materialId: material.materialId || 0, quantity });
+      toast.success(
+        `Đã thêm ${quantity} mét ${
+          material.name || "Nguyên liệu"
+        } vào giỏ hàng! 💡 Kiểm tra số lượng trong giỏ hàng.`
+      );
+    } catch (error) {
+      console.error("Error adding product to cart:", error);
+      toast.error("Không thể thêm sản phẩm vào giỏ hàng. Vui lòng Đăng Nhập!");
+    }
   };
 
   if (loading) {
@@ -641,8 +669,8 @@ const MaterialDetailPage: React.FC = () => {
                 color="text.secondary"
                 sx={{ mb: 2, display: "block" }}
               >
-                📐 Phân loại kích cỡ (ước tính khổ vải 1.4m): 1m ≈ (1 × 1.4m),
-                2m ≈ (2 × 1.4m), 3m ≈ (3 × 1.4m)
+                📐 Phân loại kích cỡ (ước tính khổ vải 1m): 1m ≈ (1 × 1m), 2m ≈
+                (2 × 1m), 3m ≈ (3 × 1m)
               </Typography>
 
               <Box
@@ -675,39 +703,31 @@ const MaterialDetailPage: React.FC = () => {
                 </Alert>
               )}
 
-              <Button
-                variant="contained"
-                color="primary"
-                size="large"
-                startIcon={<ShoppingCart />}
-                onClick={handleAddToCart}
-                disabled={(material.quantityAvailable || 0) === 0}
-                fullWidth
-              >
-                Thêm vào giỏ hàng
-              </Button>
-            </Box>
-
-            {/* Action Buttons */}
-            <Box sx={{ display: "flex", gap: 2 }}>
-              <Button
-                variant="contained"
-                color="secondary"
-                size="large"
-                fullWidth
-                disabled={(material.quantityAvailable || 0) === 0}
-              >
-                Liên hệ nhà cung cấp
-              </Button>
-              <Button
-                variant="outlined"
-                size="large"
-                onClick={() =>
-                  navigate(`/supplier/${material.supplier?.supplierId || 0}`)
-                }
-              >
-                Xem hồ sơ
-              </Button>
+              {/* Action Buttons */}
+              <Box sx={{ display: "flex", gap: 2 }}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  size="large"
+                  startIcon={<ShoppingCart />}
+                  onClick={handleAddToCart}
+                  disabled={(material.quantityAvailable || 0) === 0}
+                  fullWidth
+                >
+                  Thêm vào giỏ hàng
+                </Button>
+                <Button
+                  variant="outlined"
+                  size="large"
+                  onClick={() =>
+                    navigate(
+                      `/explore/supplier/${material.supplier?.supplierId || 0}`
+                    )
+                  }
+                >
+                  Xem hồ sơ
+                </Button>
+              </Box>
             </Box>
           </Box>
         </Box>
@@ -733,99 +753,204 @@ const MaterialDetailPage: React.FC = () => {
 
           {/* Tab Content */}
           <Box sx={{ p: 4 }}>
-            {/* Tab 1: Thông số kỹ thuật */}
+            {/* Tab 1: Thông tin chi tiết và thông số kỹ thuật */}
             {tabIndex === 0 && (
               <Box>
-                <Typography variant="h6" fontWeight="bold" sx={{ mb: 3 }}>
-                  Thông số kỹ thuật
-                </Typography>
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: { xs: "column", md: "row" },
+                    width: "100%",
+                  }}
+                >
+                  {/* Left Column - Description */}
+                  <Box sx={{ flex: 1, pr: { md: 1 } }}>
+                    <Typography variant="h6" fontWeight="bold" sx={{ mb: 3 }}>
+                      Mô tả nguyên liệu
+                    </Typography>
+                    <Card sx={{ p: 3, mb: 3, bgcolor: "#f8f9fa" }}>
+                      {material.description ? (
+                        <Typography
+                          variant="body1"
+                          sx={{
+                            lineHeight: 1.7,
+                            whiteSpace: "pre-wrap",
+                            color: "text.primary",
+                          }}
+                        >
+                          {material.description}
+                        </Typography>
+                      ) : (
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          fontStyle="italic"
+                        >
+                          Chưa có mô tả chi tiết cho nguyên liệu này.
+                        </Typography>
+                      )}
+                    </Card>
 
-                <List>
-                  <ListItem>
-                    <ListItemText
-                      primary="Điểm bền vững tổng hợp"
-                      secondary={`${sustainabilityScore.toFixed(
-                        1
-                      )}% (dựa trên 5 tiêu chí, mỗi tiêu chí 20% trọng số)`}
-                    />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemText
-                      primary="Cách tính điểm"
-                      secondary="Carbon (20%) + Water (20%) + Waste (20%) + Certification (20%) + Transport (20%) = 100%"
-                    />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemText
-                      primary="Số lượng có sẵn"
-                      secondary={`${(
-                        material.quantityAvailable || 0
-                      ).toLocaleString("vi-VN")} mét`}
-                    />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemText
-                      primary="Giá trên đơn vị"
-                      secondary={`${(
-                        material.pricePerUnit || 0
-                      )?.toLocaleString("vi-VN")} ₫/mét`}
-                    />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemText
-                      primary="Tổng giá trị kho"
-                      secondary={`${(
-                        (material.quantityAvailable || 0) *
-                        (material.pricePerUnit || 0)
-                      ).toLocaleString("vi-VN")} ₫`}
-                    />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemText
-                      primary="Ngày tạo"
-                      secondary={
-                        material.createdAt
-                          ? new Date(material.createdAt).toLocaleDateString(
-                              "vi-VN"
-                            )
-                          : "Chưa có thông tin"
-                      }
-                    />
-                  </ListItem>
-
-                  {/* Thông tin sản xuất */}
-                  {(material.productionCountry ||
-                    material.productionRegion ||
-                    material.manufacturingProcess) && (
-                    <ListItem
-                      sx={{ flexDirection: "column", alignItems: "flex-start" }}
-                    >
-                      <ListItemText primary="Thông tin sản xuất" />
-                      <Box sx={{ mt: 1, ml: 2, width: "100%" }}>
+                    {/* Thông tin sản xuất */}
+                    {(material.productionCountry ||
+                      material.productionRegion ||
+                      material.manufacturingProcess) && (
+                      <Card sx={{ p: 3, mb: 3 }}>
+                        <Typography
+                          variant="h6"
+                          fontWeight="bold"
+                          sx={{ mb: 2 }}
+                        >
+                          Thông tin sản xuất
+                        </Typography>
                         <ProductionInfo
                           country={material.productionCountry}
                           region={material.productionRegion}
                           process={material.manufacturingProcess}
                           showDescription={true}
                         />
-                      </Box>
-                    </ListItem>
-                  )}
+                      </Card>
+                    )}
 
-                  {/* Chứng nhận bền vững */}
-                  {material.certificationDetails && (
-                    <ListItem
-                      sx={{ flexDirection: "column", alignItems: "flex-start" }}
-                    >
-                      <ListItemText primary="Chứng nhận bền vững" />
-                      <Box sx={{ mt: 1, ml: 2, width: "100%" }}>
+                    {/* Chứng nhận bền vững */}
+                    {material.certificationDetails && (
+                      <Card sx={{ p: 3 }}>
+                        <Typography
+                          variant="h6"
+                          fontWeight="bold"
+                          sx={{ mb: 2 }}
+                        >
+                          Chứng nhận bền vững
+                        </Typography>
                         <CertificationDetails
                           certificationDetails={material.certificationDetails}
                         />
-                      </Box>
-                    </ListItem>
-                  )}
-                </List>
+                      </Card>
+                    )}
+                  </Box>
+
+                  {/* Right Column - Technical Specifications */}
+                  <Box sx={{ flex: 1, pl: { md: 1 } }}>
+                    <Typography variant="h6" fontWeight="bold" sx={{ mb: 3 }}>
+                      Thông số kỹ thuật
+                    </Typography>
+
+                    <Card sx={{ p: 3, mb: 3 }}>
+                      <Typography
+                        variant="subtitle1"
+                        fontWeight="bold"
+                        sx={{ mb: 2, color: "primary.main" }}
+                      >
+                        Tính bền vững
+                      </Typography>
+                      <List dense>
+                        <ListItem sx={{ px: 0 }}>
+                          <ListItemText
+                            primary="Điểm bền vững tổng hợp"
+                            secondary={`${sustainabilityScore.toFixed(
+                              1
+                            )}% (dựa trên 5 tiêu chí, mỗi tiêu chí 20% trọng số)`}
+                          />
+                        </ListItem>
+                        <ListItem sx={{ px: 0 }}>
+                          <ListItemText
+                            primary="Cách tính điểm"
+                            secondary="Carbon (20%) + Water (20%) + Waste (20%) + Certification (20%) + Transport (20%) = 100%"
+                          />
+                        </ListItem>
+                      </List>
+                    </Card>
+
+                    <Card sx={{ p: 3, mb: 3 }}>
+                      <Typography
+                        variant="subtitle1"
+                        fontWeight="bold"
+                        sx={{ mb: 2, color: "primary.main" }}
+                      >
+                        Thông tin thương mại
+                      </Typography>
+                      <List dense>
+                        <ListItem sx={{ px: 0 }}>
+                          <ListItemText
+                            primary="Số lượng có sẵn"
+                            secondary={`${(
+                              material.quantityAvailable || 0
+                            ).toLocaleString("vi-VN")} mét`}
+                          />
+                        </ListItem>
+                        <ListItem sx={{ px: 0 }}>
+                          <ListItemText
+                            primary="Giá trên đơn vị"
+                            secondary={`${(
+                              material.pricePerUnit || 0
+                            )?.toLocaleString("vi-VN")} ₫/mét`}
+                          />
+                        </ListItem>
+                        <ListItem sx={{ px: 0 }}>
+                          <ListItemText
+                            primary="Tổng giá trị kho"
+                            secondary={`${(
+                              (material.quantityAvailable || 0) *
+                              (material.pricePerUnit || 0)
+                            ).toLocaleString("vi-VN")} ₫`}
+                          />
+                        </ListItem>
+                      </List>
+                    </Card>
+
+                    <Card sx={{ p: 3 }}>
+                      <Typography
+                        variant="subtitle1"
+                        fontWeight="bold"
+                        sx={{ mb: 2, color: "primary.main" }}
+                      >
+                        Thông tin hệ thống
+                      </Typography>
+                      <List dense>
+                        <ListItem sx={{ px: 0 }}>
+                          <ListItemText
+                            primary="Mã nguyên liệu"
+                            secondary={`M${(material.materialId || 0)
+                              ?.toString()
+                              .padStart(3, "0")}`}
+                          />
+                        </ListItem>
+                        <ListItem sx={{ px: 0 }}>
+                          <ListItemText
+                            primary="Loại vật liệu"
+                            secondary={
+                              material.materialTypeName || "Chưa phân loại"
+                            }
+                          />
+                        </ListItem>
+                        <ListItem sx={{ px: 0 }}>
+                          <ListItemText
+                            primary="Ngày tạo"
+                            secondary={
+                              material.createdAt
+                                ? new Date(
+                                    material.createdAt
+                                  ).toLocaleDateString("vi-VN")
+                                : "Chưa có thông tin"
+                            }
+                          />
+                        </ListItem>
+                        <ListItem sx={{ px: 0 }}>
+                          <ListItemText
+                            primary="Cập nhật lần cuối"
+                            secondary={
+                              material.lastUpdated
+                                ? new Date(
+                                    material.lastUpdated
+                                  ).toLocaleDateString("vi-VN")
+                                : "Chưa có thông tin"
+                            }
+                          />
+                        </ListItem>
+                      </List>
+                    </Card>
+                  </Box>
+                </Box>
               </Box>
             )}
 
@@ -1451,9 +1576,119 @@ const MaterialDetailPage: React.FC = () => {
                 <Typography variant="h6" fontWeight="bold" sx={{ mb: 3 }}>
                   Đánh giá từ khách hàng
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Chưa có đánh giá cho nguyên liệu này.
-                </Typography>
+
+                {reviewsLoading ? (
+                  <Typography variant="body2" color="text.secondary">
+                    Đang tải đánh giá...
+                  </Typography>
+                ) : (
+                  <>
+                    {/* Average Rating Summary */}
+                    <Box
+                      sx={{
+                        mb: 4,
+                        p: 3,
+                        bgcolor: "#f8f9fa",
+                        borderRadius: 2,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 3,
+                      }}
+                    >
+                      <Box sx={{ textAlign: "center" }}>
+                        <Typography
+                          variant="h2"
+                          fontWeight="bold"
+                          color="primary"
+                        >
+                          {averageRating > 0 ? averageRating.toFixed(1) : "0.0"}
+                        </Typography>
+                        <Rating
+                          value={averageRating}
+                          readOnly
+                          precision={0.1}
+                          size="large"
+                        />
+                        <Typography variant="body2" color="text.secondary">
+                          {reviews.length} đánh giá
+                        </Typography>
+                      </Box>
+                      <Box sx={{ flex: 1 }}>
+                        <Typography variant="body1" color="text.secondary">
+                          {reviews.length === 0
+                            ? "Chưa có đánh giá nào cho nguyên liệu này."
+                            : `Dựa trên ${reviews.length} đánh giá từ khách hàng đã mua.`}
+                        </Typography>
+                      </Box>
+                    </Box>
+
+                    {/* Reviews List */}
+                    {reviews.length > 0 && (
+                      <Box
+                        sx={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 2,
+                        }}
+                      >
+                        {reviews.map((review) => (
+                          <Card key={review.reviewId} sx={{ p: 3 }}>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "flex-start",
+                                gap: 2,
+                              }}
+                            >
+                              <Avatar sx={{ bgcolor: "primary.main" }}>
+                                {review.userName?.[0] || "U"}
+                              </Avatar>
+                              <Box sx={{ flex: 1 }}>
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    mb: 1,
+                                  }}
+                                >
+                                  <Typography
+                                    variant="subtitle1"
+                                    fontWeight="bold"
+                                  >
+                                    {review.userName || "Người dùng ẩn danh"}
+                                  </Typography>
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                  >
+                                    {review.createdAt
+                                      ? new Date(
+                                          review.createdAt
+                                        ).toLocaleDateString("vi-VN")
+                                      : ""}
+                                  </Typography>
+                                </Box>
+                                <Rating
+                                  value={review.ratingScore}
+                                  readOnly
+                                  size="small"
+                                  sx={{ mb: 1 }}
+                                />
+                                <Typography
+                                  variant="body2"
+                                  color="text.primary"
+                                >
+                                  {review.comment}
+                                </Typography>
+                              </Box>
+                            </Box>
+                          </Card>
+                        ))}
+                      </Box>
+                    )}
+                  </>
+                )}
               </Box>
             )}
 

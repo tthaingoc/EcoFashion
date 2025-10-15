@@ -646,86 +646,84 @@ body {
   }
 }
 
-/* Dark Mode Support */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-gray-25: #0c111d;
-    --color-gray-50: #1d2939;
-    --color-gray-100: #344054;
-    --color-gray-200: #475467;
-    --color-gray-300: #667085;
-    --color-gray-400: #98a2b3;
-    --color-gray-500: #d0d5dd;
-    --color-gray-600: #e4e7ec;
-    --color-gray-700: #f2f4f7;
-    --color-gray-800: #f9fafb;
-    --color-gray-900: #fcfcfd;
-    --color-gray-950: #ffffff;
-  }
-  
-  body {
-    background-color: var(--color-gray-25);
-    color: var(--color-gray-950);
-  }
-  
-  .dashboard-main {
-    background-color: var(--color-gray-50);
-  }
-  
-  .dashboard-header,
-  .stats-card,
-  .chart-container {
-    background: var(--color-gray-100);
-    border-color: var(--color-gray-200);
-  }
-  
-  .dashboard-title {
-    color: var(--color-gray-950);
-  }
-  
-  .dashboard-subtitle {
-    color: var(--color-gray-600);
-  }
-  
-  .stats-value {
-    color: var(--color-gray-950);
-  }
-  
-  .stats-label {
-    color: var(--color-gray-600);
-  }
-  
-  .chart-title {
-    color: var(--color-gray-950);
-  }
-  
-  .activity-message {
-    color: var(--color-gray-950);
-  }
-  
-  .activity-time {
-    color: var(--color-gray-600);
-  }
-  
-  .quick-action-title {
-    color: var(--color-gray-950);
-  }
-  
-  .quick-action-description {
-    color: var(--color-gray-600);
-  }
-  
-  .form-select,
-  .form-input {
-    background-color: var(--color-gray-100);
-    border-color: var(--color-gray-300);
-    color: var(--color-gray-950);
-  }
-  
-  .chart-placeholder {
-    background-color: var(--color-gray-200);
-    color: var(--color-gray-600);
-  }
+/* Dark Mode Support (class-based only). Device dark mode is ignored. */
+.dark :root {
+  --color-gray-25: #0c111d;
+  --color-gray-50: #1d2939;
+  --color-gray-100: #344054;
+  --color-gray-200: #475467;
+  --color-gray-300: #667085;
+  --color-gray-400: #98a2b3;
+  --color-gray-500: #d0d5dd;
+  --color-gray-600: #e4e7ec;
+  --color-gray-700: #f2f4f7;
+  --color-gray-800: #f9fafb;
+  --color-gray-900: #fcfcfd;
+  --color-gray-950: #ffffff;
+}
+
+.dark body {
+  background-color: var(--color-gray-25);
+  color: var(--color-gray-950);
+}
+
+.dark .dashboard-main {
+  background-color: var(--color-gray-50);
+}
+
+.dark .dashboard-header,
+.dark .stats-card,
+.dark .chart-container {
+  background: var(--color-gray-100);
+  border-color: var(--color-gray-200);
+}
+
+.dark .dashboard-title {
+  color: var(--color-gray-950);
+}
+
+.dark .dashboard-subtitle {
+  color: var(--color-gray-600);
+}
+
+.dark .stats-value {
+  color: var(--color-gray-950);
+}
+
+.dark .stats-label {
+  color: var(--color-gray-600);
+}
+
+.dark .chart-title {
+  color: var(--color-gray-950);
+}
+
+.dark .activity-message {
+  color: var(--color-gray-950);
+}
+
+.dark .activity-time {
+  color: var(--color-gray-600);
+}
+
+.dark .quick-action-title {
+  color: var(--color-gray-950);
+}
+
+.dark .quick-action-description {
+  color: var(--color-gray-600);
+}
+
+.dark .form-select,
+.dark .form-input {
+  background-color: var(--color-gray-100);
+  border-color: var(--color-gray-300);
+  color: var(--color-gray-950);
+}
+
+.dark .chart-placeholder {
+  background-color: var(--color-gray-200);
+  color: var(--color-gray-600);
 }
 
 /* Form Components */

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   CreditCardIcon,
   BanknotesIcon,
@@ -9,32 +9,49 @@ import {
   MinusIcon,
   EyeIcon,
   EyeSlashIcon,
-  ChartBarIcon
-} from '@heroicons/react/24/outline';
-import { useWalletSummary } from '../../hooks/useWalletQueries';
-import { useInitiateDeposit, useRequestWithdraw } from '../../hooks/useWalletMutations';
-import { WALLET_CFG } from '../../config/wallet';
-import { toast } from 'react-toastify';
-import walletService, { WalletTransaction } from '../../services/api/walletService';
+  ChartBarIcon,
+} from "@heroicons/react/24/outline";
+import { useWalletSummary } from "../../hooks/useWalletQueries";
+import {
+  useInitiateDeposit,
+  useRequestWithdraw,
+  useRespondWithdraw,
+} from "../../hooks/useWalletMutations";
+import { WALLET_CFG } from "../../config/wallet";
+import { toast } from "react-toastify";
+import walletService, {
+  WalletTransaction,
+} from "../../services/api/walletService";
+import AllTransactionsModal from "./AllTransactionsModal";
 
 // Helper component để hiển thị transaction status
 const TransactionStatusBadge: React.FC<{ status: string }> = ({ status }) => {
   const statusConfig = {
-    'Success': { color: 'bg-green-100 text-green-800', icon: '✅', label: 'Thành công' },
-    'Pending': { color: 'bg-yellow-100 text-yellow-800', icon: '⏳', label: 'Đang xử lý' },
-    'Fail': { color: 'bg-red-100 text-red-800', icon: '❌', label: 'Thất bại' }
+    Success: {
+      color: "bg-green-100 text-green-800",
+      icon: "✅",
+      label: "Thành công",
+    },
+    Pending: {
+      color: "bg-yellow-100 text-yellow-800",
+      icon: "⏳",
+      label: "Đang xử lý",
+    },
+    Fail: { color: "bg-red-100 text-red-800", icon: "❌", label: "Thất bại" },
   } as const;
 
-  const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.Pending;
-  
+  const config =
+    statusConfig[status as keyof typeof statusConfig] || statusConfig.Pending;
+
   return (
-    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${config.color}`}>
+    <span
+      className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${config.color}`}
+    >
       <span className="mr-1">{config.icon}</span>
       {config.label}
     </span>
   );
 };
-
 
 // Modal Components
 const DepositModal: React.FC<{
@@ -44,32 +61,32 @@ const DepositModal: React.FC<{
   isLoading: boolean;
 }> = ({ isOpen, onClose, onDeposit, isLoading }) => {
   const [amount, setAmount] = useState<number>(0);
-  const [description, setDescription] = useState('');
-
+  const [description, setDescription] = useState("");
 
   if (!isOpen) return null;
-
 
   const handleQuickAmount = (quickAmount: number) => {
     setAmount(quickAmount);
   };
 
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (amount < WALLET_CFG.minDeposit || amount > WALLET_CFG.maxDeposit) {
-      toast.error(`Số tiền nạp phải từ ${WALLET_CFG.minDeposit.toLocaleString()} đến ${WALLET_CFG.maxDeposit.toLocaleString()} VND`);
+      toast.error(
+        `Số tiền nạp phải từ ${WALLET_CFG.minDeposit.toLocaleString()} đến ${WALLET_CFG.maxDeposit.toLocaleString()} VND`
+      );
       return;
     }
     onDeposit(amount, description);
   };
 
-
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl max-w-md w-full p-6">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-gray-900">Nạp tiền vào ví</h2>
+          <h2 className="text-xl font-semibold text-gray-900">
+            Nạp tiền vào ví
+          </h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -78,7 +95,6 @@ const DepositModal: React.FC<{
           </button>
         </div>
 
-
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -86,7 +102,7 @@ const DepositModal: React.FC<{
             </label>
             <input
               type="number"
-              value={amount || ''}
+              value={amount || ""}
               onChange={(e) => setAmount(Number(e.target.value))}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Nhập số tiền"
@@ -95,10 +111,10 @@ const DepositModal: React.FC<{
               required
             />
             <p className="text-xs text-gray-500 mt-1">
-              Tối thiểu: {WALLET_CFG.minDeposit.toLocaleString()} VND - Tối đa: {WALLET_CFG.maxDeposit.toLocaleString()} VND
+              Tối thiểu: {WALLET_CFG.minDeposit.toLocaleString()} VND - Tối đa:{" "}
+              {WALLET_CFG.maxDeposit.toLocaleString()} VND
             </p>
           </div>
-
 
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -118,7 +134,6 @@ const DepositModal: React.FC<{
             </div>
           </div>
 
-
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Ghi chú (không bắt buộc)
@@ -131,7 +146,6 @@ const DepositModal: React.FC<{
               rows={3}
             />
           </div>
-
 
           <div className="flex gap-3">
             <button
@@ -147,7 +161,7 @@ const DepositModal: React.FC<{
               disabled={isLoading || !amount}
               className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {isLoading ? 'Đang xử lý...' : 'Nạp tiền'}
+              {isLoading ? "Đang xử lý..." : "Nạp tiền"}
             </button>
           </div>
         </form>
@@ -156,6 +170,116 @@ const DepositModal: React.FC<{
   );
 };
 
+const WithdrawalModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  onWithdrawal: (amount: number, description?: string) => void;
+  isLoading: boolean;
+}> = ({ isOpen, onClose, onWithdrawal, isLoading }) => {
+  const [amount, setAmount] = useState<number>(0);
+  const [description, setDescription] = useState(null);
+  const { data: walletData, error, refetch } = useWalletSummary();
+  if (!isOpen) return null;
+
+  const handleQuickAmount = (quickAmount: number) => {
+    setAmount(quickAmount);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (amount < WALLET_CFG.minDeposit || amount > walletData.wallet.balance) {
+      toast.error(
+        `Số tiền có thể rút phải từ ${WALLET_CFG.minDeposit.toLocaleString()} đến ${walletData.wallet.balance.toLocaleString()} (Toàn bộ Tài Khoản) VND`
+      );
+      return;
+    }
+    onWithdrawal(amount, description);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl max-w-md w-full p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold text-gray-900">
+            Tạo yêu cầu rút tiền
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            ✕
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Số tiền (VND)
+            </label>
+            <input
+              type="number"
+              value={amount || ""}
+              onChange={(e) => setAmount(Number(e.target.value))}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Nhập số tiền"
+              min={WALLET_CFG.minDeposit}
+              max={WALLET_CFG.maxDeposit}
+              required
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Tối thiểu: {WALLET_CFG.minDeposit.toLocaleString()} VND - Tối đa:{" "}
+              {WALLET_CFG.maxDeposit.toLocaleString()} VND
+            </p>
+          </div>
+
+          <div className="mb-10">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Số tiền nhanh
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              {WALLET_CFG.quickAmounts.map((quickAmount) => (
+                <button
+                  key={quickAmount}
+                  type="button"
+                  onClick={() => handleQuickAmount(quickAmount)}
+                  className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-blue-50 hover:border-blue-500 transition-colors"
+                >
+                  {quickAmount.toLocaleString()}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Lưu ý rút tiền */}
+          <div className="mb-6">
+            <p className="text-sm text-red-600 font-medium">
+              Lưu ý: Bạn chỉ được rút tiền <b>1 lần mỗi tháng</b>. Vui lòng cân
+              nhắc trước khi gửi yêu cầu.
+            </p>
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              disabled={isLoading}
+            >
+              Hủy
+            </button>
+            <button
+              type="submit"
+              disabled={isLoading || !amount}
+              className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {isLoading ? "Đang xử lý..." : "Rút tiền"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
 
 // Transaction Group Component
 const TransactionGroup: React.FC<{
@@ -173,7 +297,6 @@ const TransactionGroup: React.FC<{
   const [isExpanded, setIsExpanded] = useState(false);
   const mainTransaction = group.transactions[0];
   const displayInfo = walletService.getOrderTransactionDisplay(mainTransaction);
-
 
   if (group.isMultiOrder) {
     return (
@@ -197,14 +320,17 @@ const TransactionGroup: React.FC<{
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <p className={`font-semibold ${group.totalAmount >= 0 ? 'text-green-600' : 'text-red-600'
-              }`}>
-              {group.totalAmount >= 0 ? '+' : ''}{group.totalAmount.toLocaleString('vi-VN')} VND
+            <p
+              className={`font-semibold ${
+                group.totalAmount >= 0 ? "text-green-600" : "text-red-600"
+              }`}
+            >
+              {group.totalAmount >= 0 ? "+" : ""}
+              {group.totalAmount.toLocaleString("vi-VN")} VND
             </p>
-            <span className="text-blue-600">{isExpanded ? '▲' : '▼'}</span>
+            <span className="text-blue-600">{isExpanded ? "▲" : "▼"}</span>
           </div>
         </div>
-
 
         {isExpanded && (
           <div className="mt-3 pl-13 space-y-2 border-t border-blue-200 pt-3">
@@ -212,18 +338,22 @@ const TransactionGroup: React.FC<{
             {displayInfo.detailedDescription && (
               <div className="p-3 bg-blue-50 rounded text-sm text-gray-700 border-l-4 border-blue-200">
                 <strong className="text-blue-800">Chi tiết giao dịch:</strong>
-                <p className="mt-1 text-gray-600">{displayInfo.detailedDescription}</p>
+                <p className="mt-1 text-gray-600">
+                  {displayInfo.detailedDescription}
+                </p>
               </div>
             )}
-            
+
             {/* Danh sách các OrderIds */}
-            {group.orderIds.map(orderId => (
+            {group.orderIds.map((orderId) => (
               <div
                 key={orderId}
                 className="flex items-center justify-between p-2 bg-white rounded cursor-pointer hover:bg-blue-50"
                 onClick={() => onOrderClick(orderId)}
               >
-                <span className="text-sm text-gray-600">📦 Đơn hàng #ĐH{orderId}</span>
+                <span className="text-sm text-gray-600">
+                  📦 Đơn hàng #ĐH{orderId}
+                </span>
                 <span className="text-sm text-blue-600">Xem chi tiết →</span>
               </div>
             ))}
@@ -233,14 +363,14 @@ const TransactionGroup: React.FC<{
     );
   }
 
-
   // Single order
   return (
     <div
-      className={`flex items-center justify-between p-3 rounded-lg transition-colors ${displayInfo.isOrderRelated
-        ? 'hover:bg-blue-50 cursor-pointer border border-transparent hover:border-blue-200'
-        : 'hover:bg-gray-50'
-        }`}
+      className={`flex items-center justify-between p-3 rounded-lg transition-colors ${
+        displayInfo.isOrderRelated
+          ? "hover:bg-blue-50 cursor-pointer border border-transparent hover:border-blue-200"
+          : "hover:bg-gray-50"
+      }`}
       onClick={() => {
         if (displayInfo.isOrderRelated && group.orderId) {
           onOrderClick(group.orderId);
@@ -248,12 +378,16 @@ const TransactionGroup: React.FC<{
       }}
     >
       <div className="flex items-center gap-3">
-        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${group.totalAmount >= 0 ? 'bg-green-100' : 'bg-red-100'
-          }`}>
-          {group.totalAmount >= 0 ?
-            <ArrowUpIcon className="w-5 h-5 text-green-600" /> :
+        <div
+          className={`w-10 h-10 rounded-full flex items-center justify-center ${
+            group.totalAmount >= 0 ? "bg-green-100" : "bg-red-100"
+          }`}
+        >
+          {group.totalAmount >= 0 ? (
+            <ArrowUpIcon className="w-5 h-5 text-green-600" />
+          ) : (
             <ArrowDownIcon className="w-5 h-5 text-red-600" />
-          }
+          )}
         </div>
         <div className="flex-1">
           <p className="font-medium text-gray-900">{displayInfo.title}</p>
@@ -269,54 +403,86 @@ const TransactionGroup: React.FC<{
           </div>
         </div>
       </div>
-      <p className={`font-semibold ${group.totalAmount >= 0 ? 'text-green-600' : 'text-red-600'
-        }`}>
-        {group.totalAmount >= 0 ? '+' : ''}{group.totalAmount.toLocaleString('vi-VN')} VND
+      <p
+        className={`font-semibold ${
+          group.totalAmount >= 0 ? "text-green-600" : "text-red-600"
+        }`}
+      >
+        {group.totalAmount >= 0 ? "+" : ""}
+        {group.totalAmount.toLocaleString("vi-VN")} VND
       </p>
     </div>
   );
 };
 
-
 const WalletDashboardTailwind: React.FC = () => {
   const navigate = useNavigate();
   const [showBalance, setShowBalance] = useState(true);
   const [showDepositModal, setShowDepositModal] = useState(false);
+  const [showWithdrawalModal, setShowwithdrawalModal] = useState(false);
+  const [showAllTransactionsModal, setShowAllTransactionsModal] =
+    useState(false);
 
+  useEffect(() => {
+    const redirectUrl = localStorage.getItem("walletRedirect");
+    if (redirectUrl) {
+      localStorage.removeItem("walletRedirect");
+      window.location.href = redirectUrl; // quay về wallet
+    }
+  }, []);
 
   const { data: walletData, isLoading, error, refetch } = useWalletSummary();
-  const { mutateAsync: deposit, isPending: isDepositLoading } = useInitiateDeposit();
-
+  const { mutateAsync: deposit, isPending: isDepositLoading } =
+    useInitiateDeposit();
 
   const handleDeposit = async (amount: number, description?: string) => {
     try {
       const result = await deposit({ amount, description });
-      const paymentUrl = (result as any)?.paymentUrl || (result as any)?.PaymentUrl;
-
+      const paymentUrl =
+        (result as any)?.paymentUrl || (result as any)?.PaymentUrl;
 
       if (paymentUrl) {
         window.location.href = paymentUrl;
       } else {
-        toast.error('Không thể tạo liên kết thanh toán');
+        toast.error("Không thể tạo liên kết thanh toán");
       }
     } catch (error) {
-      console.error('Deposit error:', error);
+      console.error("Deposit error:", error);
     } finally {
       setShowDepositModal(false);
     }
   };
 
+  const { mutateAsync: withdrawal } = useRequestWithdraw();
+  const { mutateAsync: respondWithdrawal, isPending: isWithdrawalLoading } =
+    useRespondWithdraw();
 
-  const handleOrderClick = (orderId: number) => {
+  const handleWithdrawal = async (amount: number, description?: string) => {
     try {
-      console.log('Navigating to order ID:', orderId);
-      navigate(`/orders/${orderId}`);
+      const result = await withdrawal({ amount, description });
+      console.log(result);
+      if (result.success === false) {
+        toast.error(result.errorMessage);
+      } else if (result) {
+        toast.success("Xin Chờ Duyệt!");
+        setShowwithdrawalModal(false);
+      }
     } catch (error) {
-      console.error('Navigation error:', error);
-      toast.error('Không thể xem chi tiết đơn hàng');
+      toast.error(error);
+    } finally {
+      setShowwithdrawalModal(false);
     }
   };
 
+  const handleOrderClick = (orderId: number) => {
+    try {
+      console.log("Navigating to order ID:", orderId);
+      navigate(`/orders/${orderId}`);
+    } catch (error) {
+      console.error("Navigation error:", error);
+      toast.error("Không thể xem chi tiết đơn hàng");
+    }
+  };
 
   if (isLoading) {
     return (
@@ -332,7 +498,6 @@ const WalletDashboardTailwind: React.FC = () => {
       </div>
     );
   }
-
 
   if (error) {
     return (
@@ -350,15 +515,14 @@ const WalletDashboardTailwind: React.FC = () => {
     );
   }
 
-
-  const balance = (walletData as any)?.balance ?? (walletData as any)?.wallet?.balance ?? 0;
+  const balance =
+    (walletData as any)?.balance ?? (walletData as any)?.wallet?.balance ?? 0;
   const monthlyRaw = (walletData as any)?.monthlyStats ?? {};
-  const income = (monthlyRaw as any)?.totalIncome ?? (monthlyRaw as any)?.deposited ?? 0;
-  const expense = (monthlyRaw as any)?.totalExpense ?? (monthlyRaw as any)?.spent ?? 0;
+  const income =
+    (monthlyRaw as any)?.totalIncome ?? (monthlyRaw as any)?.deposited ?? 0;
+  const expense =
+    (monthlyRaw as any)?.totalExpense ?? (monthlyRaw as any)?.spent ?? 0;
   const recentTransactions = (walletData as any)?.recentTransactions ?? [];
-
-
-
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
@@ -370,18 +534,22 @@ const WalletDashboardTailwind: React.FC = () => {
             onClick={() => setShowBalance(!showBalance)}
             className="text-white/80 hover:text-white transition-colors"
           >
-            {showBalance ? <EyeIcon className="w-6 h-6" /> : <EyeSlashIcon className="w-6 h-6" />}
+            {showBalance ? (
+              <EyeIcon className="w-6 h-6" />
+            ) : (
+              <EyeSlashIcon className="w-6 h-6" />
+            )}
           </button>
         </div>
-
 
         <div className="mb-6">
           <p className="text-white/80 mb-2">Số dư hiện tại</p>
           <p className="text-4xl font-bold">
-            {showBalance ? `${balance.toLocaleString('vi-VN')} VND` : '••••••••'}
+            {showBalance
+              ? `${balance.toLocaleString("vi-VN")} VND`
+              : "••••••••"}
           </p>
         </div>
-
 
         <div className="flex gap-4">
           <button
@@ -392,15 +560,20 @@ const WalletDashboardTailwind: React.FC = () => {
             Nạp tiền
           </button>
           <button
-            disabled
-            className="flex items-center gap-2 px-6 py-3 bg-white/10 rounded-lg opacity-50 cursor-not-allowed"
+            onClick={() => setShowwithdrawalModal(true)}
+            disabled={walletData.wallet.balance === 0}
+            className={`flex items-center gap-2 px-6 py-3 rounded-lg transition-colors
+            ${
+              walletData.wallet.balance === 0
+                ? "bg-gray-300 text-gray-500 opacity-50 cursor-not-allowed"
+                : "bg-blue-500 text-white hover:bg-blue-700"
+            }`}
           >
             <MinusIcon className="w-5 h-5" />
-            Rút tiền (Sắp có)
+            Rút tiền
           </button>
         </div>
       </div>
-
 
       {/* Monthly Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -408,27 +581,29 @@ const WalletDashboardTailwind: React.FC = () => {
           <div className="flex items-center gap-3">
             <ArrowUpIcon className="w-8 h-8 text-green-600" />
             <div>
-              <p className="text-sm text-green-600 font-medium">Thu nhập tháng này</p>
+              <p className="text-sm text-green-600 font-medium">
+                Thu nhập tháng này
+              </p>
               <p className="text-xl font-bold text-green-700">
-                +{(income as number).toLocaleString('vi-VN')} VND
+                +{(income as number).toLocaleString("vi-VN")} VND
               </p>
             </div>
           </div>
         </div>
-
 
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
           <div className="flex items-center gap-3">
             <ArrowDownIcon className="w-8 h-8 text-red-600" />
             <div>
-              <p className="text-sm text-red-600 font-medium">Chi tiêu tháng này</p>
+              <p className="text-sm text-red-600 font-medium">
+                Chi tiêu tháng này
+              </p>
               <p className="text-xl font-bold text-red-700">
-                {(expense as number).toLocaleString('vi-VN')} VND
+                {(expense as number).toLocaleString("vi-VN")} VND
               </p>
             </div>
           </div>
         </div>
-
 
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <div className="flex items-center gap-3">
@@ -436,23 +611,29 @@ const WalletDashboardTailwind: React.FC = () => {
             <div>
               <p className="text-sm text-blue-600 font-medium">Chênh lệch</p>
               <p className="text-xl font-bold text-blue-700">
-                {((income as number) + (expense as number)).toLocaleString('vi-VN')} VND
+                {((income as number) + (expense as number)).toLocaleString(
+                  "vi-VN"
+                )}{" "}
+                VND
               </p>
             </div>
           </div>
         </div>
       </div>
 
-
       {/* Recent Transactions */}
       <div className="bg-white border border-gray-200 rounded-xl p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-gray-900">Giao dịch gần đây</h2>
-          <button className="text-blue-600 hover:text-blue-700 font-medium">
+          <h2 className="text-xl font-semibold text-gray-900">
+            Giao dịch gần đây
+          </h2>
+          <button
+            onClick={() => setShowAllTransactionsModal(true)}
+            className="text-blue-600 hover:text-blue-700 font-medium transition-colors"
+          >
             Xem tất cả
           </button>
         </div>
-
 
         {recentTransactions.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
@@ -463,17 +644,26 @@ const WalletDashboardTailwind: React.FC = () => {
           <div className="space-y-3">
             {/* Tách transactions thành order-related và non-order */}
             {(() => {
+              // Chỉ lấy 5 giao dịch gần nhất
+              const recentFive = recentTransactions.slice(0, 5);
+
               // Cải thiện logic phân loại transactions
-              const orderTransactions = recentTransactions.filter((t: any) =>
-                // Giao dịch có orderId hoặc orderGroupId trực tiếp
-                t.orderId || t.orderGroupId ||
-                // Hoặc có type liên quan đến order và description chứa thông tin đơn hàng
-                (['Payment', 'PaymentReceived', 'Transfer'].includes(t.type) && 
-                 (t.description?.includes('ĐH') || t.description?.includes('đơn')))
+              const orderTransactions = recentFive.filter(
+                (t: any) =>
+                  // Giao dịch có orderId hoặc orderGroupId trực tiếp
+                  t.orderId ||
+                  t.orderGroupId ||
+                  // Hoặc có type liên quan đến order và description chứa thông tin đơn hàng
+                  (["Payment", "PaymentReceived", "Transfer"].includes(
+                    t.type
+                  ) &&
+                    (t.description?.includes("ĐH") ||
+                      t.description?.includes("đơn")))
               );
-              const nonOrderTransactions = recentTransactions.filter((t: any) =>
-                // Loại trừ các giao dịch đã được phân vào orderTransactions
-                !orderTransactions.includes(t)
+              const nonOrderTransactions = recentFive.filter(
+                (t: any) =>
+                  // Loại trừ các giao dịch đã được phân vào orderTransactions
+                  !orderTransactions.includes(t)
               );
               // Group order transactions
               const groupedOrders = walletService.groupTransactionsByOrder(
@@ -490,49 +680,75 @@ const WalletDashboardTailwind: React.FC = () => {
                     />
                   ))}
                   {/* Non-order transactions (individual) */}
-                  {nonOrderTransactions.map((transaction: any, index: number) => {
-                    const displayInfo = walletService.getOrderTransactionDisplay(transaction);
-                    return (
-                      <div
-                        key={`non-order-${index}`}
-                        className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${transaction.amount >= 0 ? 'bg-green-100' : 'bg-red-100'
-                            }`}>
-                            {transaction.amount >= 0 ?
-                              <ArrowUpIcon className="w-5 h-5 text-green-600" /> :
-                              <ArrowDownIcon className="w-5 h-5 text-red-600" />
-                            }
-                          </div>
-                          <div className="flex-1">
-                            <p className="font-medium text-gray-900">{displayInfo.title}</p>
-                            <p className="text-sm text-gray-500">{displayInfo.subtitle}</p>
-                            <div className="flex items-center gap-2 mt-1">
-                              <TransactionStatusBadge status={transaction.status} />
-                              {/* Hiển thị description chi tiết cho non-order transaction */}
-                              {displayInfo.detailedDescription && (
-                                <p className="text-xs text-gray-400 truncate flex-1">
-                                  {displayInfo.detailedDescription}
-                                </p>
+                  {nonOrderTransactions.map(
+                    (transaction: any, index: number) => {
+                      const displayInfo =
+                        walletService.getOrderTransactionDisplay(transaction);
+                      return (
+                        <div
+                          key={`non-order-${index}`}
+                          className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div
+                              className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                                transaction.amount >= 0 &&
+                                transaction.type !== "Withdrawal"
+                                  ? "bg-green-100"
+                                  : "bg-red-100"
+                              }`}
+                            >
+                              {transaction.amount >= 0 &&
+                              transaction.type !== "Withdrawal" ? (
+                                <ArrowUpIcon className="w-5 h-5 text-green-600" />
+                              ) : (
+                                <ArrowDownIcon className="w-5 h-5 text-red-600" />
                               )}
                             </div>
+                            <div className="flex-1">
+                              <p className="font-medium text-gray-900">
+                                {displayInfo.title}
+                              </p>
+                              <p className="text-sm text-gray-500">
+                                {displayInfo.subtitle}
+                              </p>
+                              <div className="flex items-center gap-2 mt-1">
+                                <TransactionStatusBadge
+                                  status={transaction.status}
+                                />
+                                {/* Hiển thị description chi tiết cho non-order transaction */}
+                                {displayInfo.detailedDescription && (
+                                  <p className="text-xs text-gray-400 truncate flex-1">
+                                    {displayInfo.detailedDescription}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
                           </div>
+                          <p
+                            className={`font-semibold ${
+                              transaction.amount >= 0 &&
+                              transaction.type !== "Withdrawal"
+                                ? "text-green-600"
+                                : "text-red-600"
+                            }`}
+                          >
+                            {transaction.amount >= 0 &&
+                            transaction.type !== "Withdrawal"
+                              ? "+"
+                              : "-"}
+                            {transaction.amount.toLocaleString("vi-VN")} VND
+                          </p>
                         </div>
-                        <p className={`font-semibold ${transaction.amount >= 0 ? 'text-green-600' : 'text-red-600'
-                          }`}>
-                          {transaction.amount >= 0 ? '+' : ''}{transaction.amount.toLocaleString('vi-VN')} VND
-                        </p>
-                      </div>
-                    );
-                  })}
+                      );
+                    }
+                  )}
                 </>
               );
             })()}
           </div>
         )}
       </div>
-
 
       {/* Deposit Modal */}
       <DepositModal
@@ -541,10 +757,24 @@ const WalletDashboardTailwind: React.FC = () => {
         onDeposit={handleDeposit}
         isLoading={isDepositLoading}
       />
+
+      {/* Deposit Modal */}
+      <WithdrawalModal
+        isOpen={showWithdrawalModal}
+        onClose={() => setShowwithdrawalModal(false)}
+        onWithdrawal={handleWithdrawal}
+        isLoading={isWithdrawalLoading}
+      />
+
+      {/* All Transactions Modal */}
+      <AllTransactionsModal
+        isOpen={showAllTransactionsModal}
+        onClose={() => setShowAllTransactionsModal(false)}
+        transactions={recentTransactions}
+        onOrderClick={handleOrderClick}
+      />
     </div>
   );
 };
 
-
 export default WalletDashboardTailwind;
-

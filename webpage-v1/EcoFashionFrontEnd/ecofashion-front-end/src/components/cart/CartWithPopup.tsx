@@ -13,12 +13,12 @@ const CartWithPopup: React.FC<CartWithPopupProps> = () => {
   const closeTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const [scrolled, setScrolled] = useState(false);
   const isHome = location.pathname === "/";
-  useEffect(() => {
-    if (!isHome) return;
-    const handleScroll = () => setScrolled(window.scrollY > 100);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [isHome]);
+  // useEffect(() => {
+  //   if (!isHome) return;
+  //   const handleScroll = () => setScrolled(window.scrollY > 100);
+  //   window.addEventListener("scroll", handleScroll);
+  //   return () => window.removeEventListener("scroll", handleScroll);
+  // }, [isHome]);
   const handleMouseEnter = () => {
     if (closeTimer.current) clearTimeout(closeTimer.current);
     setCartOpen(true);
@@ -42,7 +42,7 @@ const CartWithPopup: React.FC<CartWithPopupProps> = () => {
         <div className="relative">
           <ShoppingCartIcon
             className={`w-6 h-6 text-inherit hover:text-green-600 transition duration-200 ${
-              scrolled || !isHome ? "text-gray-700" : "text-white"
+              !isHome ? "text-gray-900" : "text-white"
             }`}
           />
           {itemCount > 0 && (

@@ -45,7 +45,7 @@ const faqs = [
 export default function Contact() {
   window.scrollTo(0, 0);
   return (
-    <Box width={"100%"}>
+    <Box>
       <Box
         sx={{
           backgroundColor: "#15a34a",

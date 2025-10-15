@@ -1,15 +1,30 @@
-import React from 'react';
-import { useSupplierStocks, useMaterialTransactions, useReceiveMaterial } from '../../hooks/useSupplierInventory';
-import { formatViDateTime } from '../../utils/date';
-import { PlusIcon } from '../../assets/icons/index.tsx';
+import React from "react";
+import {
+  useSupplierStocks,
+  useMaterialTransactions,
+  useReceiveMaterial,
+} from "../../hooks/useSupplierInventory";
+import { formatViDateTime } from "../../utils/date";
+import { PlusIcon } from "../../assets/icons/index.tsx";
 
 const SupplierInventory: React.FC = () => {
   const { data: stocks = [], isLoading } = useSupplierStocks();
-  const [activeMaterialId, setActiveMaterialId] = React.useState<number | null>(null);
-  const { data: transactions = [] } = useMaterialTransactions(activeMaterialId ? { materialId: activeMaterialId } : undefined);
+  const [activeMaterialId, setActiveMaterialId] = React.useState<number | null>(
+    null
+  );
+  const [txTypeFilter, setTxTypeFilter] = React.useState<string>("");
+  const { data: transactions = [] } = useMaterialTransactions(
+    activeMaterialId || txTypeFilter
+      ? {
+          materialId: activeMaterialId ?? undefined,
+          type: txTypeFilter || undefined,
+        }
+      : undefined
+  );
   const receive = useReceiveMaterial();
 
-  const [qty, setQty] = React.useState<string>('');
+  const [qty, setQty] = React.useState<string>("");
+  const [note, setNote] = React.useState<string>("");
   const [warehouseId, setWarehouseId] = React.useState<number | null>(null);
   const [openId, setOpenId] = React.useState<number | null>(null);
 
@@ -17,15 +32,35 @@ const SupplierInventory: React.FC = () => {
     setOpenId(materialId);
     setActiveMaterialId(materialId);
     setWarehouseId(warehouse);
-    setQty('');
+    setQty("");
+    setNote("");
   };
 
   const submitReceive = async () => {
     if (!openId || !warehouseId) return;
     const quantity = parseFloat(qty);
     if (!quantity || quantity <= 0) return;
-    await receive.mutateAsync({ materialId: openId, warehouseId, quantity, unit: 'm' });
+    await receive.mutateAsync({
+      materialId: openId,
+      warehouseId,
+      quantity,
+      unit: "m",
+      note: note?.trim() || undefined,
+    });
     setOpenId(null);
+  };
+
+  const translateTxType = (type?: string | null) => {
+    switch ((type || "").trim()) {
+      case "CustomerSale":
+        return "Khách mua vật liệu";
+      case "SupplierReceipt":
+        return "Nhà cung cấp nhập kho";
+      case "ManualAdjustment":
+        return "Điều chỉnh thủ công";
+      default:
+        return type || "—";
+    }
   };
 
   return (
@@ -45,26 +80,61 @@ const SupplierInventory: React.FC = () => {
               <div className="text-gray-500">Chưa có tồn kho</div>
             ) : (
               stocks.map((s) => (
-                <div key={`${s.materialId}-${s.warehouseId}`} className="border rounded-xl bg-white shadow-sm p-4">
+                <div
+                  key={`${s.materialId}-${s.warehouseId}`}
+                  className="border rounded-xl bg-white shadow-sm p-4"
+                >
                   <div className="flex items-start justify-between">
                     <div>
-                      <h3 className="font-semibold text-gray-900">{s.materialName || `Material #${s.materialId}`}</h3>
-                      <p className="text-xs text-gray-500">Kho: {s.warehouseName || s.warehouseId}</p>
+                      <h3 className="font-semibold text-gray-900">
+                        {s.materialName || `Material #${s.materialId}`}
+                      </h3>
+                      <p className="text-xs text-gray-500">
+                        Kho: {s.warehouseName || s.warehouseId}
+                      </p>
                     </div>
-                    <span className="px-2 py-0.5 rounded text-xs bg-green-100 text-green-700">Đủ hàng</span>
+                    <span className="px-2 py-0.5 rounded text-xs bg-green-100 text-green-700">
+                      Đủ hàng
+                    </span>
                   </div>
                   {s.imageUrl && (
-                    <img src={s.imageUrl} alt={s.materialName || ''} className="w-full h-36 object-cover rounded-md mt-3" />
+                    <img
+                      src={s.imageUrl}
+                      alt={s.materialName || ""}
+                      className="w-full h-36 object-cover rounded-md mt-3"
+                    />
                   )}
                   <div className="mt-3 text-sm">
-                    <p className="text-gray-600">Tồn kho: <span className="text-gray-900 font-medium">{s.quantityOnHand} {s.unit || 'mét'}</span></p>
-                    <p className="text-gray-600">Tối thiểu: <span className="text-gray-900 font-medium">{s.minThreshold} {s.unit || 'mét'}</span></p>
-                    <p className="text-gray-600">Danh mục hiện có: <span className="text-gray-900 font-medium">{s.quantityAvailable} {s.unit || 'mét'}</span></p>
-                    <p className="text-gray-600">Đơn giá: <span className="text-gray-900 font-medium">{s.pricePerUnit.toLocaleString()}đ/m</span></p>
+                    <p className="text-gray-600">
+                      Tồn kho:{" "}
+                      <span className="text-gray-900 font-medium">
+                        {s.quantityOnHand} {s.unit || "mét"}
+                      </span>
+                    </p>
+                    <p className="text-gray-600">
+                      Tối thiểu:{" "}
+                      <span className="text-gray-900 font-medium">
+                        {s.minThreshold} {s.unit || "mét"}
+                      </span>
+                    </p>
+                    <p className="text-gray-600">
+                      Danh mục hiện có:{" "}
+                      <span className="text-gray-900 font-medium">
+                        {s.quantityAvailable} {s.unit || "mét"}
+                      </span>
+                    </p>
+                    <p className="text-gray-600">
+                      Đơn giá:{" "}
+                      <span className="text-gray-900 font-medium">
+                        {s.pricePerUnit.toLocaleString()}đ/m
+                      </span>
+                    </p>
                   </div>
                   <div className="mt-3">
-                    <button className="w-full h-10 border rounded-lg flex items-center justify-center gap-2 hover:bg-gray-50"
-                      onClick={() => openModal(s.materialId, s.warehouseId)}>
+                    <button
+                      className="w-full h-10 border rounded-lg flex items-center justify-center gap-2 hover:bg-gray-50"
+                      onClick={() => openModal(s.materialId, s.warehouseId)}
+                    >
                       <PlusIcon className="w-4 h-4" />
                       Nhập kho
                     </button>
@@ -76,9 +146,24 @@ const SupplierInventory: React.FC = () => {
 
           {/* Transactions list (simple) */}
           <div className="dashboard-card mt-8">
-            <div className="card-header">
-              <h3 className="card-title">Lịch Sử Giao Dịch</h3>
-              <p className="card-subtitle">Các thay đổi gần đây</p>
+            <div className="card-header flex items-center justify-between gap-3">
+              <div>
+                <h3 className="card-title">Lịch Sử Giao Dịch</h3>
+                <p className="card-subtitle">Các thay đổi gần đây</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="text-sm text-gray-600">Lọc loại</label>
+                <select
+                  className="form-select"
+                  value={txTypeFilter}
+                  onChange={(e) => setTxTypeFilter(e.target.value)}
+                >
+                  <option value="">Tất cả</option>
+                  <option value="CustomerSale">Khách mua vật liệu</option>
+                  <option value="SupplierReceipt">Nhà cung cấp nhập kho</option>
+                  <option value="ManualAdjustment">Điều chỉnh thủ công</option>
+                </select>
+              </div>
             </div>
             <div className="card-body overflow-x-auto">
               {transactions.length === 0 ? (
@@ -88,6 +173,7 @@ const SupplierInventory: React.FC = () => {
                   <thead>
                     <tr className="text-left text-gray-500">
                       <th className="p-2">Thời gian</th>
+                      <th className="p-2">Vật liệu</th>
                       <th className="p-2">Loại</th>
                       <th className="p-2">Chênh lệch</th>
                       <th className="p-2">Trước → Sau</th>
@@ -95,13 +181,32 @@ const SupplierInventory: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {transactions.map(t => (
+                    {transactions.map((t) => (
                       <tr key={t.transactionId} className="border-t">
-                        <td className="p-2">{formatViDateTime(t.createdAt as any)}</td>
-                        <td className="p-2">{t.transactionType}</td>
-                        <td className="p-2">{t.quantityChange > 0 ? `+${t.quantityChange}` : t.quantityChange}</td>
-                        <td className="p-2">{t.beforeQty} → {t.afterQty}</td>
-                        <td className="p-2">{t.note || '—'}</td>
+                        <td className="p-2">
+                          {formatViDateTime(t.createdAt as any)}
+                        </td>
+                        <td className="p-2 font-bold">
+                          {t.materialName || `Material #${t.materialId}`}
+                        </td>
+                        <td className="p-2">
+                          {translateTxType(t.transactionType as any)}
+                        </td>
+                        <td className={`p-2 font-semibold ${
+                          t.quantityChange > 0
+                            ? "text-green-600"
+                            : t.quantityChange < 0
+                            ? "text-red-600"
+                            : "text-gray-600"
+                        }`}>
+                          {t.quantityChange > 0
+                            ? `+${t.quantityChange}`
+                            : t.quantityChange}
+                        </td>
+                        <td className="p-2">
+                          <span className="text-red-600">{t.beforeQty}</span> → <span className="text-green-600">{t.afterQty}</span>
+                        </td>
+                        <td className="p-2">{t.note || "—"}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -113,7 +218,10 @@ const SupplierInventory: React.FC = () => {
           {/* Simple receive modal */}
           {openId && (
             <div className="fixed inset-0 z-50 flex items-center justify-center">
-              <div className="absolute inset-0 bg-black/40" onClick={() => setOpenId(null)} />
+              <div
+                className="absolute inset-0 bg-black/40"
+                onClick={() => setOpenId(null)}
+              />
               <div className="relative bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
                 <div className="p-4 border-b">
                   <h3 className="text-lg font-semibold">Nhập kho</h3>
@@ -122,18 +230,48 @@ const SupplierInventory: React.FC = () => {
                 <div className="p-4 space-y-3">
                   <div>
                     <label className="text-sm text-gray-600">Số lượng *</label>
-                    <input type="number" value={qty} onChange={(e) => setQty(e.target.value)} className="w-full border rounded p-2" placeholder="0" min={0} step={0.01} />
+                    <input
+                      type="number"
+                      value={qty}
+                      onChange={(e) => setQty(e.target.value)}
+                      className="w-full border rounded p-2"
+                      placeholder="0"
+                      min={0}
+                      step={0.01}
+                    />
                   </div>
-                  <div className="text-xs text-gray-500">Kho: {warehouseId}</div>
+                  <div>
+                    <label className="text-sm text-gray-600">Ghi chú</label>
+                    <textarea
+                      value={note}
+                      onChange={(e) => setNote(e.target.value)}
+                      className="w-full border rounded p-2"
+                      placeholder="Ví dụ: Nhập hàng từ nhà cung cấp A, lô #123"
+                      rows={3}
+                    />
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    Kho: {warehouseId}
+                  </div>
                 </div>
                 <div className="flex items-center justify-end gap-2 p-4 border-t">
-                  <button className="btn-secondary" onClick={() => setOpenId(null)}>Hủy</button>
-                  <button className="btn-primary" onClick={submitReceive} disabled={receive.isPending}>Nhập kho</button>
+                  <button
+                    className="btn-secondary"
+                    onClick={() => setOpenId(null)}
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    className="btn-primary"
+                    onClick={submitReceive}
+                    disabled={receive.isPending}
+                  >
+                    Nhập kho
+                  </button>
                 </div>
               </div>
             </div>
           )}
-
         </div>
       </div>
     </div>
@@ -141,5 +279,3 @@ const SupplierInventory: React.FC = () => {
 };
 
 export default SupplierInventory;
-
-

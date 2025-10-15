@@ -11,7 +11,7 @@ interface DateRange {
   to: string;
 }
 
-type WarehouseType = 'all' | 'material' | 'designer-material' | 'product';
+type WarehouseType = 'all' | 'material' | 'material-supplier' | 'designer-material' | 'product';
 
 const InventoryReport: React.FC = () => {
   // State for filters
@@ -38,9 +38,11 @@ const InventoryReport: React.FC = () => {
     queryKey: ['material-transactions', dateRange.from, dateRange.to],
     queryFn: () => materialInventoryService.getTransactions({
       from: dateRange.from,
-      to: dateRange.to
+      to: dateRange.to,
+      supplierOnly: warehouseType === 'material-supplier',
+      warehouseId: warehouseType === 'material-supplier' ? 3 : undefined
     }),
-    enabled: warehouseType === 'material' || warehouseType === 'all',
+    enabled: warehouseType === 'material' || warehouseType === 'material-supplier' || warehouseType === 'all',
     retry: 3,
     staleTime: 5 * 60 * 1000
   });
@@ -152,7 +154,7 @@ const InventoryReport: React.FC = () => {
           <div className="dashboard-content">
             <div className="text-center py-12">
               <div className="text-red-600 mb-4">Lỗi khi tải dữ liệu kho hàng</div>
-              <button 
+              <button
                 onClick={() => window.location.reload()}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
               >
@@ -177,9 +179,9 @@ const InventoryReport: React.FC = () => {
             </p>
           </div>
 
-          {/* Filters */}
+          {/* Filters: only warehouse type */}
           <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               {/* Warehouse Type Filter */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -192,59 +194,24 @@ const InventoryReport: React.FC = () => {
                 >
                   <option value="all">Tất cả kho</option>
                   <option value="material">Kho nguyên liệu</option>
+                  <option value="material-supplier">Kho nguyên liệu - NCC</option>
                   <option value="designer-material">Kho nguyên liệu Designer</option>
                   <option value="product">Kho sản phẩm</option>
                 </select>
               </div>
-
-              {/* Date Range */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Từ ngày
-                </label>
-                <input
-                  type="date"
-                  name="from"
-                  value={dateRange.from}
-                  onChange={handleDateChange}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Đến ngày
-                </label>
-                <input
-                  type="date"
-                  name="to"
-                  value={dateRange.to}
-                  onChange={handleDateChange}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div className="flex items-end">
-                <button
-                  onClick={() => window.location.reload()}
-                  className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                >
-                  Làm mới
-                </button>
-              </div>
             </div>
           </div>
 
-          {/* Loading State */}
-          {isLoading && (
+          {/* Loading State hidden */}
+          {false && (
             <div className="text-center py-8">
               <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
               <p className="mt-2 text-gray-600">Đang tải dữ liệu...</p>
             </div>
           )}
 
-          {/* Stats Cards */}
-          {(materialSummary || designerSummary || productSummary) && (
+          {/* Stats Cards hidden */}
+          {false && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
               {warehouseType !== 'designer-material' && materialSummary && (
                 <>
@@ -428,8 +395,8 @@ const InventoryReport: React.FC = () => {
             </div>
           )}
 
-          {/* Chart Section */}
-          {((chartData && chartData.length > 0) || (productActivity && productActivity.length > 0)) && (
+          {/* Chart Section hidden */}
+          {false && (
             <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
               {warehouseType === 'material' || warehouseType === 'all' ? (
                 <>
@@ -443,10 +410,10 @@ const InventoryReport: React.FC = () => {
                           <span className="text-sm text-gray-600">{item.supplierName || 'Không xác định'}</span>
                           <div className="flex items-center space-x-2">
                             <div className="w-32 bg-gray-200 rounded-full h-2">
-                              <div 
+                              <div
                                 className="bg-blue-600 h-2 rounded-full"
-                                style={{ 
-                                  width: `${Math.min(100, (item.quantity / Math.max(...chartData.map(d => d.quantity))) * 100)}%` 
+                                style={{
+                                  width: `${Math.min(100, (item.quantity / Math.max(...chartData.map(d => d.quantity))) * 100)}%`
                                 }}
                               ></div>
                             </div>
@@ -460,7 +427,7 @@ const InventoryReport: React.FC = () => {
                   )}
                 </>
               ) : null}
-              
+
               {warehouseType === 'product' && productActivity && productActivity.length > 0 && (
                 <>
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">
@@ -508,6 +475,9 @@ const InventoryReport: React.FC = () => {
                         Nguyên Liệu
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Kho
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Số Lượng
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -516,25 +486,27 @@ const InventoryReport: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {warehouseType !== 'designer-material' && materialTransactions && 
+                    {warehouseType !== 'designer-material' && materialTransactions &&
                       materialTransactions.slice(0, 10).map((transaction, index) => (
                         <tr key={index}>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {new Date(transaction.createdAt).toLocaleDateString('vi-VN')}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                              transaction.transactionType === 'SupplierReceipt' 
-                                ? 'bg-green-100 text-green-800'
-                                : transaction.transactionType === 'CustomerSale'
+                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${transaction.transactionType === 'SupplierReceipt'
+                              ? 'bg-green-100 text-green-800'
+                              : transaction.transactionType === 'CustomerSale'
                                 ? 'bg-blue-100 text-blue-800'
                                 : 'bg-gray-100 text-gray-800'
-                            }`}>
+                              }`}>
                               {transaction.transactionType}
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {transaction.materialName || 'N/A'}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {warehouseType === 'material-supplier' ? 'Kho nguyên liệu - NCC' : (transaction.warehouseName || 'N/A')}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             <span className={transaction.quantityChange > 0 ? 'text-green-600' : 'text-red-600'}>
@@ -577,13 +549,12 @@ const InventoryReport: React.FC = () => {
                             {new Date(transaction.transactionDate).toLocaleDateString('vi-VN')}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                              transaction.transactionType === 'Production' 
-                                ? 'bg-green-100 text-green-800'
-                                : transaction.transactionType === 'Sale'
+                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${transaction.transactionType === 'Production'
+                              ? 'bg-green-100 text-green-800'
+                              : transaction.transactionType === 'Sale'
                                 ? 'bg-blue-100 text-blue-800'
                                 : 'bg-gray-100 text-gray-800'
-                            }`}>
+                              }`}>
                               {transaction.transactionType}
                             </span>
                           </td>
@@ -614,8 +585,8 @@ const InventoryReport: React.FC = () => {
             </div>
           )}
 
-          {/* Low Stock Alert */}
-          {((lowStockItems && lowStockItems.length > 0) || (productLowStock && productLowStock.length > 0)) && (
+          {/* Low Stock Alert hidden */}
+          {false && (
             <div className="bg-white rounded-lg shadow-sm p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 Cảnh Báo Tồn Kho Thấp

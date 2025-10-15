@@ -48,15 +48,7 @@ const navItems: NavItem[] = [
       { name: "Đơn Hàng Hoàn Thành", path: "/supplier/dashboard/orders/completed", pro: false },
     ],
   },
-  {
-    icon: <PieChartIcon />,
-    name: "Phân Tích",
-    subItems: [
-      { name: "Phân Tích Bán Hàng", path: "/supplier/dashboard/analytics", pro: false },
-      { name: "Báo Cáo Hiệu Suất", path: "/supplier/dashboard/analytics/performance", pro: false },
-      { name: "Biểu Đồ Doanh Thu", path: "/supplier/dashboard/analytics/revenue", pro: false },
-    ],
-  },
+
 ];
 
 const otherItems: NavItem[] = [
@@ -265,12 +257,12 @@ const SupplierSidebar: React.FC = () => {
             </div>
 
             {/* Other Navigation */}
-            <div>
+            {/* <div>
               <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                 {(isExpanded || isHovered) && "Khác"}
               </h3>
               {renderMenuItems(otherItems, "others")}
-            </div>
+            </div> */}
           </nav>
 
           {/* Footer */}

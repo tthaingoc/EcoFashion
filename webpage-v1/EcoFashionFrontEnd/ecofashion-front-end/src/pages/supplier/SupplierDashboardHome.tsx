@@ -1,69 +1,75 @@
-import React from 'react';
-import { 
-  GridIcon, 
-  BoxCubeIcon, 
-  ListIcon, 
-  BoxIcon, 
-  PieChartIcon, 
-  UserCircleIcon, 
-  PlugInIcon 
-} from '../../assets/icons/index.tsx';
-
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  BoxCubeIcon,
+  ListIcon,
+  BoxIcon,
+  PieChartIcon,
+  UserCircleIcon,
+} from "../../assets/icons/index.tsx";
+import SupplierRevenueChart from "../../components/supplier/SupplierRevenueChart";
+import { supplierAnalyticsApi } from "../../services/supplier/supplierAnalyticsApi";
 
 const SupplierDashboardHome: React.FC = () => {
-  const statsData = [
-    {
-      title: "Tổng Đơn Hàng",
-      value: "1,234",
-      change: "+12.5%",
-      changeType: "positive" as const,
-      icon: <ListIcon className="text-blue-500" />,
-      bgColor: "bg-blue-500",
-    },
-    {
-      title: "Doanh Thu",
-      value: "₫45.2M",
-      change: "+8.2%",
-      changeType: "positive" as const,
-      icon: <PieChartIcon className="text-green-500" />,
-      bgColor: "bg-green-500",
-    },
-    {
-      title: "Vật Liệu Trong Kho",
-      value: "156",
-      change: "-2.1%",
-      changeType: "negative" as const,
-      icon: <BoxIcon className="text-orange-500" />,
-      bgColor: "bg-orange-500",
-    },
-    {
-      title: "Khách Hàng Mới",
-      value: "89",
-      change: "+15.3%",
-      changeType: "positive" as const,
-      icon: <UserCircleIcon className="text-purple-500" />,
-      bgColor: "bg-purple-500",
-    },
-  ];
+  const navigate = useNavigate();
+  const [revenueData, setRevenueData] = useState<{
+    totalRevenue: number;
+    totalOrders: number;
+  } | null>(null);
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    }).format(value);
+  };
+
+  // Fetch revenue data for stats
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        // Get last 30 days data
+        const endDate = new Date().toISOString().split("T")[0];
+        const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split("T")[0];
+
+        const analytics = await supplierAnalyticsApi.getRevenueAnalytics({
+          period: "daily",
+          startDate,
+          endDate,
+        });
+
+        setRevenueData({
+          totalRevenue: analytics.totalRevenue,
+          totalOrders: analytics.totalOrders,
+        });
+      } catch (error) {
+        console.error("Failed to fetch revenue stats:", error);
+      }
+    };
+
+    fetchStats();
+  }, []);
 
   const quickActions = [
     {
       title: "Thêm Vật Liệu",
       description: "Thêm vật liệu mới vào kho",
       icon: <BoxCubeIcon className="text-brand-500" />,
-      path: "/supplier/materials/add",
+      path: "/supplier/dashboard/materials/add",
     },
     {
       title: "Xem Đơn Hàng",
       description: "Kiểm tra đơn hàng mới",
       icon: <ListIcon className="text-brand-500" />,
-      path: "/supplier/orders",
+      path: "/supplier/dashboard/orders",
     },
     {
       title: "Báo Cáo",
       description: "Xem báo cáo doanh thu",
       icon: <PieChartIcon className="text-brand-500" />,
-      path: "/supplier/analytics",
+      path: "/supplier/dashboard",
     },
   ];
 
@@ -97,59 +103,17 @@ const SupplierDashboardHome: React.FC = () => {
           {/* Header */}
           <div className="dashboard-header">
             <h1 className="dashboard-title">Dashboard</h1>
-            <p className="dashboard-subtitle">Chào mừng bạn trở lại! Đây là tổng quan về hoạt động kinh doanh của bạn.</p>
-          </div>
-
-          {/* Stats Grid */}
-          <div className="grid-stats mb-8">
-            {statsData.map((stat, index) => (
-              <div key={index} className="stats-card hover-lift">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="stats-label">{stat.title}</p>
-                    <p className="stats-value">{stat.value}</p>
-                    <p className={`stats-trend ${stat.changeType === 'positive' ? 'stats-trend-positive' : 'stats-trend-negative'}`}>
-                      {stat.change} so với tháng trước
-                    </p>
-                  </div>
-                  <div className={`stats-icon-container ${stat.bgColor}`}>
-                    {stat.icon}
-                  </div>
-                </div>
-              </div>
-            ))}
+            <p className="dashboard-subtitle">
+              Chào mừng bạn trở lại! Đây là tổng quan về hoạt động kinh doanh
+              của bạn.
+            </p>
           </div>
 
           {/* Charts Grid */}
-          <div className="grid-charts mb-8">
-            {/* Sales Chart */}
-            <div className="chart-container">
-              <h3 className="chart-title">Doanh Thu Tháng Này</h3>
-              <div className="chart-placeholder">
-                <div className="flex items-center justify-center h-full">
-                  <div className="text-center">
-                    <PieChartIcon className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                    <p className="text-gray-500">Biểu đồ doanh thu sẽ được hiển thị ở đây</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Orders Chart */}
-            <div className="chart-container">
-              <h3 className="chart-title">Đơn Hàng Gần Đây</h3>
-              <div className="chart-placeholder">
-                <div className="flex items-center justify-center h-full">
-                  <div className="text-center">
-                    <ListIcon className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                    <p className="text-gray-500">Biểu đồ đơn hàng sẽ được hiển thị ở đây</p>
-                  </div>
-                </div>
-              </div>
-            </div>
+          <div className="mb-8">
+            {/* Revenue Chart */}
+            <SupplierRevenueChart />
           </div>
-
-
 
           {/* Quick Actions & Recent Activity */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -158,12 +122,16 @@ const SupplierDashboardHome: React.FC = () => {
               <h3 className="chart-title">Thao Tác Nhanh</h3>
               <div className="grid-actions">
                 {quickActions.map((action, index) => (
-                  <div key={index} className="quick-action-card hover-lift">
-                    <div className="quick-action-icon">
-                      {action.icon}
-                    </div>
+                  <div
+                    key={index}
+                    className="quick-action-card hover-lift cursor-pointer"
+                    onClick={() => navigate(action.path)}
+                  >
+                    <div className="quick-action-icon">{action.icon}</div>
                     <h4 className="quick-action-title">{action.title}</h4>
-                    <p className="quick-action-description">{action.description}</p>
+                    <p className="quick-action-description">
+                      {action.description}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -175,7 +143,9 @@ const SupplierDashboardHome: React.FC = () => {
               <div className="activity-list">
                 {recentActivity.map((activity, index) => (
                   <div key={index} className="activity-item">
-                    <div className={`activity-dot activity-dot-${activity.type}`}></div>
+                    <div
+                      className={`activity-dot activity-dot-${activity.type}`}
+                    ></div>
                     <div className="activity-content">
                       <p className="activity-message">{activity.message}</p>
                       <p className="activity-time">{activity.time}</p>
@@ -191,4 +161,4 @@ const SupplierDashboardHome: React.FC = () => {
   );
 };
 
-export default SupplierDashboardHome; 
+export default SupplierDashboardHome;

@@ -61,25 +61,17 @@ export interface TypeMaterial {
 }
 
 export interface MaterialInStored {
+  inventoryId: number;
   materialId: number;
-  persentageUsed: number;
-  meterUsed: number;
   name: string;
-  materialTypeName: string;
-  quantityAvailable: number;
-  sustainabilityCriteria: SustainabilityCriterion[];
-  materialDescription: string;
-  sustainabilityScore: number;
-  carbonFootprint: number;
-  carbonFootprintUnit: string;
-  waterUsage: number;
-  waterUsageUnit: string;
-  wasteDiverted: number;
-  wasteDivertedUnit: string;
-  certificationDetails: string;
-  supplierName: string;
+  imageUrl: string;
+  quantity: number;
+  status: string;
   pricePerUnit: number;
-  createdAt: string;
+  totalValue: number;
+  lastUpdated: string;
+  quantityAvailable: number;
+  supplierName: string;
 }
 
 export interface StoredMaterial {
@@ -129,6 +121,7 @@ export interface DesignsVariants {
   quantity: number;
   ratio: number;
   sizeName: string;
+  sizeId: number;
   colorCode: string;
 }
 
@@ -194,11 +187,22 @@ export interface FullProductDetail {
   colorCode: string;
   sizeId: number;
   sizeName: string;
+  sizeRatio: number;
   quantityAvailable: number;
+  designId: number;
+  lastUpdated: string;
 }
 
 export interface DesignResponse {
   design: Design;
+}
+
+export interface DesignMaterial {
+  materialId: number;
+  materialName: string;
+  requiredMeters: number;
+  designerStock: number;
+  supplierStock: number;
 }
 
 export const designFieldMapping = {
@@ -325,10 +329,10 @@ export class DesignService {
   /**
    * Get all design
    */
-  static async getAllDesignByDesigner(designerId: string): Promise<Design[]> {
+  static async getAllDesignByDesigner(): Promise<Design[]> {
     try {
       const response = await apiClient.get<BaseApiResponse<Design[]>>(
-        `/${this.API_BASE}/design-variant/${designerId}`
+        `/${this.API_BASE}/design-variant`
       );
       return handleApiResponse(response);
     } catch (error) {
@@ -405,12 +409,10 @@ export class DesignService {
   /**
    * Get stored material
    */
-  static async getStoredMaterial(
-    designerId: string
-  ): Promise<StoredMaterial[]> {
+  static async getStoredMaterial(): Promise<MaterialInStored[]> {
     try {
-      const response = await apiClient.get<BaseApiResponse<StoredMaterial[]>>(
-        `/DesignerMaterialInventories/GetStoredMaterial/${designerId}`
+      const response = await apiClient.get<BaseApiResponse<MaterialInStored[]>>(
+        `/DesignerMaterialInventories/GetStoredMaterial`
       );
       return handleApiResponse(response);
     } catch (error) {
@@ -667,10 +669,10 @@ export class DesignService {
   /**
    * Get all design that have product
    */
-  static async getAllDesignProuct(designerId: string): Promise<Design[]> {
+  static async getAllDesignProuct(): Promise<Design[]> {
     try {
       const response = await apiClient.get<BaseApiResponse<Design[]>>(
-        `/${this.API_BASE}/designs-with-products/${designerId}`
+        `/${this.API_BASE}/designs-with-products/by-designer`
       );
       return handleApiResponse(response);
     } catch (error) {
@@ -682,13 +684,12 @@ export class DesignService {
    * Get all design with product detail
    */
   static async getDesignProductDetailsAsync(
-    id: number,
-    desingerId: string
+    id: number
   ): Promise<FullProductDetail[]> {
     try {
       const response = await apiClient.get<
         BaseApiResponse<FullProductDetail[]>
-      >(`/${this.API_BASE}/designProductDetails/${id}/${desingerId}`);
+      >(`/${this.API_BASE}/designProductDetails/${id}`);
       return handleApiResponse(response);
     } catch (error) {
       return handleApiError(error);
@@ -782,5 +783,22 @@ export class DesignService {
       return handleApiError(error);
     }
   };
+
+  /**
+   * Get Design Material
+   */
+  static async getDesignMaterialByDesignId(
+    designId: number
+  ): Promise<DesignMaterial[]> {
+    try {
+      const response = await apiClient.get(
+        `/DesignDraft/fabric-usage-each-Design/${designId}`
+      );
+
+      return handleApiResponse(response);
+    } catch (error) {
+      return handleApiError(error);
+    }
+  }
 }
 export default DesignService;

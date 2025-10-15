@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using EcoFashionBackEnd.Services;
 using EcoFashionBackEnd.Dtos;
+using EcoFashionBackEnd.Dtos.Design;
 
 [Route("api/[controller]")]
 [ApiController]
@@ -74,7 +75,6 @@ public class DesignerController : ControllerBase
     /// Admin: Get all designers (full details)
     /// </summary>
     [HttpGet]
-    [Authorize(Roles = "admin")]
     public async Task<IActionResult> GetAllDesigners()
     {
         var result = await _designerService.GetAllDesigners();
@@ -99,7 +99,6 @@ public class DesignerController : ControllerBase
     /// Admin: Get designer full details
     /// </summary>
     [HttpGet("{id}")]
-    [Authorize(Roles = "admin")]
     public async Task<IActionResult> GetDesignerById(Guid id)
     {
         var designer = await _designerService.GetDesignerById(id);
@@ -162,7 +161,6 @@ public class DesignerController : ControllerBase
     /// Admin: Filter designers
     /// </summary>
     [HttpGet("Filter")]
-    [Authorize(Roles = "admin")]
     public async Task<IActionResult> FilterDesigners(
         [FromQuery] string? designerName,
         [FromQuery] string? email,
@@ -180,7 +178,6 @@ public class DesignerController : ControllerBase
     /// Admin: Search designers
     /// </summary>
     [HttpGet("Search")]
-    [Authorize(Roles = "admin")]
     public async Task<IActionResult> SearchDesigners([FromQuery] string? keyword)
     {
         var searchResults = await _designerService.SearchDesigners(keyword);
@@ -331,4 +328,19 @@ public class DesignerController : ControllerBase
             return NotFound(ApiResult<object>.Fail("Không tìm thấy liên kết giữa nhà thiết kế và nhà cung cấp này."));
         }
     }
+
+
+    [HttpGet("designers/{designerId}/material-usage")]
+    public async Task<IActionResult> GetDesignerMaterialUsage(Guid designerId)
+    {
+
+        var usage = await _designerService.GetDesignerMaterialUsageAsync(designerId);
+        return Ok(ApiResult<List<DesignerUsageSummaryDto>>.Succeed(usage));
+    }
+
+
+
+
+
+
 }

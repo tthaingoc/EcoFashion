@@ -118,7 +118,7 @@ const ExploreDesignersPage: React.FC = () => {
   }, [searchQuery]);
 
   const handleDesignerClick = (designerId: string) => {
-    navigate(`/explore/designers/${designerId}`);
+    navigate(`/brand/${designerId}`);
   };
 
   const totalRating = designers.reduce((sum, d) => sum + (d.rating || 0), 0);

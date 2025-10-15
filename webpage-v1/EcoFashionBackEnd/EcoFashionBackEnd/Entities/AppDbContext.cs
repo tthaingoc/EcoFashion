@@ -139,7 +139,7 @@ namespace EcoFashionBackEnd.Entities
             // Ensure only one default address per user
             modelBuilder.Entity<UserAddress>()
                 .HasIndex(ua => new { ua.UserId, ua.IsDefault })
-                .HasFilter("[IsDefault] = 1")
+                .HasFilter("\"IsDefault\" = true")
                 .IsUnique();
             #endregion
             #region wallet
@@ -639,7 +639,7 @@ namespace EcoFashionBackEnd.Entities
                       .HasForeignKey(c => c.UserId)
                       .OnDelete(DeleteBehavior.Restrict);
                 entity.HasIndex(c => new { c.UserId, c.IsActive })
-                      .HasFilter("[UserId] IS NOT NULL AND [IsActive] = 1")
+                      .HasFilter("\"UserId\" IS NOT NULL AND \"IsActive\" = true")
                       .IsUnique();
                 entity.Property(c => c.CreatedAt);
                 entity.Property(c => c.UpdatedAt);

@@ -71,7 +71,7 @@ namespace EcoFashionBackEnd.Services
                             MeterUsed = (decimal)dm.MeterUsed
                         })
                         .ToList(),
-                    ProductCount = d.Products.Count
+                    ProductCount = d.Products.Count,
                 })
                 .ToListAsync();
         }
@@ -173,34 +173,29 @@ namespace EcoFashionBackEnd.Services
             return designDetailDto;
         }
 
-
         public async Task<List<DesignWithProductInfoDto>> GetDesignsWithProductsPaginationAsync(int page, int pageSize)
         {
             var designs = await _dbContext.Designs
                 .AsNoTracking()
-                .OrderByDescending(d => d.CreatedAt)
                 .Where(d => d.Products.Any())
+                .OrderByDescending(d => d.CreatedAt)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(d => new DesignWithProductInfoDto
+                .Select(d => new
                 {
-                    DesignId = d.DesignId,
-                    Name = d.Name,
-                    RecycledPercentage = d.RecycledPercentage,
+                    d.DesignId,
+                    d.Name,
+                    d.RecycledPercentage,
                     ItemTypeName = d.ItemTypes.TypeName,
-                    SalePrice = d.SalePrice,
-                    DesignImageUrls = d.DesignImages
-                    .Select(di => di.Image.ImageUrl)
-                    .ToList(),
-                    Materials = d.DesignsMaterials
-                    .Select(dm => new MaterialDto
+                    d.SalePrice,
+                    DesignImageUrls = d.DesignImages.Select(di => di.Image.ImageUrl),
+                    Materials = d.DesignsMaterials.Select(dm => new MaterialDto
                     {
                         MaterialId = dm.MaterialId,
                         MaterialName = dm.Materials.Name,
-                        MeterUsed = (decimal)dm.MeterUsed
-                    })
-                    .ToList(),
-                    ProductCount = d.Products.Count,
+                        MeterUsed = dm.MeterUsed
+                    }),
+                    ProductCount = d.Products.Count(),
                     Designer = d.DesignerProfile != null
                         ? new DesignerPublicDto
                         {
@@ -211,7 +206,19 @@ namespace EcoFashionBackEnd.Services
                 })
                 .ToListAsync();
 
-            return designs;
+            // Ép về List<T> sau khi dữ liệu đã lấy xong
+            return designs.Select(d => new DesignWithProductInfoDto
+            {
+                DesignId = d.DesignId,
+                Name = d.Name,
+                RecycledPercentage = d.RecycledPercentage,
+                ItemTypeName = d.ItemTypeName,
+                SalePrice = d.SalePrice,
+                DesignImageUrls = d.DesignImageUrls.ToList(),
+                Materials = d.Materials.ToList(),
+                ProductCount = d.ProductCount,
+                Designer = d.Designer
+            }).ToList();
         }
 
 
@@ -275,7 +282,7 @@ namespace EcoFashionBackEnd.Services
                     DesignImageUrls = d.DesignImages
                         .Select(di => di.Image.ImageUrl)
                         .ToList(),
-
+                    CreateAt = d.CreatedAt,
                     // Keep material selection minimal
                     Materials = d.DesignsMaterials
                         .Select(dm => new MaterialDto
@@ -292,6 +299,7 @@ namespace EcoFashionBackEnd.Services
                             Id = dv.Id,
                             DesignId = dv.DesignId,
                             Quantity = dv.Quantity,
+                            SizeId = dv.SizeId,
                             SizeName = dv.Size.SizeName,
                             ColorCode = dv.ColorCode,
                             Ratio = d.ItemTypes.TypeSizeRatios
@@ -368,10 +376,19 @@ namespace EcoFashionBackEnd.Services
                     ColorCode = p.ColorCode,
                     SizeId = p.SizeId,
                     SizeName = p.Size.SizeName,
+                    SizeRatio = d.ItemTypes.TypeSizeRatios
+                        .Where(r => r.SizeId == p.SizeId)
+                        .Select(r => r.Ratio)
+                        .FirstOrDefault(),
+                    DesignId = p.DesignId,
                     QuantityAvailable = p.Inventories
                         .Where(pi => pi.WarehouseId == productWarehouseId)
                         .Select(pi => pi.QuantityAvailable)
-                        .FirstOrDefault()
+                        .FirstOrDefault(),
+                    LastUpdated = p.Inventories
+                        .Where(pi => pi.WarehouseId == productWarehouseId)
+                        .Select(pi => pi.LastUpdated)
+                        .FirstOrDefault(),
                 }))
                 .ToListAsync();
 

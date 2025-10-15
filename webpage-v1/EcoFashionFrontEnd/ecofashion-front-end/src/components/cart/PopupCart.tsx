@@ -20,11 +20,10 @@ const PopupCart: React.FC<PopupCartProps> = ({ open, onClose }) => {
   // Animation: fade/slide in-out
   return (
     <div
-      className={`absolute right-0 mt-2 w-80 md:w-96 bg-white border border-green-500 rounded-xl shadow-2xl z-50 transition-all duration-300 ${
-        open
-          ? "opacity-100 translate-y-0 pointer-events-auto"
-          : "opacity-0 -translate-y-4 pointer-events-none"
-      }`}
+      className={`absolute right-0 mt-2 w-80 md:w-96 bg-white border border-green-500 rounded-xl shadow-2xl z-50 transition-all duration-300 text-gray-800 ${open
+        ? "opacity-100 translate-y-0 pointer-events-auto"
+        : "opacity-0 -translate-y-4 pointer-events-none"
+        }`}
       style={{ top: "120%" }}
       onClick={(e) => e.stopPropagation()}
     >
@@ -47,7 +46,7 @@ const PopupCart: React.FC<PopupCartProps> = ({ open, onClose }) => {
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-green-500 font-bold">•</span>
-                    <span className="font-medium">{item.name}</span>
+                    <span className="font-medium text-gray-800">{item.name}</span>
                     <span className="text-xs text-gray-400 ml-1">
                       ({item.type === "material" ? "Nguyên liệu" : "Sản phẩm"})
                     </span>
@@ -62,7 +61,7 @@ const PopupCart: React.FC<PopupCartProps> = ({ open, onClose }) => {
                     >
                       -
                     </button>
-                    <span className="px-2">
+                    <span className="px-2 text-gray-700">
                       {item.quantity} {item.unit || "cái"}
                     </span>
                     <button

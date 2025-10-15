@@ -2,32 +2,28 @@ using EcoFashionBackEnd.Entities;
 using EcoFashionBackEnd.Dtos.Material;
 using EcoFashionBackEnd.Common.Payloads.Requests;
 using EcoFashionBackEnd.Common.Payloads.Responses;
-using Microsoft.EntityFrameworkCore;
+using EcoFashionBackEnd.Repositories;
 using EcoFashionBackEnd.Dtos;
 
 
 namespace EcoFashionBackEnd.Services
 {
-    /// <summary>
-    /// Service for enriching Material entities with calculated data
-    /// Centralizes sustainability and transport calculations
-    /// </summary>
+    // Service for enriching Material entities with calculated data
+    // Centralizes sustainability and transport calculations
     public class MaterialEnrichmentService
     {
         private readonly SustainabilityService _sustainabilityService;
-        private readonly AppDbContext _dbContext;
+        private readonly IMaterialRepository _materialRepository;
 
         public MaterialEnrichmentService(
             SustainabilityService sustainabilityService,
-            AppDbContext dbContext)
+            IMaterialRepository materialRepository)
         {
             _sustainabilityService = sustainabilityService;
-            _dbContext = dbContext;
+            _materialRepository = materialRepository;
         }
 
-        /// <summary>
-        /// Enrich single material with sustainability data
-        /// </summary>
+        // Enrich single material with sustainability data
         public async Task<MaterialDetailDto> EnrichMaterialAsync(Material material)
         {
             var sustainabilityReport = await _sustainabilityService.CalculateMaterialSustainabilityScore(material.MaterialId);
@@ -40,14 +36,12 @@ namespace EcoFashionBackEnd.Services
             return MapToDetailDto(material, sustainabilityReport, benchmarks);
         }
 
-        /// <summary>
-        /// Enrich multiple materials with sustainability data (batch processing)
-        /// </summary>
+        // Enrich multiple materials with sustainability data (batch processing)
         public async Task<List<MaterialDetailDto>> EnrichMaterialsAsync(List<Material> materials)
         {
             var materialIds = materials.Select(m => m.MaterialId).ToList();
             var sustainabilityReports = await _sustainabilityService.CalculateMaterialsSustainabilityScores(materialIds);
-            
+
             // Get all benchmarks for all material types
             var typeIds = materials.Select(m => m.TypeId).Distinct().ToList();
             var allBenchmarks = await GetBenchmarksForTypesAsync(typeIds);
@@ -61,20 +55,18 @@ namespace EcoFashionBackEnd.Services
                     .Select(b => CalculateBenchmarkComparison(b, material))
                     .Where(b => b != null)
                     .ToList();
-                
+
                 result.Add(MapToDetailDto(material, sustainabilityReport, materialBenchmarks));
             }
 
             return result;
         }
-        
-        /// <summary>
-        /// Enrich and sort materials by sustainability score (descending)
-        /// </summary>
+
+        // Enrich and sort materials by sustainability score (descending)
         public async Task<List<MaterialDetailDto>> EnrichAndSortMaterialsBySustainabilityAsync(List<Material> materials)
         {
             var enrichedMaterials = await EnrichMaterialsAsync(materials);
-            
+
             // Sort by sustainability score descending, then by name for consistency
             return enrichedMaterials
                 .OrderByDescending(m => m.SustainabilityScore)
@@ -82,39 +74,31 @@ namespace EcoFashionBackEnd.Services
                 .ToList();
         }
 
-        /// <summary>
-        /// Apply transport calculations to material creation request
-        /// </summary>
+        // Apply transport calculations to material creation request
         public void EnrichMaterialCreationRequest(MaterialCreationFormRequest request)
         {
             // Auto-calculate transport info if not provided
             TransportCalculationService.CalculateTransportInfo(request);
         }
 
-        /// <summary>
-        /// Get transport evaluation for a material
-        /// </summary>
+        // Get transport evaluation for a material
         public object GetTransportEvaluation(Material material)
         {
             return TransportCalculationService.GetTransportEvaluation(
-                material.TransportDistance ?? 0, 
+                material.TransportDistance ?? 0,
                 material.TransportMethod ?? "Unknown"
             );
         }
 
-        /// <summary>
-        /// Get production evaluation for a material
-        /// </summary>
+        // Get production evaluation for a material
         public object GetProductionEvaluation(Material material)
         {
             return TransportCalculationService.GetProductionEvaluation(material.ProductionCountry);
         }
 
-        /// <summary>
-        /// Map Material entity to DetailDto with all enrichments
-        /// </summary>
+        // Map Material entity to DetailDto with all enrichments
         private MaterialDetailDto MapToDetailDto(
-            Material material, 
+            Material material,
             MaterialSustainabilityReport? sustainabilityReport,
             List<MaterialTypeBenchmarkModel> benchmarks)
         {
@@ -127,7 +111,7 @@ namespace EcoFashionBackEnd.Services
                 QuantityAvailable = material.QuantityAvailable,
                 PricePerUnit = material.PricePerUnit,
                 DocumentationUrl = material.DocumentationUrl ?? string.Empty,
-                
+
                 // Sustainability data
                 CarbonFootprint = material.CarbonFootprint,
                 CarbonFootprintUnit = material.CarbonFootprintUnit,
@@ -159,7 +143,7 @@ namespace EcoFashionBackEnd.Services
                 // Supplier data
                 SupplierId = material.SupplierId,
                 SupplierName = material.Supplier?.SupplierName ?? string.Empty,
-                
+
                 // Supplier object
                 Supplier = material.Supplier != null ? new SupplierPublicModel
                 {
@@ -179,7 +163,7 @@ namespace EcoFashionBackEnd.Services
                     Certificates = material.Supplier.Certificates,
                     CreatedAt = material.Supplier.CreatedAt
                 } : null,
-                
+
                 // Images URLs
                 ImageUrls = material.MaterialImages?.Select(mi => mi.Image?.ImageUrl).Where(url => !string.IsNullOrEmpty(url)).Select(url => url!).ToList() ?? new List<string>(),
 
@@ -200,38 +184,25 @@ namespace EcoFashionBackEnd.Services
                     Unit = ms.SustainabilityCriterion?.Unit,
                     Value = ms.Value
                 }).ToList() ?? new List<MaterialSustainabilityCriterionDto>(),
-                
+
                 // Benchmarks (convert from entities to models)
                 Benchmarks = benchmarks.Where(b => b != null).ToList()
             };
         }
 
-        /// <summary>
-        /// Get benchmarks for a specific material type
-        /// </summary>
+        // Get benchmarks for a specific material type
         private async Task<List<MaterialTypeBenchmark>> GetMaterialBenchmarksAsync(int typeId)
         {
-            return await _dbContext.MaterialTypesBenchmarks
-                .Where(b => b.TypeId == typeId)
-                .Include(b => b.SustainabilityCriteria)
-                .ToListAsync();
+            return await _materialRepository.GetBenchmarksByTypeIdAsync(typeId);
         }
 
-        /// <summary>
-        /// Get benchmarks for multiple material types
-        /// </summary>
+        // Get benchmarks for multiple material types
         private async Task<List<MaterialTypeBenchmark>> GetBenchmarksForTypesAsync(List<int> typeIds)
         {
-            return await _dbContext.MaterialTypesBenchmarks
-                .Where(b => typeIds.Contains(b.TypeId))
-                .Include(b => b.MaterialType)
-                .Include(b => b.SustainabilityCriteria)
-                .ToListAsync();
+            return await _materialRepository.GetBenchmarksByTypeIdsAsync(typeIds);
         }
 
-        /// <summary>
-        /// Map Material entity to MaterialCreationResponse with enriched data
-        /// </summary>
+        // Map Material entity to MaterialCreationResponse with enriched data
         public async Task<MaterialCreationResponse> MapToCreationResponseAsync(Material material)
         {
             var sustainabilityReport = await _sustainabilityService.CalculateMaterialSustainabilityScore(material.MaterialId);
@@ -281,21 +252,16 @@ namespace EcoFashionBackEnd.Services
             };
         }
 
-        /// <summary>
-        /// Map Material entity to MaterialDetailResponse with enriched data
-        /// </summary>
+        // Map Material entity to MaterialDetailResponse with enriched data
         public async Task<MaterialDetailResponse> MapToDetailResponseAsync(Material material)
         {
             var sustainabilityReport = await _sustainabilityService.CalculateMaterialSustainabilityScore(material.MaterialId);
 
             // Get all benchmarks for this material's type
-            var allBenchmarks = await _dbContext.MaterialTypesBenchmarks
-                .Include(b => b.MaterialType)
-                .Include(b => b.SustainabilityCriteria)
-                .ToListAsync();
+            var allBenchmarks = await _materialRepository.GetBenchmarksByTypeIdsAsync(new List<int> { material.TypeId });
 
             var materialBenchmarks = new List<MaterialTypeBenchmarkModel>();
-            
+
             try
             {
                 materialBenchmarks = allBenchmarks
@@ -388,7 +354,7 @@ namespace EcoFashionBackEnd.Services
         // Helper methods từ MaterialService
         private async Task<string> GetMaterialTypeNameAsync(int typeId)
         {
-            var materialType = await _dbContext.MaterialTypes.FindAsync(typeId);
+            var materialType = await _materialRepository.GetMaterialTypeByIdAsync(typeId);
             return materialType?.TypeName ?? "Unknown";
         }
 
@@ -409,8 +375,8 @@ namespace EcoFashionBackEnd.Services
             var advantages = new List<string>();
 
             // Check for sustainable transport (short distance and eco-friendly method)
-            if (material.TransportDistance.HasValue && material.TransportDistance < 1000 && 
-                !string.IsNullOrEmpty(material.TransportMethod) && 
+            if (material.TransportDistance.HasValue && material.TransportDistance < 1000 &&
+                !string.IsNullOrEmpty(material.TransportMethod) &&
                 material.TransportMethod.ToLower() != "air")
                 advantages.Add("Vận chuyển bền vững");
             if (material.CarbonFootprint < 3)
@@ -425,7 +391,7 @@ namespace EcoFashionBackEnd.Services
 
         // Helper method để tính toán so sánh benchmark (từ MaterialService)
         private MaterialTypeBenchmarkModel CalculateBenchmarkComparison(
-            MaterialTypeBenchmark benchmark, 
+            MaterialTypeBenchmark benchmark,
             Material material)
         {
             var result = new MaterialTypeBenchmarkModel
@@ -444,7 +410,7 @@ namespace EcoFashionBackEnd.Services
                 1 => material.CarbonFootprint.HasValue ? (float)material.CarbonFootprint : null, // Carbon Footprint
                 2 => material.WaterUsage.HasValue ? (float)material.WaterUsage : null, // Water Usage
                 3 => material.WasteDiverted.HasValue ? (float)material.WasteDiverted : null, // Waste Diverted
-                4 => !string.IsNullOrEmpty(material.CertificationDetails) && 
+                4 => !string.IsNullOrEmpty(material.CertificationDetails) &&
                      HasRecognizedSustainabilityCertification(material.CertificationDetails) ? 1f : 0f, // Sustainability Certification
                 5 => null, // Transport - calculated dynamically in SustainabilityService
                 _ => null
@@ -537,37 +503,35 @@ namespace EcoFashionBackEnd.Services
             return result;
         }
 
-        /// <summary>
-        /// Kiểm tra xem material có chứng chỉ bền vững được công nhận không
-        /// </summary>
+        // Kiểm tra xem material có chứng chỉ bền vững được công nhận không
         private static bool HasRecognizedSustainabilityCertification(string certificationDetails)
         {
             if (string.IsNullOrEmpty(certificationDetails))
                 return false;
 
             var details = certificationDetails.ToUpperInvariant();
-            
+
             // Tier 1: Comprehensive sustainability standards
-            if (details.Contains("GOTS") || 
-                details.Contains("CRADLE TO CRADLE") || 
-                details.Contains("USDA ORGANIC") || 
+            if (details.Contains("GOTS") ||
+                details.Contains("CRADLE TO CRADLE") ||
+                details.Contains("USDA ORGANIC") ||
                 details.Contains("BLUESIGN"))
                 return true;
 
             // Tier 2: High-value specialized standards
-            if (details.Contains("OCS") || 
-                details.Contains("EU ECOLABEL") || 
-                details.Contains("FAIRTRADE") || 
-                details.Contains("BCI") || 
+            if (details.Contains("OCS") ||
+                details.Contains("EU ECOLABEL") ||
+                details.Contains("FAIRTRADE") ||
+                details.Contains("BCI") ||
                 details.Contains("BETTER COTTON") ||
-                details.Contains("OEKO-TEX") || 
-                details.Contains("RWS") || 
+                details.Contains("OEKO-TEX") ||
+                details.Contains("RWS") ||
                 details.Contains("ECO PASSPORT"))
                 return true;
 
             // Tier 3: Material-specific recycling standards
-            if (details.Contains("GRS") || 
-                details.Contains("RCS") || 
+            if (details.Contains("GRS") ||
+                details.Contains("RCS") ||
                 details.Contains("RECYCLED CLAIM"))
                 return true;
 

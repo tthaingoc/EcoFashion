@@ -159,9 +159,14 @@ const MaterialDetailModal: React.FC<Props> = ({ open, materialId, onClose }) => 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
               <div><span className="text-gray-500">Nhà cung cấp:</span> <span className="ml-2 text-gray-900 dark:text-white">{data?.supplier?.supplierName || data?.supplier?.supplierId || '—'}</span></div>
               <div><span className="text-gray-500">Giá:</span> <span className="ml-2 text-gray-900 dark:text-white">{data?.pricePerUnit ? data.pricePerUnit.toLocaleString() : '—'}đ/m</span></div>
+
               <div><span className="text-gray-500">Quốc gia:</span> <span className="ml-2 text-gray-900 dark:text-white">{data?.productionCountry || '—'}</span></div>
-              <div><span className="text-gray-500">Loại:</span> <span className="ml-2 text-gray-900 dark:text-white">{data?.materialTypeName || '—'}</span></div>
+              <div><span className="text-gray-500">Nơi sản xuất:</span> <span className="ml-2 text-gray-900 dark:text-white">{data?.productionRegion || '—'}</span></div>
+
+              <div><span className="text-gray-500">Loại vật liệu vải:</span> <span className="ml-2 text-gray-900 dark:text-white">{data?.materialTypeName || '—'}</span></div>
+              <div><span className="text-gray-500">Quy trình sản xuất:</span> <span className="ml-2 text-gray-900 dark:text-white">{data?.manufacturingProcess || '—'}</span></div>
               <div><span className="text-gray-500">Chứng chỉ bền vững:</span> <span className="ml-2 text-gray-900 dark:text-white">{data?.certificationDetails || '—'}</span></div>
+              <div><span className="text-gray-500">Link dẫn chứng:</span> <span className="ml-2 text-gray-900 dark:text-white">{data?.documentationUrl || '—'}</span></div>
             </div>
             {data?.productionCountry && (
               <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
@@ -180,13 +185,7 @@ const MaterialDetailModal: React.FC<Props> = ({ open, materialId, onClose }) => 
                 )}
               </div>
             )}
-            {/* Số lượng đề xuất nhập kho */}
-            {typeof data?.quantityAvailable === 'number' && (
-              <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
-                <span className="inline-block align-middle text-base">📦</span>
-                <span>Số lượng đề xuất nhập kho: <span className="font-semibold">{data.quantityAvailable}</span></span>
-              </div>
-            )}
+
           </div>
         </div>
 
@@ -199,16 +198,15 @@ const MaterialDetailModal: React.FC<Props> = ({ open, materialId, onClose }) => 
                 <div className="flex items-center justify-end gap-2 mt-2">
                   <span className="text-base font-semibold">Tổng điểm:</span>
                   {typeof data.sustainabilityScore === 'number' && (
-                    <span className={`text-lg font-bold flex items-center gap-1 ${
-                      data.sustainabilityScore >= 80 ? 'text-green-600' :
-                      data.sustainabilityScore >= 60 ? 'text-yellow-600' :
-                      data.sustainabilityScore >= 40 ? 'text-orange-500' :
-                      'text-red-600'
-                    }`}>
+                    <span className={`text-lg font-bold flex items-center gap-1 ${data.sustainabilityScore >= 80 ? 'text-green-600' :
+                        data.sustainabilityScore >= 60 ? 'text-yellow-600' :
+                          data.sustainabilityScore >= 40 ? 'text-orange-500' :
+                            'text-red-600'
+                      }`}>
                       {data.sustainabilityScore >= 80 ? '🌟' :
-                       data.sustainabilityScore >= 60 ? '👍' :
-                       data.sustainabilityScore >= 40 ? '⚠️' :
-                       '❌'}
+                        data.sustainabilityScore >= 60 ? '👍' :
+                          data.sustainabilityScore >= 40 ? '⚠️' :
+                            '❌'}
                       {data.sustainabilityScore}%
                     </span>
                   )}
@@ -216,16 +214,16 @@ const MaterialDetailModal: React.FC<Props> = ({ open, materialId, onClose }) => 
                 </div>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full text-sm table-fixed">
+                <table className="w-full text-sm">
                   <thead className="bg-gray-50 dark:bg-gray-800">
                     <tr>
-                      <th className="text-left p-3 pr-8 min-w-[230px]">Tiêu chí</th>
-                      <th className="text-left p-3 min-w-[90px]">Thực tế</th>
-                      <th className="text-left p-3 min-w-[90px]">Chuẩn</th>
-                      <th className="text-left p-3 min-w-[80px]">Đơn vị</th>
-                      <th className="text-left p-3 min-w-[110px]">Cải thiện</th>
-                      <th className="text-left p-3 min-w-[70px]">Điểm</th>
-                      <th className="text-left p-3 min-w-[120px]">Đánh giá</th>
+                      <th className="text-left p-2 md:p-3">Tiêu chí</th>
+                      <th className="text-left p-2 md:p-3">Thực tế</th>
+                      <th className="text-left p-2 md:p-3">Chuẩn</th>
+                      <th className="text-left p-2 md:p-3">Đơn vị</th>
+                      <th className="text-left p-2 md:p-3">Cải thiện</th>
+                      <th className="text-left p-2 md:p-3">Điểm</th>
+                      <th className="text-left p-2 md:p-3">Đánh giá</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -242,30 +240,32 @@ const MaterialDetailModal: React.FC<Props> = ({ open, materialId, onClose }) => 
                       }
                       return (
                         <tr key={idx} className="border-t border-gray-100 dark:border-gray-800">
-                          <td className="p-3 pr-8 font-bold flex items-center gap-2 min-w-[230px]">
-                            {criterionIcon(c.criterionName)}
-                            <span>{c.criterionName}</span>
+                          <td className="p-2 md:p-3 font-bold">
+                            <div className="flex items-center gap-2">
+                              {criterionIcon(c.criterionName)}
+                              <span className="whitespace-nowrap">{c.criterionName}</span>
+                            </div>
                           </td>
-                          <td className="p-3 min-w-[90px]">
+                          <td className="p-2 md:p-3">
                             {c.criterionName === 'Organic Certification'
                               ? <div className="flex items-center gap-2">
-                                  <span>{c.actualValue === 100 ? '100' : '0'}</span>
-                                  {c.actualValue === 100
-                                    ? <CircleIcon color="green" />
-                                    : <CircleIcon color="red" />}
-                                </div>
+                                <span>{c.actualValue === 100 ? '100' : '0'}</span>
+                                {c.actualValue === 100
+                                  ? <CircleIcon color="green" />
+                                  : <CircleIcon color="red" />}
+                              </div>
                               : <>{c.actualValue ?? '—'}</>}
                           </td>
-                          <td className="p-3 min-w-[90px]">
+                          <td className="p-2 md:p-3">
                             {c.criterionName === 'Organic Certification'
                               ? <div className="flex items-center gap-2">
-                                  <span>{c.benchmarkValue ?? '100'}</span>
-                                  <CircleIcon color="green" />
-                                </div>
+                                <span>{c.benchmarkValue ?? '100'}</span>
+                                <CircleIcon color="green" />
+                              </div>
                               : <>{c.benchmarkValue ?? '—'}</>}
                           </td>
-                          <td className="p-3 min-w-[80px]">{c.unit || '—'}</td>
-                          <td className={`p-3 min-w-[110px] ${(() => {
+                          <td className="p-2 md:p-3">{c.unit || '—'}</td>
+                          <td className={`p-2 md:p-3 ${(() => {
                             if (improvement === 'Không áp dụng' || improvement === '—') return 'text-gray-400';
                             if (improvement === 'Đã đạt') return 'text-green-600 font-semibold';
                             if (improvement === 'Cần chứng chỉ') return 'text-red-600 font-semibold';
@@ -279,8 +279,8 @@ const MaterialDetailModal: React.FC<Props> = ({ open, materialId, onClose }) => 
                           })()}`}>
                             {improvement}
                           </td>
-                          <td className={`p-3 min-w-[70px] ${(() => {
-                            if (c.score === undefined || c.score === null ) return 'text-gray-400';
+                          <td className={`p-2 md:p-3 ${(() => {
+                            if (c.score === undefined || c.score === null) return 'text-gray-400';
                             const score = typeof c.score === 'string' ? parseFloat(c.score) : c.score;
                             if (!isNaN(score)) {
                               if (score >= 80) return 'text-green-600 font-semibold';
@@ -290,9 +290,15 @@ const MaterialDetailModal: React.FC<Props> = ({ open, materialId, onClose }) => 
                             }
                             return '';
                           })()}`}>
-                            {c.score ?? '—'}
+                            {c.score !== undefined && c.score !== null
+                              ? (typeof c.score === 'string' ? parseFloat(c.score).toFixed(2) : c.score.toFixed(2))
+                              : '—'}
                           </td>
-                          <td className={`p-3 min-w-[120px] font-semibold flex items-center gap-1 ${getStatusColorBenchmark(c.status)}`}>{statusIcon(c.status)} {c.status}</td>
+                          <td className={`p-2 md:p-3 font-semibold ${getStatusColorBenchmark(c.status)}`}>
+                            <div className="flex items-center gap-1 whitespace-nowrap">
+                              {statusIcon(c.status)} {c.status}
+                            </div>
+                          </td>
                         </tr>
                       );
                     })}

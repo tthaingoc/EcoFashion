@@ -1,9 +1,8 @@
-﻿using EcoFashionBackEnd.Common;
+using EcoFashionBackEnd.Common;
 using EcoFashionBackEnd.Dtos.Material;
 using EcoFashionBackEnd.Entities;
 using EcoFashionBackEnd.Repositories;
 using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore;
 using EcoFashionBackEnd.Common.Payloads.Requests;
 using EcoFashionBackEnd.Common.Payloads.Responses;
 using EcoFashionBackEnd.Dtos;
@@ -13,20 +12,20 @@ namespace EcoFashionBackEnd.Services
 {
     public class MaterialService
     {
-        private readonly AppDbContext _dbContext;
+        private readonly IMaterialRepository _materialRepository;
         private readonly MaterialQueryService _materialQueryService;
         private readonly MaterialEnrichmentService _materialEnrichmentService;
         private readonly MaterialBusinessService _materialBusinessService;
         private readonly CloudService _cloudService;
 
         public MaterialService(
-            AppDbContext dbContext,
+            IMaterialRepository materialRepository,
             MaterialQueryService materialQueryService,
             MaterialEnrichmentService materialEnrichmentService,
             MaterialBusinessService materialBusinessService,
             CloudService cloudService)
         {
-            _dbContext = dbContext;
+            _materialRepository = materialRepository;
             _materialQueryService = materialQueryService;
             _materialEnrichmentService = materialEnrichmentService;
             _materialBusinessService = materialBusinessService;
@@ -158,10 +157,7 @@ namespace EcoFashionBackEnd.Services
         {
             try
             {
-                var material = await _dbContext.Materials
-                    .Include(m => m.MaterialImages)
-                    .ThenInclude(mi => mi.Image)
-                    .FirstOrDefaultAsync(m => m.MaterialId == materialId);
+                var material = await _materialRepository.GetMaterialWithImagesAsync(materialId);
 
                 if (material == null)
                 {
@@ -193,8 +189,8 @@ namespace EcoFashionBackEnd.Services
                         }
                     };
 
-                    _dbContext.MaterialImages.Add(materialImage);
-                    await _dbContext.SaveChangesAsync();
+                    await _materialRepository.AddMaterialImageAsync(materialImage);
+                    await _materialRepository.Commit();
 
                     savedImages.Add(new MaterialImageDto
                     {
@@ -220,25 +216,23 @@ namespace EcoFashionBackEnd.Services
         {
             try
             {
-                var materialTypes = await _dbContext.MaterialTypes
-                    .Where(mt => mt.IsActive)
-                    .OrderBy(mt => mt.DisplayOrder)
-                    .Select(mt => new MaterialTypeModel
-                    {
-                        TypeId = mt.TypeId,
-                        TypeName = mt.TypeName ?? string.Empty,
-                        ImageUrl = mt.ImageUrl, // Added missing ImageUrl field
-                        Description = mt.Description,
-                        Category = mt.Category,
-                        IsOrganic = mt.IsOrganic,
-                        IsRecycled = mt.IsRecycled,
-                        SustainabilityNotes = mt.SustainabilityNotes,
-                        DisplayOrder = mt.DisplayOrder,
-                        IsActive = mt.IsActive
-                    })
-                    .ToListAsync();
+                var materialTypes = await _materialRepository.GetAllActiveMaterialTypesAsync();
 
-                return ApiResult<List<MaterialTypeModel>>.Succeed(materialTypes);
+                var materialTypeModels = materialTypes.Select(mt => new MaterialTypeModel
+                {
+                    TypeId = mt.TypeId,
+                    TypeName = mt.TypeName ?? string.Empty,
+                    ImageUrl = mt.ImageUrl,
+                    Description = mt.Description,
+                    Category = mt.Category,
+                    IsOrganic = mt.IsOrganic,
+                    IsRecycled = mt.IsRecycled,
+                    SustainabilityNotes = mt.SustainabilityNotes,
+                    DisplayOrder = mt.DisplayOrder,
+                    IsActive = mt.IsActive
+                }).ToList();
+
+                return ApiResult<List<MaterialTypeModel>>.Succeed(materialTypeModels);
             }
             catch (Exception ex)
             {
@@ -292,8 +286,8 @@ namespace EcoFashionBackEnd.Services
 
                 // Use the query service with filters
                 var materials = await _materialQueryService.GetMaterialsFilteredAsync(
-                    supplierId: supplierGuid, 
-                    approvalStatus: string.IsNullOrEmpty(approvalStatus) || approvalStatus.ToLower() == "all" ? null : approvalStatus);
+                    supplierId: supplierGuid,
+                    approvalStatus: string.IsNullOrEmpty(approvalStatus) || approvalStatus.Equals("all", StringComparison.OrdinalIgnoreCase) ? null : approvalStatus);
 
                 var materialDtos = await _materialEnrichmentService.EnrichMaterialsAsync(materials);
                 return ApiResult<List<MaterialDetailDto>>.Succeed(materialDtos);

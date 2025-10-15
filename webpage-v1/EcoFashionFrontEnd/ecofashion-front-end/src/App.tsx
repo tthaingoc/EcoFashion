@@ -17,7 +17,7 @@ import ApplySupplier from "./pages/apply/ApplySupplier";
 import MyApplications from "./pages/apply/MyApplications";
 import DesignerProfile from "./pages/designer/DesignerProfile";
 import DesignerDetailedProfile from "./pages/designer/DesignerDetailedProfile";
-import DesginerDashboared from "./pages/designer/DesignerDashboard";
+import DesignerDashboared from "./pages/designer/DesignerDashboard";
 import SupplierProfile from "./pages/supplier/SupplierProfile";
 import SupplierDetailedProfile from "./pages/supplier/SupplierDetailedProfile";
 import SupplierDashboard from "./pages/supplier/SupplierDashboard";
@@ -33,10 +33,9 @@ import AddMaterial from "./pages/supplier/AddMaterial";
 import CustomerProfile from "./pages/customer/CustomerProfile";
 import Explore from "./pages/explore/Explore";
 import AddDesignDraft from "./pages/design/AddDesignDraft";
-
 import ExploreDesigners from "./pages/explore/ExploreDesigners";
 import ExploreSuppliers from "./pages/explore/ExploreSuppliers";
-import DesignerLandingPage from "./pages/explore/DesignerLandingPage";
+//import DesignerLandingPage from "./pages/explore/DesignerLandingPage";
 import SupplierLandingPage from "./pages/explore/SupplierLandingPage";
 import DashboardHome from "./pages/admin/DashboardHome";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -46,6 +45,7 @@ import MaterialsPending from "./pages/admin/MaterialsPending";
 import MaterialsApproved from "./pages/admin/MaterialsApproved";
 import MaterialTypesAll from "./pages/admin/MaterialTypesAll";
 import InventoryReport from "./pages/admin/InventoryReport";
+import UsersAll from "./pages/admin/UsersAll";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { ToastContainer } from "react-toastify";
 import BusinessInfor from "./pages/BusinessInfor";
@@ -62,10 +62,9 @@ import WalletPageTailwind from "./pages/wallet/WalletPageTailwind";
 import VNPaySuccess from "./pages/payment/VNPaySuccess";
 import { useAuthStore } from "./store/authStore";
 import { useCartStore } from "./store/cartStore";
-import { ConfirmProvider } from "material-ui-confirm";
+//import { ConfirmProvider } from "material-ui-confirm";
 import MaterialList from "./pages/material/MaterialList";
-
-
+import WalletWithdraw from "./pages/admin/WalletWithdraw";
 //import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
@@ -146,7 +145,13 @@ function App() {
           path="/orders"
           element={
             <ProtectedRoute
-              allowedRoles={["customer", "supplier", "designer", "admin"]}
+              allowedRoles={[
+                "customer",
+                "supplier",
+                "designer",
+                "admin",
+                "user",
+              ]}
             >
               <OrdersPage />
             </ProtectedRoute>
@@ -242,7 +247,7 @@ function App() {
           path="/designer/dashboard"
           element={
             <ProtectedRoute requiredRole={"designer"}>
-              <DesginerDashboared />
+              <DesignerDashboared />
             </ProtectedRoute>
           }
         />
@@ -277,7 +282,7 @@ function App() {
         <Route path="/explore" element={<Explore />} />
         <Route path="/explore/designers" element={<ExploreDesigners />} />
         <Route path="/explore/suppliers" element={<ExploreSuppliers />} />
-        <Route path="/explore/designer/:id" element={<DesignerLandingPage />} />
+
         <Route path="/explore/supplier/:id" element={<SupplierLandingPage />} />
 
         {/* ===== SUPPLIER ROUTES ===== */}
@@ -321,10 +326,6 @@ function App() {
         {/* ===== EXPLORE ROUTES ===== */}
         <Route path="/explore" element={<Explore />} />
         <Route path="/explore/designers" element={<ExploreDesigners />} />
-        <Route
-          path="/explore/designers/:id"
-          element={<DesignerLandingPage />}
-        />
         <Route path="/explore/suppliers" element={<ExploreSuppliers />} />
         <Route
           path="/explore/suppliers/:id"
@@ -340,10 +341,12 @@ function App() {
           }
         >
           <Route index element={<DashboardHome />} />
+          <Route path="users" element={<UsersAll />} />
           <Route path="applications" element={<ApplicationManagement />} />
           <Route path="material-types" element={<MaterialTypesAll />} />
           <Route path="materials" element={<MaterialsAll />} />
           <Route path="materials/pending" element={<MaterialsPending />} />
+          <Route path="walletWithdraw" element={<WalletWithdraw />} />
           <Route path="materials/approved" element={<MaterialsApproved />} />
           <Route path="analytics/inventory" element={<InventoryReport />} />
         </Route>

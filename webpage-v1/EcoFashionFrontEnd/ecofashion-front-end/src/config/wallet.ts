@@ -8,25 +8,35 @@ export const WALLET_CFG = {
 };
 
 export const QUERY_KEYS = {
-  wallet: ['wallet'],
-  walletSummary: ['wallet', 'summary'],
-  walletTransactions: (page: number, pageSize: number) => ['wallet', 'transactions', page, pageSize],
-  walletTransactionsInfinite: (pageSize: number) => ['wallet', 'transactions', 'infinite', pageSize],
-  orders: ['orders'],
-  settlements: ['settlements'],
-  checkout: ['checkout'],
+  wallet: ["wallet"],
+  walletSummary: ["wallet", "summary"],
+  walletTransactions: (page: number, pageSize: number) => [
+    "wallet",
+    "transactions",
+    page,
+    pageSize,
+  ],
+  walletTransactionsInfinite: (pageSize: number) => [
+    "wallet",
+    "transactions",
+    "infinite",
+    pageSize,
+  ],
+  orders: ["orders"],
+  settlements: ["settlements"],
+  checkout: ["checkout"],
 } as const;
 
 export const SETTLEMENT_STATUS = {
-  PENDING: 'Pending',
-  RELEASED: 'Released',
-  CANCELLED: 'Cancelled',
+  PENDING: "Pending",
+  RELEASED: "Released",
+  CANCELLED: "Cancelled",
 } as const;
 
 export const TRANSACTION_TYPES = {
-  DEPOSIT: 'Deposit',
-  WITHDRAWAL: 'Withdrawal', 
-  PAYMENT: 'Payment',
-  REFUND: 'Refund',
-  TRANSFER: 'Transfer',
+  DEPOSIT: "Deposit",
+  WITHDRAWAL: "Withdrawal",
+  PAYMENT: "Payment",
+  REFUND: "Refund",
+  TRANSFER: "Transfer",
 } as const;

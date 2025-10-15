@@ -13,7 +13,10 @@ export const useCreateMaterial = () => {
     onSuccess: (data) => {
       // Invalidate and refetch materials list
       queryClient.invalidateQueries({ queryKey: ['materials'] });
-      
+
+      // Invalidate supplier materials list to show the new material
+      queryClient.invalidateQueries({ queryKey: ['supplierMaterials'] });
+
       // Show success message (you can replace this with your preferred notification system)
       console.log('Material created successfully:', data);
     },

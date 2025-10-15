@@ -1,4 +1,5 @@
-﻿using EcoFashionBackEnd.Entities;
+﻿//Thanh toán 
+using EcoFashionBackEnd.Entities;
 using EcoFashionBackEnd.Extensions.NewFolder;
 using EcoFashionBackEnd.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -25,7 +26,7 @@ namespace EcoFashionBackEnd.Services
             SettlementService settlementService
            )
         {
-            _userRepository= userRepository;
+            _userRepository = userRepository;
             _vnPayService = vnPayService;
             _orderRepository = orderRepository;
             _paymentTransactionRepository = paymentTransactionRepository;
@@ -136,7 +137,7 @@ namespace EcoFashionBackEnd.Services
 
             // Chỉ cập nhật nếu chưa được xử lý (idempotent)
             bool shouldUpdate = false;
-            
+
             if (response.VnPayResponseCode == "00" && order.PaymentStatus != PaymentStatus.Paid)
             {
                 order.Status = OrderStatus.processing; // Chuyển sang Processing sau khi thanh toán thành công
@@ -146,7 +147,7 @@ namespace EcoFashionBackEnd.Services
             }
             else if (response.VnPayResponseCode != "00" && order.PaymentStatus == PaymentStatus.Pending)
             {
-                order.Status = OrderStatus.pending; 
+                order.Status = OrderStatus.pending;
                 order.PaymentStatus = PaymentStatus.Failed;
                 shouldUpdate = true;
             }
@@ -155,12 +156,12 @@ namespace EcoFashionBackEnd.Services
             {
                 _orderRepository.Update(order);
                 await _orderRepository.Commit();
-                
+
                 // TRỪ KHO khi payment thành công (chuyển sang Processing)
                 if (response.VnPayResponseCode == "00")
                 {
                     await DeductInventoryForOrderAsync(orderId);
-                    
+
                     // Settlements sẽ được tạo khi order delivered (không phải lúc processing)
                     // await _settlementService.CreateSettlementsForOrderAsync(orderId);
                     // await _settlementService.ReleasePayoutsForOrderAsync(orderId);
@@ -217,7 +218,7 @@ namespace EcoFashionBackEnd.Services
             {
                 // Chỉ cập nhật nếu chưa được xử lý (idempotent cho IPN)
                 bool shouldUpdate = false;
-                
+
                 if (isSuccess && order.PaymentStatus != PaymentStatus.Paid)
                 {
                     order.Status = OrderStatus.processing; // Chuyển sang Processing sau khi thanh toán thành công
@@ -231,17 +232,17 @@ namespace EcoFashionBackEnd.Services
                     order.PaymentStatus = PaymentStatus.Failed;
                     shouldUpdate = true;
                 }
-                
+
                 if (shouldUpdate)
                 {
                     _orderRepository.Update(order);
                     await _orderRepository.Commit();
-                    
+
                     // TRỪ KHO khi payment thành công (chuyển sang Processing)
                     if (isSuccess)
                     {
                         await DeductInventoryForOrderAsync(orderId);
-                        
+
                         // Settlements sẽ được tạo khi order delivered (không phải lúc processing)
                         // await _settlementService.CreateSettlementsForOrderAsync(orderId);
                         // await _settlementService.ReleasePayoutsForOrderAsync(orderId);
@@ -263,7 +264,7 @@ namespace EcoFashionBackEnd.Services
             {
                 // Kiểm tra xem đã trừ kho cho order này chưa (tránh trùng lập)
                 var existingDeduction = await _dbContext.MaterialStockTransactions
-                    .AnyAsync(t => t.ReferenceId == orderId.ToString() && 
+                    .AnyAsync(t => t.ReferenceId == orderId.ToString() &&
                                   t.TransactionType == MaterialTransactionType.CustomerSale &&
                                   (t.ReferenceType == "WalletPayment" || t.ReferenceType == "OrderPayment"));
 

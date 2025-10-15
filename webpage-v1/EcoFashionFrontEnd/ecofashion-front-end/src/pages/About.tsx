@@ -1,39 +1,33 @@
 import { Box, Typography, Paper, Avatar, Button } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 import Typewriter from "typewriter-effect";
 
 const teamMembers = [
   {
     name: "Tài",
     role: "Leader",
-    description:
-      "With over 10 years of experience in horticulture, Tài is passionate about ecofashion and sustainable materials.",
     avatar: "https://via.placeholder.com/100",
   },
   {
     name: "Vinh",
     role: "Member",
-    description:
-      "Vinh is an expert in digital marketing and leads our outreach efforts to spread the love for ecofashion.",
     avatar: "https://via.placeholder.com/100",
   },
   {
     name: "Tuấn",
     role: "Member",
-    description:
-      "Tuấn ensures our customers have the best experience, providing guidance and support.",
     avatar: "https://via.placeholder.com/100",
   },
   {
     name: "Năng",
     role: "Member",
-    description:
-      "Vinh ensures our customers have the best experience, providing guidance and support.",
     avatar: "https://via.placeholder.com/100",
   },
 ];
 
 function AboutPage() {
   window.scrollTo(0, 0);
+  const navigate = useNavigate();
   return (
     <Box
       sx={{
@@ -54,7 +48,7 @@ function AboutPage() {
           textAlign: "center",
         }}
       >
-        About Us
+        Về Chúng Tôi
       </Typography>
 
       {/* Typing Animation with Custom Color */}
@@ -63,7 +57,7 @@ function AboutPage() {
           <Typewriter
             options={{
               strings: [
-                "We provide a wide variety of premium ecofashion designs and materials with care guides.",
+                "Chúng tôi mang đến phong cách thời trang bền vững vào từng thiết kế cao cấp, kèm hướng dẫn chăm sóc tận tâm.",
               ],
               autoStart: true,
               loop: true,
@@ -87,14 +81,14 @@ function AboutPage() {
           variant="h5"
           sx={{ fontWeight: "bold", marginBottom: 2, color: "#00796b" }}
         >
-          Our History
+          Lịch Sử
         </Typography>
         <Typography variant="body1" paragraph sx={{ lineHeight: 1.6 }}>
-          Founded in 2025, EcoFashion started as a small group business
-          dedicated to sharing the love of sustainable fashions . Over the
-          years, we have expanded our collection and now serve customers across
-          the globe. Our commitment to quality and customer satisfaction remains
-          at the heart of everything we do.
+          Được thành lập vào năm 2025, EcoFashion bắt đầu như một nhóm nhỏ với
+          sứ mệnh chia sẻ niềm đam mê thời trang bền vững. Qua những năm, chúng
+          tôi đã mở rộng bộ sưu tập và hiện phục vụ khách hàng trên toàn cầu.
+          Cam kết về chất lượng và sự hài lòng của khách hàng vẫn luôn là trọng
+          tâm trong mọi hoạt động của chúng tôi.
         </Typography>
       </Paper>
 
@@ -112,22 +106,23 @@ function AboutPage() {
           variant="h5"
           sx={{ fontWeight: "bold", marginBottom: 2, color: "#00796b" }}
         >
-          Our Values
+          Giá Trị Cốt Lõi
         </Typography>
         <Typography variant="body1" paragraph sx={{ lineHeight: 1.6 }}>
-          We uphold the following values that guide our operations:
+          Chúng tôi tôn trọng những giá trị sau, định hướng mọi hoạt động của
+          mình:
         </Typography>
         <Typography variant="body1" sx={{ marginBottom: 1 }}>
-          <strong>Quality:</strong> We ensure the highest quality in every
-          designs and materials we sell.
+          <strong>Chất Lượng:</strong> Chúng tôi đảm bảo chất lượng cao nhất
+          trong mọi thiết kế và vật liệu cung cấp.
         </Typography>
         <Typography variant="body1" sx={{ marginBottom: 1 }}>
-          <strong>Sustainability:</strong> We practice environmentally friendly
-          methods in our operations.
+          <strong>Bền Vững:</strong> Chúng tôi áp dụng các phương pháp thân
+          thiện với môi trường trong hoạt động của mình.
         </Typography>
         <Typography variant="body1">
-          <strong>Community:</strong> We believe in building a community of
-          sustainable fashion lovers through engagement and education.
+          <strong>Cộng Đồng:</strong> Chúng tôi tin vào việc xây dựng một cộng
+          đồng yêu thời trang bền vững thông qua sự tương tác và giáo dục.
         </Typography>
       </Paper>
 
@@ -142,7 +137,7 @@ function AboutPage() {
           textDecoration: "underline",
         }}
       >
-        Meet Our Team
+        Gặp Gỡ Đội Ngũ Của Chúng Tôi
       </Typography>
       <Box
         sx={{
@@ -194,12 +189,6 @@ function AboutPage() {
               >
                 {member.role}
               </Typography>
-              <Typography
-                variant="body2"
-                sx={{ marginTop: 1, color: "#666", lineHeight: 1.5 }}
-              >
-                {member.description}
-              </Typography>
             </Paper>
           </Box>
         ))}
@@ -219,25 +208,14 @@ function AboutPage() {
           variant="h5"
           sx={{ fontWeight: "bold", marginBottom: 2, color: "#00796b" }}
         >
-          Our Mission
+          Sứ Mệnh Của Chúng Tôi
         </Typography>
         <Typography variant="body1" paragraph sx={{ lineHeight: 1.6 }}>
-          Our mission is to cultivate a community that appreciates the beauty of
-          ecofashion designs and provide them with the resources to thrive. We
-          strive to be your go-to source for everything related to ecofashion
-          design and materials .
+          Sứ mệnh của chúng tôi là xây dựng một cộng đồng trân trọng vẻ đẹp của
+          các thiết kế thời trang sinh thái và cung cấp cho họ những nguồn lực
+          cần thiết để phát triển. Chúng tôi luôn nỗ lực trở thành điểm đến tin
+          cậy cho mọi thông tin về thiết kế và vật liệu thời trang bền vững.
         </Typography>
-        <Button
-          variant="contained"
-          sx={{
-            marginTop: 2,
-            backgroundColor: "#00796b",
-            "&:hover": { backgroundColor: "#004d40" },
-          }}
-          onClick={() => alert("Join our newsletter!")}
-        >
-          Join Our Newsletter
-        </Button>
       </Box>
     </Box>
   );

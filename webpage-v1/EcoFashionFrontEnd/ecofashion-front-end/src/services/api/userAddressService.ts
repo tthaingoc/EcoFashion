@@ -9,8 +9,8 @@ export interface UserAddress {
   // Thay zipCode bằng personalPhoneNumber: số điện thoại liên hệ giao hàng
   personalPhoneNumber?: string;
   country?: string;
+  senderName?: string;
   isDefault: boolean;
-  // Note: fullName không có trong UserAddress table, sẽ dùng User.fullName làm fallback ở UI
 }
 
 export interface CreateAddressRequest {
@@ -20,6 +20,7 @@ export interface CreateAddressRequest {
   // Số điện thoại nhận hàng (thay cho Mã bưu điện)
   personalPhoneNumber?: string;
   country?: string;
+  senderName?: string;
   isDefault?: boolean;
 }
 
@@ -30,6 +31,7 @@ export interface UpdateAddressRequest {
   // Số điện thoại nhận hàng (thay cho Mã bưu điện)
   personalPhoneNumber?: string;
   country?: string;
+  senderName?: string;
   isDefault?: boolean;
 }
 
@@ -40,8 +42,8 @@ export interface AddressFormData {
   // Số điện thoại liên hệ giao hàng tại địa chỉ này
   personalPhoneNumber: string;
   country: string;
+  senderName: string;
   isDefault: boolean;
-  // Note: fullName để trong form UI nhưng không lưu vào UserAddress table
 }
 
 export const userAddressService = {

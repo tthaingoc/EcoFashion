@@ -22,13 +22,14 @@ class MaterialInventoryService {
     return arr;
   }
 
-  async getTransactions(params?: { materialId?: number; warehouseId?: number; type?: string; from?: string; to?: string }): Promise<MaterialStockTransactionDto[]> {
+  async getTransactions(params?: { materialId?: number; warehouseId?: number; type?: string; from?: string; to?: string; supplierOnly?: boolean }): Promise<MaterialStockTransactionDto[]> {
     const qs = new URLSearchParams();
     if (params?.materialId) qs.append('materialId', String(params.materialId));
     if (params?.warehouseId) qs.append('warehouseId', String(params.warehouseId));
     if (params?.type) qs.append('type', params.type);
     if (params?.from) qs.append('from', params.from);
     if (params?.to) qs.append('to', params.to);
+    if (params?.supplierOnly !== undefined) qs.append('supplierOnly', String(params.supplierOnly));
     const response = await apiClient.get<any>(`${this.BASE}/transactions${qs.toString() ? `?${qs}` : ''}`);
     const data = handleApiResponse<any>(response);
     const arr: MaterialStockTransactionDto[] = (Array.isArray(data) ? data : data.result || data.data || [])

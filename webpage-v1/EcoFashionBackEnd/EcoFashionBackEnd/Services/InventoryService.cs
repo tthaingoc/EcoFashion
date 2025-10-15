@@ -8,6 +8,7 @@ namespace EcoFashionBackEnd.Services
     public class InventoryService
     {
         private readonly IRepository<Product, int> _productRepository;
+        private readonly IRepository<Material, int> _materialRepository;
         private readonly IRepository<ProductInventory, int> _productInventoryRepository;
         private readonly IRepository<DesignerMaterialInventory, int> _designerMaterialInventory;
         private readonly IRepository<MaterialInventoryTransaction, int> _materialInventoryTransactionRepository;
@@ -18,6 +19,7 @@ namespace EcoFashionBackEnd.Services
 
         public InventoryService(
           IRepository<Product, int> productRepository,
+          IRepository<Material, int> materialRepository,
           IRepository<ProductInventory, int> productInventoryRepository,
           IRepository<DesignerMaterialInventory, int> designerMaterialInventory,
           IRepository<MaterialInventoryTransaction, int> materialInventoryTransactionRepository,
@@ -28,6 +30,7 @@ namespace EcoFashionBackEnd.Services
           )
         {
             _productRepository = productRepository;
+            _materialRepository = materialRepository;
             _productInventoryRepository = productInventoryRepository;
             _designerMaterialInventory = designerMaterialInventory;
             _materialInventoryTransactionRepository = materialInventoryTransactionRepository;
@@ -89,7 +92,8 @@ namespace EcoFashionBackEnd.Services
                     {
                         ProductId = change.ProductId,
                         WarehouseId = change.WarehouseId,
-                        QuantityAvailable = change.TotalQuantity
+                        QuantityAvailable = change.TotalQuantity,
+                        LastUpdated = DateTime.UtcNow
                     };
 
                     await _productInventoryRepository.AddAsync(inventory);
@@ -99,6 +103,7 @@ namespace EcoFashionBackEnd.Services
                 {
                     // 🔄 Cập nhật
                     inventory.QuantityAvailable += change.TotalQuantity;
+                    inventory.LastUpdated = DateTime.UtcNow;
                     _productInventoryRepository.Update(inventory);
                     await _productInventoryRepository.Commit(); // 💡 commit để transaction chắc chắn thấy AfterQty
                 }
@@ -114,7 +119,7 @@ namespace EcoFashionBackEnd.Services
                     BeforeQty = beforeQty,
                     AfterQty = afterQty,
                     TransactionType = change.TotalQuantity >= 0 ? "Import" : "Export",
-                    TransactionDate = DateTime.UtcNow,
+                    TransactionDate = DateTime.Now,
                     Notes = isNewInventory
         ? "Tạo mới sản phẩm trong kho."
         : (change.TotalQuantity >= 0 ? "Nhập kho sản phẩm." : "Xuất kho sản phẩm.")
@@ -183,7 +188,6 @@ namespace EcoFashionBackEnd.Services
                 var originalQuantity = inventory.Quantity;
                 inventory.Quantity -= requiredQty;
 
-
                 var transaction = new MaterialInventoryTransaction
                 {
                     InventoryId = inventory.InventoryId,
@@ -205,7 +209,7 @@ namespace EcoFashionBackEnd.Services
         }
 
         //Cộng kho khi mua vật liệu
-        public async Task AddDesignerMaterialsAsync(Guid designerId, Dictionary<int, decimal> addMap)
+        public async Task AddDesignerMaterialsAsync(Guid designerId, Dictionary<int, decimal> addMap, int orderId)
         {
             var userIdString = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
@@ -251,13 +255,19 @@ namespace EcoFashionBackEnd.Services
 
                 if (!inventories.TryGetValue(materialId, out var inventory))
                 {
+                    var price = await _materialRepository
+                         .GetAll()
+                         .Where(m => m.MaterialId == materialId)
+                         .Select(m => m.PricePerUnit)
+                         .FirstOrDefaultAsync();
                     inventory = new DesignerMaterialInventory
                     {
                         WarehouseId = warehouse.WarehouseId,
                         MaterialId = materialId,
                         Quantity = addQty,
                         LastBuyDate = DateTime.UtcNow,
-                        Status = addQty > 0 ? "In Stock" : "Out of Stock"
+                        Status = addQty > 0 ? "In Stock" : "Out of Stock",
+                        Cost = addQty * price,
                     };
 
                     await _designerMaterialInventory.AddAsync(inventory);
@@ -271,8 +281,8 @@ namespace EcoFashionBackEnd.Services
                         AfterQty = addQty,
                         PerformedByUserId = userId,
                         TransactionType = "Import",
-                        TransactionDate = DateTime.UtcNow,
-                        Notes = "Nhập kho vật liệu cho Designer"
+                        TransactionDate = DateTime.Now,
+                        Notes = $"Nhập kho vật liệu cho Nhà Thiết Kế từ đơn hàng #{orderId}"
                     };
 
                     await _materialInventoryTransactionRepository.AddAsync(transactionNew);
@@ -285,6 +295,7 @@ namespace EcoFashionBackEnd.Services
                     inventory.Quantity = afterQty;
                     inventory.LastBuyDate = DateTime.UtcNow;
                     inventory.Status = afterQty > 0 ? "In Stock" : "Out of Stock";
+                    inventory.Cost = afterQty * inventory.Material.PricePerUnit;
 
                     _designerMaterialInventory.Update(inventory);
                     await _designerMaterialInventory.Commit();
@@ -297,8 +308,8 @@ namespace EcoFashionBackEnd.Services
                         AfterQty = afterQty,
                         PerformedByUserId = userId,
                         TransactionType = "Import",
-                        TransactionDate = DateTime.UtcNow,
-                        Notes = "Nhập kho vật liệu cho Designer"
+                        TransactionDate = DateTime.Now,
+                        Notes = $"Nhập kho vật liệu cho Nhà Thiết Kế từ đơn hàng #{orderId}"
                     };
 
                     await _materialInventoryTransactionRepository.AddAsync(transaction);
@@ -307,5 +318,6 @@ namespace EcoFashionBackEnd.Services
 
             await _materialInventoryTransactionRepository.Commit();
         }
+
     }
 }

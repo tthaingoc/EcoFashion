@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { useUIStore } from '../../store/uiStore';
 import Avatar from '../common/Avatar';
@@ -9,15 +9,19 @@ import { useQuery } from '@tanstack/react-query';
 import logo2 from '../../assets/pictures/homepage/logo2.png';
 
 const AdminHeader: React.FC = () => {
-  const { toggleAdminMobileSidebar } = useUIStore();
-  const { 
-    user, 
-    getInitials, 
-    getAvatarUrl, 
+  const { toggleAdminMobileSidebar, adminSidebar } = useUIStore();
+  const location = useLocation();
+  const {
+    user,
+    getInitials,
+    getAvatarUrl,
     getDisplayName,
     logout
   } = useAuthStore();
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [materialsMenuOpen, setMaterialsMenuOpen] = useState(false);
+  const [usersMenuOpen, setUsersMenuOpen] = useState(false);
+  const [analyticsMenuOpen, setAnalyticsMenuOpen] = useState(false);
   const navigate = useNavigate();
   const { data: notifications = [], refetch: refetchNotes } = useQuery<NotificationItem[]>({
     queryKey: ['adminNotifications', user?.userId],
@@ -41,7 +45,8 @@ const AdminHeader: React.FC = () => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between bg-white px-4 shadow-sm dark:bg-gray-900 lg:px-6">
+    <>
+      <header className="sticky top-0 z-30 flex h-16 items-center justify-between bg-white px-4 shadow-sm dark:bg-gray-900 lg:px-6">
       <div className="flex items-center gap-4">
         {/* Mobile menu button */}
         <button
@@ -192,6 +197,332 @@ const AdminHeader: React.FC = () => {
         </div>
       </div>
     </header>
+
+      {/* Mobile Menu Overlay */}
+      {adminSidebar.isMobileOpen && (
+        <div
+          className="lg:hidden fixed inset-0 z-50 bg-black bg-opacity-50"
+          onClick={toggleAdminMobileSidebar}
+        >
+          <div
+            className="fixed inset-y-0 left-0 w-80 bg-white shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Mobile Menu Header */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+              <div className="flex items-center gap-3">
+                <span className="text-lg font-semibold text-gray-900">
+                  EcoFashion Admin
+                </span>
+              </div>
+              <button
+                onClick={toggleAdminMobileSidebar}
+                className="p-2 text-gray-500 hover:text-gray-700"
+              >
+                <svg
+                  className="h-6 w-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            {/* Mobile Menu Content */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              {/* Dashboard */}
+              <Link
+                to="/admin/dashboard"
+                className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  location.pathname === "/admin/dashboard"
+                    ? "text-brand-500 bg-brand-50"
+                    : "text-gray-700 hover:text-brand-500 hover:bg-gray-50"
+                }`}
+                onClick={toggleAdminMobileSidebar}
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                  />
+                </svg>
+                <span>Bảng Điều Khiển</span>
+              </Link>
+
+              {/* Applications */}
+              <Link
+                to="/admin/dashboard/applications"
+                className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  location.pathname === "/admin/dashboard/applications"
+                    ? "text-brand-500 bg-brand-50"
+                    : "text-gray-700 hover:text-brand-500 hover:bg-gray-50"
+                }`}
+                onClick={toggleAdminMobileSidebar}
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                  />
+                </svg>
+                <span>Đơn Đăng Ký</span>
+              </Link>
+
+              {/* Wallet Withdraw */}
+              <Link
+                to="/admin/dashboard/walletWithdraw"
+                className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  location.pathname === "/admin/dashboard/walletWithdraw"
+                    ? "text-brand-500 bg-brand-50"
+                    : "text-gray-700 hover:text-brand-500 hover:bg-gray-50"
+                }`}
+                onClick={toggleAdminMobileSidebar}
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                  />
+                </svg>
+                <span>Đơn Rút Tiền</span>
+              </Link>
+
+              {/* Users Section */}
+              <div>
+                <button
+                  onClick={() => setUsersMenuOpen(!usersMenuOpen)}
+                  className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg transition-colors text-gray-700 hover:text-brand-500 hover:bg-gray-50"
+                >
+                  <div className="flex items-center gap-3">
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                      />
+                    </svg>
+                    <span>Người Dùng</span>
+                  </div>
+                  <svg
+                    className={`w-4 h-4 transition-transform ${
+                      usersMenuOpen ? "rotate-180" : ""
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </button>
+                {usersMenuOpen && (
+                  <div className="ml-8 mt-2 space-y-1">
+                    <Link
+                      to="/admin/dashboard/users"
+                      className={`block px-3 py-2 text-sm rounded-lg transition-colors ${
+                        location.pathname === "/admin/dashboard/users"
+                          ? "text-brand-500 bg-brand-50"
+                          : "text-gray-600 hover:text-brand-500 hover:bg-gray-50"
+                      }`}
+                      onClick={toggleAdminMobileSidebar}
+                    >
+                      Tất Cả Người Dùng
+                    </Link>
+                  </div>
+                )}
+              </div>
+
+              {/* Materials Section */}
+              <div>
+                <button
+                  onClick={() => setMaterialsMenuOpen(!materialsMenuOpen)}
+                  className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg transition-colors text-gray-700 hover:text-brand-500 hover:bg-gray-50"
+                >
+                  <div className="flex items-center gap-3">
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"
+                      />
+                    </svg>
+                    <span>Vật Liệu</span>
+                  </div>
+                  <svg
+                    className={`w-4 h-4 transition-transform ${
+                      materialsMenuOpen ? "rotate-180" : ""
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </button>
+                {materialsMenuOpen && (
+                  <div className="ml-8 mt-2 space-y-1">
+                    <Link
+                      to="/admin/dashboard/material-types"
+                      className={`block px-3 py-2 text-sm rounded-lg transition-colors ${
+                        location.pathname === "/admin/dashboard/material-types"
+                          ? "text-brand-500 bg-brand-50"
+                          : "text-gray-600 hover:text-brand-500 hover:bg-gray-50"
+                      }`}
+                      onClick={toggleAdminMobileSidebar}
+                    >
+                      Tất Cả Loại Vật Liệu
+                    </Link>
+                    <Link
+                      to="/admin/dashboard/materials"
+                      className={`block px-3 py-2 text-sm rounded-lg transition-colors ${
+                        location.pathname === "/admin/dashboard/materials"
+                          ? "text-brand-500 bg-brand-50"
+                          : "text-gray-600 hover:text-brand-500 hover:bg-gray-50"
+                      }`}
+                      onClick={toggleAdminMobileSidebar}
+                    >
+                      Tất Cả Vật Liệu
+                    </Link>
+                    <Link
+                      to="/admin/dashboard/materials/pending"
+                      className={`block px-3 py-2 text-sm rounded-lg transition-colors ${
+                        location.pathname === "/admin/dashboard/materials/pending"
+                          ? "text-brand-500 bg-brand-50"
+                          : "text-gray-600 hover:text-brand-500 hover:bg-gray-50"
+                      }`}
+                      onClick={toggleAdminMobileSidebar}
+                    >
+                      Chờ Phê Duyệt
+                    </Link>
+                    <Link
+                      to="/admin/dashboard/materials/approved"
+                      className={`block px-3 py-2 text-sm rounded-lg transition-colors ${
+                        location.pathname === "/admin/dashboard/materials/approved"
+                          ? "text-brand-500 bg-brand-50"
+                          : "text-gray-600 hover:text-brand-500 hover:bg-gray-50"
+                      }`}
+                      onClick={toggleAdminMobileSidebar}
+                    >
+                      Đã Phê Duyệt
+                    </Link>
+                  </div>
+                )}
+              </div>
+
+              {/* Analytics Section */}
+              <div>
+                <button
+                  onClick={() => setAnalyticsMenuOpen(!analyticsMenuOpen)}
+                  className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg transition-colors text-gray-700 hover:text-brand-500 hover:bg-gray-50"
+                >
+                  <div className="flex items-center gap-3">
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"
+                      />
+                    </svg>
+                    <span>Phân Tích</span>
+                  </div>
+                  <svg
+                    className={`w-4 h-4 transition-transform ${
+                      analyticsMenuOpen ? "rotate-180" : ""
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </button>
+                {analyticsMenuOpen && (
+                  <div className="ml-8 mt-2 space-y-1">
+                    <Link
+                      to="/admin/dashboard/analytics/inventory"
+                      className={`block px-3 py-2 text-sm rounded-lg transition-colors ${
+                        location.pathname === "/admin/dashboard/analytics/inventory"
+                          ? "text-brand-500 bg-brand-50"
+                          : "text-gray-600 hover:text-brand-500 hover:bg-gray-50"
+                      }`}
+                      onClick={toggleAdminMobileSidebar}
+                    >
+                      Báo Cáo Kho Hàng
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 

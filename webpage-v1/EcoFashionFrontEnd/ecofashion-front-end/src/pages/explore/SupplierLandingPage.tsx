@@ -12,6 +12,8 @@ import {
   SupplierService,
   type SupplierPublic,
 } from "../../services/api/supplierService";
+import { materialService } from "../../services/api/materialService";
+import type { MaterialDetailDto } from "../../schemas/materialSchema";
 import { toast } from "react-toastify";
 
 export default function SupplierLandingPage() {
@@ -20,6 +22,8 @@ export default function SupplierLandingPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [supplierData, setSupplierData] = useState<SupplierPublic | null>(null);
+  const [materials, setMaterials] = useState<MaterialDetailDto[]>([]);
+  const [loadingMaterials, setLoadingMaterials] = useState(true);
 
   useEffect(() => {
     const loadSupplierData = async () => {
@@ -43,6 +47,25 @@ export default function SupplierLandingPage() {
       }
     };
     loadSupplierData();
+  }, [id]);
+
+  useEffect(() => {
+    const loadMaterials = async () => {
+      if (!id) return;
+      try {
+        setLoadingMaterials(true);
+        const data = await materialService.getAllMaterialsWithFilters({
+          supplierId: id,
+          publicOnly: true,
+        });
+        setMaterials(data);
+      } catch (error: any) {
+        console.error("Failed to load materials:", error);
+      } finally {
+        setLoadingMaterials(false);
+      }
+    };
+    loadMaterials();
   }, [id]);
 
   if (loading) {
@@ -212,6 +235,77 @@ export default function SupplierLandingPage() {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Materials Section */}
+      <div className="supplier-content-section">
+        <div className="supplier-card" style={{ gridColumn: "1 / -1" }}>
+          <h3 className="supplier-section-title">
+            📦 Vật Liệu Của Nhà Cung Cấp
+          </h3>
+          {loadingMaterials ? (
+            <div className="text-center py-8 text-gray-500">
+              Đang tải vật liệu...
+            </div>
+          ) : materials.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              Nhà cung cấp chưa có vật liệu nào
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
+              {materials.map((material) => (
+                <div
+                  key={material.materialId}
+                  className="border rounded-lg p-4 hover:shadow-lg transition-shadow cursor-pointer"
+                  onClick={() => navigate(`/material/${material.materialId}`)}
+                >
+                  {material.imageUrls && (
+                    <img
+                      src={material.imageUrls[1]}
+                      alt={material.name}
+                      className="w-full h-48 object-cover rounded-lg mb-3"
+                      onError={(e) => {
+                        e.currentTarget.src = "/assets/default-image.jpg";
+                      }}
+                    />
+                  )}
+                  <h4 className="font-semibold text-lg mb-2">
+                    {material.name}
+                  </h4>
+                  <p className="text-sm text-gray-600 mb-2">
+                    Loại : {material.materialTypeName}
+                  </p>
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-brand-600 font-semibold">
+                      {material.pricePerUnit?.toLocaleString("vi-VN")} VNĐ/mét
+                    </span>
+                    <span className="text-sm text-gray-500">
+                      Còn {material.quantityAvailable} mét vải
+                    </span>
+                  </div>
+                  {material.sustainabilityScore !== undefined && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-600">
+                        Điểm bền vững:
+                      </span>
+                      <span
+                        className={`font-semibold ${
+                          material.sustainabilityScore >= 70
+                            ? "text-green-600"
+                            : material.sustainabilityScore >= 50
+                            ? "text-yellow-600"
+                            : "text-red-600"
+                        }`}
+                      >
+                        {material.sustainabilityScore.toFixed(1)}/100
+                      </span>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

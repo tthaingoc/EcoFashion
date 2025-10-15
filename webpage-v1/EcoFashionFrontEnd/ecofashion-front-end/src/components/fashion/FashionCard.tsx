@@ -34,9 +34,8 @@ import { grey } from "@mui/material/colors";
 import type { Design } from "../../services/api/designService";
 import { useCartStore } from "../../store/cartStore";
 import { toast } from "react-toastify";
-//example
-import ao_linen from "../../assets/pictures/example/ao-linen.webp";
-import { products } from "../../data/productsData";
+//image
+import DesignDefaultImage from "../../assets/pictures/fashion/ao_eco.jpg";
 interface FashionCardProps {
   product: Design;
   type?: string;
@@ -198,7 +197,7 @@ const FashionCard: React.FC<FashionCardProps> = ({
       {/* Product Image */}
       <CardMedia
         component="img"
-        image={product.designImageUrls[0]}
+        image={product.designImageUrls[0] || DesignDefaultImage}
         alt={product.name}
         sx={{
           width: "100%",

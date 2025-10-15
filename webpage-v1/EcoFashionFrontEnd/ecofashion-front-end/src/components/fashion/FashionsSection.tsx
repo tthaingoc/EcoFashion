@@ -1,12 +1,5 @@
 import React, { useRef, useState } from "react";
-import {
-  Box,
-  Container,
-  Typography,
-  Button,
-  IconButton,
-  Grid,
-} from "@mui/material";
+import { Box, Container, Typography, Button, IconButton } from "@mui/material";
 import "./FashionCard.css";
 import FashionCard from "./FashionCard";
 import type { Fashion } from "../../types/Fashion";
@@ -117,10 +110,20 @@ const FashionsSection: React.FC<ProductsSectionProps> = ({
           </IconButton>
         </Box>
       </Box>
-      <Box sx={{ width: "100%", gap: 2 }}>
-        <Grid container spacing={2}>
+      <Box sx={{ width: "100%" }}>
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: {
+              xs: "1fr",
+              sm: "repeat(2, 1fr)",
+              md: "repeat(4, 1fr)",
+            },
+            gap: 2,
+          }}
+        >
           {visibleProducts.map((product) => (
-            <Grid key={product.designId} size={3}>
+            <Box key={product.designId}>
               {type ? (
                 <div className="design-card">
                   <FashionCard
@@ -142,9 +145,9 @@ const FashionsSection: React.FC<ProductsSectionProps> = ({
                   onProductClick={onProductClick}
                 />
               )}
-            </Grid>
+            </Box>
           ))}
-        </Grid>
+        </Box>
       </Box>
 
       <Box sx={{ textAlign: "center", paddingTop: 2, paddingBottom: 2 }}>

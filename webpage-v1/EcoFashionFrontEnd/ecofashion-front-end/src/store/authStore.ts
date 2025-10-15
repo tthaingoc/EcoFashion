@@ -20,6 +20,7 @@ import {
 } from "../utils/authUtils";
 import { clearAllAuthData } from "../utils/authUtils";
 import { useCartStore } from "./cartStore";
+import { cartService } from "../services/api/cartService";
 
 interface AuthState {
   // State
@@ -103,6 +104,23 @@ export const useAuthStore = create<AuthState>()(
             loading: false,
           });
 
+          // Clear any leftover checkout/session data from a previous user
+          try {
+            sessionStorage.removeItem("checkoutIdempotencyKey");
+            sessionStorage.removeItem("checkoutOrderIds");
+            sessionStorage.removeItem("checkoutOrderGroupId");
+          } catch (_) {
+            // no-op
+          }
+
+          // Reset cart UI and sync from server for the logged-in user
+          try {
+            useCartStore.getState().resetLocal();
+            await useCartStore.getState().syncFromServer();
+          } catch (_) {
+            // ignore cart sync errors
+          }
+
           // Auto-load profile based on role
           await get().loadUserProfile();
 
@@ -140,6 +158,15 @@ export const useAuthStore = create<AuthState>()(
       logout: async () => {
         set({ loading: true });
         try {
+          // Clean up any checkout-related session data
+          try {
+            sessionStorage.removeItem("checkoutIdempotencyKey");
+            sessionStorage.removeItem("checkoutOrderIds");
+            sessionStorage.removeItem("checkoutOrderGroupId");
+          } catch (_) {
+            // no-op
+          }
+
           // Try to call logout API, but don't fail if it doesn't work
           try {
             await AuthService.logout();

@@ -3,9 +3,8 @@ import axios from "axios";
 import type { AxiosResponse } from "axios";
 
 // Determine API base URL based on environment
-const API_BASE_URL = import.meta.env.DEV
-  ? "http://localhost:5148/api"
-  : "https://yourdomain.com/api";
+// Fallback to "/api" (works with Vite dev proxy and reverse proxies in prod)
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
 
 // Create axios instance with common config
 export const apiClient = axios.create({

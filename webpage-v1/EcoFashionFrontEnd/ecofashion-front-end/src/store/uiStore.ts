@@ -177,14 +177,9 @@ export const useUIStore = create<UIState>()(
         },
       }),
       onRehydrateStorage: () => (state) => {
-        // Apply theme on hydration
-        if (state?.theme) {
-          if (state.theme === 'dark') {
-            document.documentElement.classList.add('dark');
-          } else {
-            document.documentElement.classList.remove('dark');
-          }
-        }
+        // Force light mode regardless of device preference
+        document.documentElement.classList.remove('dark');
+        if (state) state.theme = 'light';
       },
     }
   )

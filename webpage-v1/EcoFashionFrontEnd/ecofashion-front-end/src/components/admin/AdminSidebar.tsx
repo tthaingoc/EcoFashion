@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { useAdminSidebar } from '../../services/admin/AdminSidebarContext';
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { useAdminSidebar } from "../../services/admin/AdminSidebarContext";
 import {
   GridIcon,
   BoxCubeIcon,
@@ -12,10 +12,11 @@ import {
   ChevronDownIcon,
   ChevronUpIcon,
   HorizontaLDots,
-  PlusIcon
-} from '../../assets/icons/index.tsx'; // Updated import path and icons
-import logo2 from '../../assets/pictures/homepage/logo2.png';
-import { useAuthStore } from '../../store/authStore';
+  PlusIcon,
+  WalletTransition,
+} from "../../assets/icons/index.tsx"; // Updated import path and icons
+import logo2 from "../../assets/pictures/homepage/logo2.png";
+import { useAuthStore } from "../../store/authStore";
 
 type NavItem = {
   name: string;
@@ -36,32 +37,41 @@ const navItems: NavItem[] = [
     path: "/admin/dashboard/applications",
   },
   {
+    icon: <WalletTransition className="w-6 h-6" />,
+    name: "Đơn Rút Tiền",
+    path: "/admin/dashboard/walletWithdraw",
+  },
+  {
     icon: <UserCircleIcon className="w-6 h-6" />,
     name: "Người Dùng",
     subItems: [
       { name: "Tất Cả Người Dùng", path: "/admin/dashboard/users", pro: false },
-      { name: "Nhà Thiết Kế", path: "/admin/dashboard/designers", pro: false },
-      { name: "Nhà Cung Cấp", path: "/admin/dashboard/suppliers", pro: false },
-      { name: "Khách Hàng", path: "/admin/dashboard/customers", pro: false },
-    ],
-  },
-  {
-    icon: <BoxIcon className="w-6 h-6" />,
-    name: "Thiết Kế",
-    subItems: [
-      { name: "Tất Cả Thiết Kế", path: "/admin/dashboard/designs", pro: false },
-      { name: "Chờ Phê Duyệt", path: "/admin/dashboard/designs/pending", pro: false },
-      { name: "Đã Phê Duyệt", path: "/admin/dashboard/designs/approved", pro: false },
     ],
   },
   {
     icon: <BoxCubeIcon className="w-6 h-6" />,
     name: "Vật Liệu",
     subItems: [
-      { name: "Tất Cả Loại Vật Liệu", path: "/admin/dashboard/material-types", pro: false },
-      { name: "Tất Cả Vật Liệu", path: "/admin/dashboard/materials", pro: false },
-      { name: "Chờ Phê Duyệt", path: "/admin/dashboard/materials/pending", pro: false },
-      { name: "Đã Phê Duyệt", path: "/admin/dashboard/materials/approved", pro: false },
+      {
+        name: "Tất Cả Loại Vật Liệu",
+        path: "/admin/dashboard/material-types",
+        pro: false,
+      },
+      {
+        name: "Tất Cả Vật Liệu",
+        path: "/admin/dashboard/materials",
+        pro: false,
+      },
+      {
+        name: "Chờ Phê Duyệt",
+        path: "/admin/dashboard/materials/pending",
+        pro: false,
+      },
+      {
+        name: "Đã Phê Duyệt",
+        path: "/admin/dashboard/materials/approved",
+        pro: false,
+      },
     ],
   },
 ];
@@ -71,23 +81,19 @@ const otherItems: NavItem[] = [
     icon: <PieChartIcon className="w-6 h-6" />,
     name: "Phân Tích",
     subItems: [
-      { name: "Báo Cáo Bán Hàng", path: "/admin/dashboard/analytics/sales", pro: false },
-      { name: "Báo Cáo Kho Hàng", path: "/admin/dashboard/analytics/inventory", pro: false },
+      {
+        name: "Báo Cáo Kho Hàng",
+        path: "/admin/dashboard/analytics/inventory",
+        pro: false,
+      },
     ],
   },
-  {
-    icon: <PlugInIcon className="w-6 h-6" />,
-    name: "Cài Đặt",
-    subItems: [
-      { name: "Cài Đặt Chung", path: "/admin/dashboard/settings/general", pro: false },
-      { name: "Bảo Mật", path: "/admin/dashboard/settings/security", pro: false },
-      { name: "Thông Báo", path: "/admin/dashboard/settings/notifications", pro: false },
-    ],
-  },
+
 ];
 
 const AdminSidebar: React.FC = () => {
-  const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useAdminSidebar();
+  const { isExpanded, isMobileOpen, isHovered, setIsHovered } =
+    useAdminSidebar();
   const location = useLocation();
   const user = useAuthStore((s) => s.user);
 
@@ -95,7 +101,9 @@ const AdminSidebar: React.FC = () => {
     type: "main" | "others";
     index: number;
   } | null>(null);
-  const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>({});
+  const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>(
+    {}
+  );
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const isActive = useCallback(
@@ -159,22 +167,19 @@ const AdminSidebar: React.FC = () => {
           {nav.subItems ? (
             <button
               onClick={() => handleSubmenuToggle(index, menuType)}
-              className={`relative flex items-center w-full gap-3 px-3 py-2 font-medium rounded-lg text-theme-sm cursor-pointer min-w-0 ${
-                openSubmenu?.type === menuType && openSubmenu?.index === index
-                  ? "menu-item-active"
-                  : "menu-item-inactive"
-              } ${
-                !isExpanded && !isHovered
+              className={`relative flex items-center w-full gap-3 px-3 py-2 font-medium rounded-lg text-theme-sm cursor-pointer min-w-0 ${openSubmenu?.type === menuType && openSubmenu?.index === index
+                ? "menu-item-active"
+                : "menu-item-inactive"
+                } ${!isExpanded && !isHovered
                   ? "lg:justify-center"
                   : "lg:justify-start"
-              }`}
+                }`}
             >
               <span
-                className={`menu-item-icon-size ${
-                  openSubmenu?.type === menuType && openSubmenu?.index === index
-                    ? "menu-item-icon-active"
-                    : "menu-item-icon-inactive"
-                }`}
+                className={`menu-item-icon-size ${openSubmenu?.type === menuType && openSubmenu?.index === index
+                  ? "menu-item-icon-active"
+                  : "menu-item-icon-inactive"
+                  }`}
               >
                 {nav.icon}
               </span>
@@ -182,12 +187,13 @@ const AdminSidebar: React.FC = () => {
                 <span className="text-sm font-medium truncate">{nav.name}</span>
               )}
               {(isExpanded || isHovered || isMobileOpen) && (
-                <span className={`menu-item-arrow flex-shrink-0 ${
-                  openSubmenu?.type === menuType &&
-                  openSubmenu?.index === index
+                <span
+                  className={`menu-item-arrow flex-shrink-0 ${openSubmenu?.type === menuType &&
+                    openSubmenu?.index === index
                     ? "menu-item-arrow-active"
                     : "menu-item-arrow-inactive"
-                }`}>
+                    }`}
+                >
                   <ChevronDownIcon className="w-5 h-5 transition-transform duration-200" />
                 </span>
               )}
@@ -196,23 +202,21 @@ const AdminSidebar: React.FC = () => {
             nav.path && (
               <Link
                 to={nav.path}
-                className={`menu-item min-w-0 ${
-                  isActive(nav.path) 
-                    ? "menu-item-active" 
-                    : "menu-item-inactive"
-                }`}
+                className={`menu-item min-w-0 ${isActive(nav.path) ? "menu-item-active" : "menu-item-inactive"
+                  }`}
               >
                 <span
-                  className={`menu-item-icon-size ${
-                    isActive(nav.path)
-                      ? "menu-item-icon-active"
-                      : "menu-item-icon-inactive"
-                  }`}
+                  className={`menu-item-icon-size ${isActive(nav.path)
+                    ? "menu-item-icon-active"
+                    : "menu-item-icon-inactive"
+                    }`}
                 >
                   {nav.icon}
                 </span>
                 {(isExpanded || isHovered || isMobileOpen) && (
-                  <span className="text-sm font-medium truncate">{nav.name}</span>
+                  <span className="text-sm font-medium truncate">
+                    {nav.name}
+                  </span>
                 )}
               </Link>
             )
@@ -235,11 +239,10 @@ const AdminSidebar: React.FC = () => {
                   <li key={subItem.name}>
                     <Link
                       to={subItem.path}
-                      className={`menu-dropdown-item ${
-                        isActive(subItem.path)
-                          ? "menu-dropdown-item-active"
-                          : "menu-dropdown-item-inactive"
-                      }`}
+                      className={`menu-dropdown-item ${isActive(subItem.path)
+                        ? "menu-dropdown-item-active"
+                        : "menu-dropdown-item-inactive"
+                        }`}
                     >
                       <div className="flex items-center gap-2">
                         <span>{subItem.name}</span>
@@ -250,22 +253,20 @@ const AdminSidebar: React.FC = () => {
                       <span className="flex items-center gap-1 ml-auto">
                         {subItem.new && (
                           <span
-                            className={`menu-dropdown-badge ${
-                              isActive(subItem.path)
-                                ? "menu-dropdown-badge-active"
-                                : "menu-dropdown-badge-inactive"
-                            }`}
+                            className={`menu-dropdown-badge ${isActive(subItem.path)
+                              ? "menu-dropdown-badge-active"
+                              : "menu-dropdown-badge-inactive"
+                              }`}
                           >
                             NEW
                           </span>
                         )}
                         {subItem.pro && (
                           <span
-                            className={`menu-dropdown-badge ${
-                              isActive(subItem.path)
-                                ? "menu-dropdown-badge-active"
-                                : "menu-dropdown-badge-inactive"
-                            }`}
+                            className={`menu-dropdown-badge ${isActive(subItem.path)
+                              ? "menu-dropdown-badge-active"
+                              : "menu-dropdown-badge-inactive"
+                              }`}
                           >
                             PRO
                           </span>
@@ -285,10 +286,9 @@ const AdminSidebar: React.FC = () => {
   return (
     <aside
       className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
-        ${
-          isExpanded || isMobileOpen
-            ? "w-[290px]"
-            : isHovered
+        ${isExpanded || isMobileOpen
+          ? "w-[290px]"
+          : isHovered
             ? "w-[290px]"
             : "w-[90px]"
         }
@@ -319,11 +319,10 @@ const AdminSidebar: React.FC = () => {
           <div className="flex flex-col gap-4">
             <div>
               <h2
-                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
-                  !isExpanded && !isHovered
-                    ? "lg:justify-center"
-                    : "justify-start"
-                }`}
+                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${!isExpanded && !isHovered
+                  ? "lg:justify-center"
+                  : "justify-start"
+                  }`}
               >
                 {isExpanded || isHovered || isMobileOpen ? (
                   "Menu Chính"
@@ -335,11 +334,10 @@ const AdminSidebar: React.FC = () => {
             </div>
             <div className="">
               <h2
-                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
-                  !isExpanded && !isHovered
-                    ? "lg:justify-center"
-                    : "justify-start"
-                }`}
+                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${!isExpanded && !isHovered
+                  ? "lg:justify-center"
+                  : "justify-start"
+                  }`}
               >
                 {isExpanded || isHovered || isMobileOpen ? (
                   "Khác"
@@ -354,10 +352,10 @@ const AdminSidebar: React.FC = () => {
         {/* Admin Info Section */}
         <div className="border-t border-gray-200 dark:border-gray-800 px-2 py-4 mt-2">
           <div className="text-xs font-semibold text-gray-900 dark:text-white">
-            {user?.fullName || 'Tên Quản Trị Viên'}
+            {user?.fullName || "Tên Quản Trị Viên"}
           </div>
           <div className="text-xs text-gray-500 truncate">
-            {user?.email || 'admin@email.com'}
+            {user?.email || "admin@email.com"}
           </div>
         </div>
       </div>
@@ -365,4 +363,4 @@ const AdminSidebar: React.FC = () => {
   );
 };
 
-export default AdminSidebar; 
+export default AdminSidebar;
