@@ -209,22 +209,7 @@ namespace EcoFashionBackEnd.Services
            var emailResult = await _emailService.SendEmailAsync(mailData);
            if (!emailResult)
            {
-               var fallbackMail = new MailData
-               {
-                   EmailToId = "vinhntse173702@fpt.edu.vn",
-                   EmailToName = "EcoFashion Dev",
-                   EmailSubject = mailData.EmailSubject,
-                   EmailBody = mailData.EmailBody
-               };
-
-
-               var fallbackResult = await _emailService.SendEmailAsync(fallbackMail);
-
-
-               if (!fallbackResult)
-               {
-                   throw new BadRequestException("Không thể gửi email xác thực đến cả user và fallback.");
-               }
+               throw new BadRequestException("Không thể gửi email xác thực. Vui lòng thử lại.");
            }
 
 

@@ -7,6 +7,7 @@ import {
   useProvinceCode,
 } from "../../hooks/useProvincesV2";
 import { WardV2 } from "../../services/api/provincesService";
+import SearchableSelect from "./SearchableSelect";
 
 interface ProvinceDistrictSelectorProps {
   selectedProvince?: string;
@@ -125,25 +126,6 @@ const ProvinceDistrictSelector: React.FC<ProvinceDistrictSelectorProps> = ({
     }
   };
 
-  const handleDistrictChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const districtName = e.target.value;
-    setSelectedDistrictForFilter(districtName);
-    // Không gọi onDistrictChange ở đây - chỉ để lọc phường/xã
-  };
-
-  const handleWardChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const wardName = e.target.value;
-    const ward = wards.find((w) => w.name === wardName);
-    if (ward) {
-      // Lưu ward vào district field để gửi về backend
-      onDistrictChange(wardName, ward.code.toString());
-      // Vẫn gọi onWardChange nếu có
-      if (onWardChange) {
-        onWardChange(wardName, ward.code.toString());
-      }
-    }
-  };
-
   const selectClassName = `w-full pl-3 pr-8 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none cursor-pointer disabled:bg-gray-50 disabled:cursor-not-allowed`;
 
   if (provincesLoading) {
@@ -188,86 +170,77 @@ const ProvinceDistrictSelector: React.FC<ProvinceDistrictSelectorProps> = ({
         </div>
       </div>
 
-      {/* District Selector */}
-      <div className="relative">
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Chọn vùng *
-          {provinceDetailsLoading && (
-            <span className="text-xs text-blue-600 ml-1">(Đang tải...)</span>
-          )}
-        </label>
-        <div className="relative">
-          <select
-            value={selectedDistrictForFilter || ""}
-            onChange={handleDistrictChange}
-            disabled={
-              disabled ||
-              !selectedProvince ||
-              districts.length === 0 ||
-              provinceDetailsLoading
-            }
-            className={selectClassName}
-            required
-          >
-            <option value="">
-              {!selectedProvince
-                ? "Chọn Tỉnh/Thành phố trước"
-                : provinceDetailsLoading
-                ? "Đang tải danh sách quận/huyện..."
-                : districts.length === 0
-                ? "Không có quận/huyện"
-                : "Chọn Quận/Huyện"}
-            </option>
-            {districts.map((district) => (
-              <option key={district.code} value={district.name}>
-                {district.name} ({district.wards.length} phường/xã)
-              </option>
-            ))}
-          </select>
-          <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-            <ChevronDownIcon className="h-4 w-4 text-gray-400" />
-          </div>
-        </div>
-      </div>
+      {/* District Selector - Searchable */}
+      <SearchableSelect
+        items={districts}
+        value={selectedDistrictForFilter}
+        onChange={(districtName) => {
+          setSelectedDistrictForFilter(districtName);
+        }}
+        getLabel={(district) =>
+          `${district.name} (${district.wards.length} phường/xã)`
+        }
+        getValue={(district) => district.name}
+        label="Chọn vùng"
+        placeholder={
+          !selectedProvince
+            ? "Chọn Tỉnh/Thành phố trước"
+            : provinceDetailsLoading
+            ? "Đang tải danh sách quận/huyện..."
+            : districts.length === 0
+            ? "Không có quận/huyện"
+            : "Nhập tên quận/huyện để tìm kiếm..."
+        }
+        disabled={
+          disabled ||
+          !selectedProvince ||
+          districts.length === 0 ||
+          provinceDetailsLoading
+        }
+        required
+        emptyMessage="Không có quận/huyện"
+        helperText={
+          provinceDetailsLoading
+            ? "Đang tải danh sách quận/huyện..."
+            : selectedDistrictForFilter
+            ? undefined
+            : "💡 Bạn có thể gõ tiếng Việt có dấu để tìm kiếm"
+        }
+      />
 
-      {/* Ward Selector */}
+      {/* Ward Selector - Searchable */}
       {showWards && (
-        <div className="relative">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Phường/Xã
-            {wards.length > 0 && (
-              <span className="text-xs text-gray-500 ml-1">
-                ({wards.length} lựa chọn)
-              </span>
-            )}
-          </label>
-          <div className="relative">
-            <select
-              value={selectedWard || ""}
-              onChange={handleWardChange}
-              disabled={
-                disabled || !selectedDistrictForFilter || wards.length === 0
+        <SearchableSelect
+          items={wards}
+          value={selectedWard || ""}
+          onChange={(wardName, ward) => {
+            if (ward) {
+              onDistrictChange(wardName, ward.code.toString());
+              if (onWardChange) {
+                onWardChange(wardName, ward.code.toString());
               }
-              className={selectClassName}
-            >
-              <option value="">
-                {!selectedDistrictForFilter
-                  ? "Chọn Quận/Huyện trước"
-                  : wards.length === 0
-                  ? "Không có phường/xã"
-                  : "Chọn Phường/Xã (tùy chọn)"}
-              </option>
-              {wards.map((ward) => (
-                <option key={ward.code} value={ward.name}>
-                  {ward.name}
-                </option>
-              ))}
-            </select>
-            <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-              <ChevronDownIcon className="h-4 w-4 text-gray-400" />
-            </div>
-          </div>
-        </div>
+            }
+          }}
+          getLabel={(ward) => ward.name}
+          getValue={(ward) => ward.name}
+          label={`Phường/Xã${wards.length > 0 ? ` (${wards.length} lựa chọn)` : ""}`}
+          placeholder={
+            !selectedDistrictForFilter
+              ? "Chọn Quận/Huyện trước"
+              : wards.length === 0
+              ? "Không có phường/xã"
+              : "Nhập tên phường/xã để tìm kiếm..."
+          }
+          disabled={disabled || !selectedDistrictForFilter || wards.length === 0}
+          emptyMessage="Không có phường/xã"
+          helperText={
+            selectedWard
+              ? undefined
+              : wards.length > 0
+              ? "💡 Gõ 'phuong vuon' để tìm 'Phường Vườn Lài'"
+              : undefined
+          }
+        />
       )}
 
       {/* API Info */}
