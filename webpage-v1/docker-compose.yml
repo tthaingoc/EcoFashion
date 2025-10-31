@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: ecofashion-db
+    environment:
+      POSTGRES_DB: Ecofashion
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-12345}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - ecofashion-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API
+  backend:
+    build:
+      context: ./EcoFashionBackEnd
+      dockerfile: EcoFashionBackEnd/Dockerfile
+    container_name: ecofashion-backend
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__PgDbConnection=Server=postgres;Database=Ecofashion;Port=5432;User Id=postgres;Password=${DB_PASSWORD:-12345}
+      - JwtSettings__Key=${JWT_SECRET}
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - CloudSettings__CloudName=${CLOUDINARY_NAME}
+      - CloudSettings__CloudKey=${CLOUDINARY_KEY}
+      - CloudSettings__CloudSecret=${CLOUDINARY_SECRET}
+      - Vnpay__TmnCode=${VNPAY_TMN_CODE}
+      - Vnpay__HashSecret=${VNPAY_HASH_SECRET}
+      - Frontend__CheckoutResultUrl=${FRONTEND_URL}/checkout/result
+      - Frontend__WalletUrl=${FRONTEND_URL}
+    ports:
+      - "5148:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - ecofashion-network
+    restart: unless-stopped
+
+  # Frontend
+  frontend:
+    build:
+      context: ./EcoFashionFrontEnd/ecofashion-front-end
+      dockerfile: Dockerfile
+    container_name: ecofashion-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - ecofashion-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  ecofashion-network:
+    driver: bridge
