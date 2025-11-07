@@ -66,6 +66,23 @@ public static class ServicesExtensions
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true
                 };
+
+                // SignalR: Allow JWT token from query string (for WebSocket connections)
+                options.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];
+                        var path = context.HttpContext.Request.Path;
+
+                        // If the request is for our hub and token is in query string
+                        if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/chathub"))
+                        {
+                            context.Token = accessToken;
+                        }
+                        return Task.CompletedTask;
+                    }
+                };
             });
 
         services.AddDbContext<AppDbContext>(opt =>
@@ -76,6 +93,7 @@ public static class ServicesExtensions
         services.AddScoped(typeof(IRepository<,>), typeof(GenericRepository<,>));
         services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<IMaterialRepository, MaterialRepository>();
+        services.AddScoped<EcoFashionBackEnd.Repositories.Interfaces.IChatRepository, EcoFashionBackEnd.Repositories.ChatRepository>();
         services.AddScoped<IDatabaseInitialiser, DatabaseInitialiser>();
 
         services.AddScoped<UserService>();
@@ -123,9 +141,14 @@ public static class ServicesExtensions
         services.AddScoped<ReviewService>();
         services.AddScoped<InventoryTransactionService>();
         services.AddScoped<WalletService>();
+        services.AddScoped<EcoFashionBackEnd.Services.Interfaces.IChatService, EcoFashionBackEnd.Services.ChatService>();
 
-
-
+        // SignalR for real-time chat
+        services.AddSignalR(options =>
+        {
+            options.EnableDetailedErrors = true; // Helpful for debugging
+            options.MaximumReceiveMessageSize = 102400; // 100 KB max message size
+        });
 
         return services;
     }

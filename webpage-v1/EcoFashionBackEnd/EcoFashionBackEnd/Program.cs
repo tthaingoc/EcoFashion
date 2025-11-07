@@ -139,6 +139,9 @@ public class Program
         // 11. Controllers
         app.MapControllers();
 
+        // 12. SignalR Hub endpoints
+        app.MapHub<EcoFashionBackEnd.Helpers.Hubs.ChatHub>("/chathub");
+
         app.Run();
     }
 

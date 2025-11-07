@@ -45,6 +45,7 @@ import {
   SupplierService,
   SupplierSummary,
 } from "../services/api";
+import ChatBox from "../components/chat/ChatBox";
 
 const StyledInput = styled(InputBase)({
   borderRadius: 20,
@@ -764,6 +765,9 @@ export default function Homepage() {
           <KeyboardArrowUpIcon />
         </Fab>
       )}
+
+      {/* Chat Box - Only visible when user is logged in */}
+      <ChatBox />
     </Box>
   );
 }

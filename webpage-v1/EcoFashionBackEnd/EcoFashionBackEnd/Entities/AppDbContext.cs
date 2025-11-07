@@ -1,4 +1,4 @@
-﻿
+
 using Microsoft.EntityFrameworkCore;
 
 namespace EcoFashionBackEnd.Entities
@@ -58,6 +58,9 @@ namespace EcoFashionBackEnd.Entities
         public DbSet<MaterialInventoryTransaction> MaterialInventoryTransactions { get; set; }
 
         public DbSet<Review> Reviews { get; set; }
+        public DbSet<ChatSession> ChatSessions { get; set; }
+        public DbSet<ChatMessage> ChatMessages { get; set; }
+
 
 
 
@@ -296,7 +299,7 @@ namespace EcoFashionBackEnd.Entities
                     .OnDelete(DeleteBehavior.Restrict);
                 // Restrict: tránh xóa design làm mất hết sản phẩm
 
-              
+
                 // SetNull: nếu variant kế hoạch bị xóa, product vẫn tồn tại
 
                 // Size (bắt buộc)
@@ -508,7 +511,7 @@ namespace EcoFashionBackEnd.Entities
                 .Property(ms => ms.Value)
                 .HasPrecision(18, 2);
 
-           
+
             modelBuilder.Entity<DesignerMaterialInventory>()
                 .HasOne(dmi => dmi.Material)
                 .WithMany()
@@ -739,6 +742,68 @@ namespace EcoFashionBackEnd.Entities
                 .WithMany()
                 .HasForeignKey(n => n.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+            #endregion
+
+            #region ChatSession and ChatMessage
+            // ChatSession configuration
+            modelBuilder.Entity<ChatSession>(entity =>
+            {
+                entity.HasKey(cs => cs.Id);
+
+                entity.Property(cs => cs.UserId)
+                    .IsRequired()
+                    .HasMaxLength(450); // Auth0 sub claim
+
+                entity.Property(cs => cs.AdminId)
+                    .HasMaxLength(450); // Nullable - admin can be assigned later
+
+                entity.Property(cs => cs.IsActive)
+                    .IsRequired();
+
+                entity.Property(cs => cs.CreatedAt)
+                    .IsRequired();
+
+                entity.Property(cs => cs.LastMessageAt)
+                    .IsRequired();
+
+                // Indexes for efficient queries
+                entity.HasIndex(cs => cs.UserId);
+                entity.HasIndex(cs => cs.AdminId);
+                entity.HasIndex(cs => new { cs.IsActive, cs.LastMessageAt });
+
+                // One-to-many relationship with ChatMessages
+                entity.HasMany(cs => cs.Messages)
+                    .WithOne(cm => cm.ChatSession)
+                    .HasForeignKey(cm => cm.ChatSessionId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // ChatMessage configuration
+            modelBuilder.Entity<ChatMessage>(entity =>
+            {
+                entity.HasKey(cm => cm.Id);
+
+                entity.Property(cm => cm.FromUserId)
+                    .IsRequired()
+                    .HasMaxLength(450); // Auth0 sub claim
+
+                entity.Property(cm => cm.Text)
+                    .IsRequired()
+                    .HasMaxLength(2000); // Reasonable limit for chat messages
+
+                entity.Property(cm => cm.SentAt)
+                    .IsRequired();
+
+                entity.Property(cm => cm.FromAdmin)
+                    .IsRequired();
+
+                entity.Property(cm => cm.IsRead)
+                    .IsRequired();
+
+                // Index for querying messages by session and time
+                entity.HasIndex(cm => new { cm.ChatSessionId, cm.SentAt });
+                entity.HasIndex(cm => cm.FromUserId);
+            });
             #endregion
 
         }

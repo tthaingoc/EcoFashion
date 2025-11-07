@@ -1,12 +1,12 @@
 //file này dùng để chọn tỉnh thành, quận huyện, phường xã trong quá trình thanh toán api v2
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import {
   useProvincesV2,
-  useProvinceDetailsV2,
+  useDistrictsV2,
+  useWardsV2,
   useProvinceCode,
 } from "../../hooks/useProvincesV2";
-import { WardV2 } from "../../services/api/provincesService";
 import SearchableSelect from "./SearchableSelect";
 
 interface ProvinceDistrictSelectorProps {
@@ -23,7 +23,7 @@ interface ProvinceDistrictSelectorProps {
 
 const ProvinceDistrictSelector: React.FC<ProvinceDistrictSelectorProps> = ({
   selectedProvince,
-  //selectedDistrict,
+  selectedDistrict,
   selectedWard,
   onProvinceChange,
   onDistrictChange,
@@ -32,11 +32,12 @@ const ProvinceDistrictSelector: React.FC<ProvinceDistrictSelectorProps> = ({
   disabled = false,
   className = "",
 }) => {
-  const [selectedProvinceCode, setSelectedProvinceCode] = useState<
-    number | null
-  >(null);
-  const [selectedDistrictForFilter, setSelectedDistrictForFilter] =
-    useState<string>("");
+  const [selectedProvinceId, setSelectedProvinceId] = useState<string | null>(
+    null
+  );
+  const [selectedDistrictId, setSelectedDistrictId] = useState<string | null>(
+    null
+  );
 
   // Fetch all provinces
   const { data: provinces = [], isLoading: provincesLoading } =
@@ -45,84 +46,46 @@ const ProvinceDistrictSelector: React.FC<ProvinceDistrictSelectorProps> = ({
   // Get province code from name
   const provinceCodeFromName = useProvinceCode(selectedProvince || "");
 
-  // Fetch province details (wards) when province is selected
-  const { data: provinceDetails, isLoading: provinceDetailsLoading } =
-    useProvinceDetailsV2(selectedProvinceCode);
+  // Fetch districts when province is selected
+  const { data: districts = [], isLoading: districtsLoading } =
+    useDistrictsV2(selectedProvinceId);
 
-  // Update selected province code when selectedProvince changes
+  // Fetch wards when district is selected
+  const { data: wards = [], isLoading: wardsLoading } =
+    useWardsV2(selectedDistrictId);
+
+  // Update selected province ID when selectedProvince changes
   useEffect(() => {
     if (selectedProvince && provinceCodeFromName) {
-      setSelectedProvinceCode(provinceCodeFromName);
+      setSelectedProvinceId(provinceCodeFromName);
     } else {
-      setSelectedProvinceCode(null);
+      setSelectedProvinceId(null);
+      setSelectedDistrictId(null);
     }
   }, [selectedProvince, provinceCodeFromName]);
 
-  // Extract unique districts from wards
-  const districts = useMemo(() => {
-    if (!provinceDetails?.wards) return [];
-
-    const districtsMap = new Map<
-      string,
-      { name: string; code: string; wards: WardV2[] }
-    >();
-
-    provinceDetails.wards.forEach((ward) => {
-      // Extract district name from ward's codename or division_type
-      let districtName = "";
-      let districtCode = "";
-
-      // Try to extract district info from ward data
-      // In API v2, wards might contain district info in their structure
-      if (ward.codename) {
-        const parts = ward.codename.split("_");
-        if (parts.length >= 2) {
-          districtName = parts.slice(0, -1).join(" ").replace(/_/g, " ");
-          districtCode = parts.slice(0, -1).join("_");
-        }
-      }
-
-      // Fallback: create generic district grouping
-      if (!districtName) {
-        const wardType = ward.division_type || "";
-        if (wardType.includes("phường")) {
-          districtName = "Quận trung tâm";
-          districtCode = "quan_trung_tam";
-        } else {
-          districtName = "Huyện ngoại thành";
-          districtCode = "huyen_ngoai_thanh";
-        }
-      }
-
-      if (!districtsMap.has(districtCode)) {
-        districtsMap.set(districtCode, {
-          name: districtName,
-          code: districtCode,
-          wards: [],
-        });
-      }
-
-      districtsMap.get(districtCode)!.wards.push(ward);
-    });
-
-    return Array.from(districtsMap.values());
-  }, [provinceDetails]);
-
-  // Get wards for selected district (for filtering)
-  const wards = useMemo(() => {
-    if (!selectedDistrictForFilter || !districts.length) return [];
-
-    const district = districts.find(
-      (d) => d.name === selectedDistrictForFilter
-    );
-    return district?.wards || [];
-  }, [selectedDistrictForFilter, districts]);
-
   const handleProvinceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const provinceName = e.target.value;
-    const province = provinces.find((p) => p.name === provinceName);
+    const province = provinces.find((p) => p.province_name === provinceName);
     if (province) {
-      onProvinceChange(provinceName, province.code.toString());
+      onProvinceChange(provinceName, province.province_id);
+      setSelectedProvinceId(province.province_id);
+      setSelectedDistrictId(null);
+    }
+  };
+
+  const handleDistrictChange = (districtName: string) => {
+    const district = districts.find((d) => d.district_name === districtName);
+    if (district) {
+      onDistrictChange(districtName, district.district_id);
+      setSelectedDistrictId(district.district_id);
+    }
+  };
+
+  const handleWardChange = (wardName: string) => {
+    const ward = wards.find((w) => w.ward_name === wardName);
+    if (ward && onWardChange) {
+      onWardChange(wardName, ward.ward_id);
     }
   };
 
@@ -159,8 +122,8 @@ const ProvinceDistrictSelector: React.FC<ProvinceDistrictSelectorProps> = ({
           >
             <option value="">Chọn Tỉnh/Thành phố</option>
             {provinces.map((province) => (
-              <option key={province.code} value={province.name}>
-                {province.name}
+              <option key={province.province_id} value={province.province_name}>
+                {province.province_name}
               </option>
             ))}
           </select>
@@ -173,19 +136,15 @@ const ProvinceDistrictSelector: React.FC<ProvinceDistrictSelectorProps> = ({
       {/* District Selector - Searchable */}
       <SearchableSelect
         items={districts}
-        value={selectedDistrictForFilter}
-        onChange={(districtName) => {
-          setSelectedDistrictForFilter(districtName);
-        }}
-        getLabel={(district) =>
-          `${district.name} (${district.wards.length} phường/xã)`
-        }
-        getValue={(district) => district.name}
-        label="Chọn vùng"
+        value={selectedDistrict || ""}
+        onChange={handleDistrictChange}
+        getLabel={(district) => district.district_name}
+        getValue={(district) => district.district_name}
+        label="Quận/Huyện"
         placeholder={
           !selectedProvince
             ? "Chọn Tỉnh/Thành phố trước"
-            : provinceDetailsLoading
+            : districtsLoading
             ? "Đang tải danh sách quận/huyện..."
             : districts.length === 0
             ? "Không có quận/huyện"
@@ -195,14 +154,14 @@ const ProvinceDistrictSelector: React.FC<ProvinceDistrictSelectorProps> = ({
           disabled ||
           !selectedProvince ||
           districts.length === 0 ||
-          provinceDetailsLoading
+          districtsLoading
         }
         required
         emptyMessage="Không có quận/huyện"
         helperText={
-          provinceDetailsLoading
+          districtsLoading
             ? "Đang tải danh sách quận/huyện..."
-            : selectedDistrictForFilter
+            : selectedDistrict
             ? undefined
             : "💡 Bạn có thể gõ tiếng Việt có dấu để tìm kiếm"
         }
@@ -213,25 +172,24 @@ const ProvinceDistrictSelector: React.FC<ProvinceDistrictSelectorProps> = ({
         <SearchableSelect
           items={wards}
           value={selectedWard || ""}
-          onChange={(wardName, ward) => {
-            if (ward) {
-              onDistrictChange(wardName, ward.code.toString());
-              if (onWardChange) {
-                onWardChange(wardName, ward.code.toString());
-              }
-            }
-          }}
-          getLabel={(ward) => ward.name}
-          getValue={(ward) => ward.name}
-          label={`Phường/Xã${wards.length > 0 ? ` (${wards.length} lựa chọn)` : ""}`}
+          onChange={handleWardChange}
+          getLabel={(ward) => ward.ward_name}
+          getValue={(ward) => ward.ward_name}
+          label={`Phường/Xã${
+            wards.length > 0 ? ` (${wards.length} lựa chọn)` : ""
+          }`}
           placeholder={
-            !selectedDistrictForFilter
+            !selectedDistrict
               ? "Chọn Quận/Huyện trước"
+              : wardsLoading
+              ? "Đang tải danh sách phường/xã..."
               : wards.length === 0
               ? "Không có phường/xã"
               : "Nhập tên phường/xã để tìm kiếm..."
           }
-          disabled={disabled || !selectedDistrictForFilter || wards.length === 0}
+          disabled={
+            disabled || !selectedDistrict || wards.length === 0 || wardsLoading
+          }
           emptyMessage="Không có phường/xã"
           helperText={
             selectedWard
@@ -249,18 +207,21 @@ const ProvinceDistrictSelector: React.FC<ProvinceDistrictSelectorProps> = ({
           <div className="text-blue-600 mt-0.5">🌐</div>
           <div>
             <p className="text-sm font-medium text-blue-800 mb-1">
-              Sử dụng API Provinces v2
+              Sử dụng API Provinces v2 (VNappmob)
             </p>
             <p className="text-xs text-blue-600">
               Dữ liệu tỉnh/thành phố, quận/huyện, phường/xã được cập nhật từ API
-              chính thức.
+              vnappmob.com
             </p>
-            {selectedProvinceCode && (
+            {selectedProvinceId && (
               <p className="text-xs text-blue-600 mt-1">
                 Đã tải:{" "}
-                {provinces.find((p) => p.code === selectedProvinceCode)?.name}
-                {provinceDetails?.wards?.length &&
-                  ` (${provinceDetails.wards.length} phường/xã)`}
+                {
+                  provinces.find((p) => p.province_id === selectedProvinceId)
+                    ?.province_name
+                }
+                {districts.length > 0 && ` (${districts.length} quận/huyện)`}
+                {wards.length > 0 && ` - ${wards.length} phường/xã`}
               </p>
             )}
           </div>

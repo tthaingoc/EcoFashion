@@ -13,6 +13,23 @@ namespace EcoFashionBackEnd.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
+                name: "ChatSessions",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    UserId = table.Column<string>(type: "character varying(450)", maxLength: 450, nullable: false),
+                    AdminId = table.Column<string>(type: "character varying(450)", maxLength: 450, nullable: true),
+                    IsActive = table.Column<bool>(type: "boolean", nullable: false),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    LastMessageAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ChatSessions", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Image",
                 columns: table => new
                 {
@@ -105,6 +122,30 @@ namespace EcoFashionBackEnd.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_UserRole", x => x.RoleId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ChatMessages",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    ChatSessionId = table.Column<int>(type: "integer", nullable: false),
+                    FromUserId = table.Column<string>(type: "character varying(450)", maxLength: 450, nullable: false),
+                    Text = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: false),
+                    SentAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    FromAdmin = table.Column<bool>(type: "boolean", nullable: false),
+                    IsRead = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ChatMessages", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ChatMessages_ChatSessions_ChatSessionId",
+                        column: x => x.ChatSessionId,
+                        principalTable: "ChatSessions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -1467,6 +1508,31 @@ namespace EcoFashionBackEnd.Migrations
                 filter: "\"UserId\" IS NOT NULL AND \"IsActive\" = true");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ChatMessages_ChatSessionId_SentAt",
+                table: "ChatMessages",
+                columns: new[] { "ChatSessionId", "SentAt" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ChatMessages_FromUserId",
+                table: "ChatMessages",
+                column: "FromUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ChatSessions_AdminId",
+                table: "ChatSessions",
+                column: "AdminId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ChatSessions_IsActive_LastMessageAt",
+                table: "ChatSessions",
+                columns: new[] { "IsActive", "LastMessageAt" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ChatSessions_UserId",
+                table: "ChatSessions",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_CheckoutSessionItems_CheckoutSessionId",
                 table: "CheckoutSessionItems",
                 column: "CheckoutSessionId");
@@ -1855,6 +1921,9 @@ namespace EcoFashionBackEnd.Migrations
                 name: "CartItems");
 
             migrationBuilder.DropTable(
+                name: "ChatMessages");
+
+            migrationBuilder.DropTable(
                 name: "CheckoutSessionItems");
 
             migrationBuilder.DropTable(
@@ -1925,6 +1994,9 @@ namespace EcoFashionBackEnd.Migrations
 
             migrationBuilder.DropTable(
                 name: "Carts");
+
+            migrationBuilder.DropTable(
+                name: "ChatSessions");
 
             migrationBuilder.DropTable(
                 name: "Image");

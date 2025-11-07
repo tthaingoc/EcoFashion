@@ -1,36 +1,30 @@
-//import apiClient from "./baseApi";
-//service gửi request cho api provinces.open-api.vn
-//https://provinces.open-api.vn/docs/
+// Service for Vietnam provinces/districts/wards API
+// Using vnappmob API: https://vapi.vnappmob.com/
 
-// Using fetch for simplicity; can replace with axios or other HTTP client if needed
-// API v2 interfaces based on actual response structure
+// API Response interfaces
 export interface ProvinceV2 {
-  name: string;
-  code: number;
-  division_type: string;
-  codename: string;
-  phone_code: number;
-  districts?: DistrictV2[];
-  wards?: WardV2[];
+  province_id: string;
+  province_name: string;
+  province_type: string;
 }
 
 export interface DistrictV2 {
-  name: string;
-  code: number;
-  division_type: string;
-  codename: string;
-  province_code: number;
-  wards?: WardV2[];
+  district_id: string;
+  district_name: string;
+  district_type: string;
+  province_id: string;
 }
 
 export interface WardV2 {
-  name: string;
-  code: number;
-  division_type: string;
-  codename: string;
-  district_code?: number;
-  province_code?: number;
-  short_codename?: string;
+  ward_id: string;
+  ward_name: string;
+  ward_type: string;
+  district_id: string;
+}
+
+// API wrapper response
+interface ApiResponse<T> {
+  results: T[];
 }
 
 // Processed interfaces for UI consistency
@@ -51,89 +45,55 @@ export interface Ward {
   name: string;
 }
 
-const BASE_URL = 'https://provinces.open-api.vn/api/v2';
+const BASE_URL = 'https://vapi.vnappmob.com/api/v2';
 
 export const provincesService = {
-  // Get all provinces from API v2
+  // Get all provinces
   getAllProvinces: async (): Promise<ProvinceV2[]> => {
     try {
-      const response = await fetch(`${BASE_URL}/p/`);
+      const response = await fetch(`${BASE_URL}/province/`);
       if (!response.ok) throw new Error('Failed to fetch provinces');
-      return response.json();
+      const data: ApiResponse<ProvinceV2> = await response.json();
+      return data.results;
     } catch (error) {
       console.error('Error fetching provinces:', error);
       throw error;
     }
   },
 
-  // Get province with districts and wards
-  getProvinceWithDetails: async (provinceCode: number): Promise<ProvinceV2> => {
+  // Get districts for a specific province
+  getDistrictsForProvince: async (provinceId: string): Promise<DistrictV2[]> => {
     try {
-      const response = await fetch(`${BASE_URL}/p/${provinceCode}?depth=2`);
-      if (!response.ok) throw new Error(`Failed to fetch province ${provinceCode}`);
-      return response.json();
+      const response = await fetch(`${BASE_URL}/province/district/${provinceId}`);
+      if (!response.ok) throw new Error(`Failed to fetch districts for province ${provinceId}`);
+      const data: ApiResponse<DistrictV2> = await response.json();
+      return data.results;
     } catch (error) {
-      console.error(`Error fetching province ${provinceCode}:`, error);
+      console.error(`Error fetching districts for province ${provinceId}:`, error);
       throw error;
     }
   },
 
-  // Get all provinces with full details (districts and wards)
-  getAllProvincesWithDetails: async (): Promise<ProvinceV2[]> => {
+  // Get wards for a specific district
+  getWardsForDistrict: async (districtId: string): Promise<WardV2[]> => {
     try {
-      const response = await fetch(`${BASE_URL}/?depth=2`);
-      if (!response.ok) throw new Error('Failed to fetch provinces with details');
-      return response.json();
+      const response = await fetch(`${BASE_URL}/province/ward/${districtId}`);
+      if (!response.ok) throw new Error(`Failed to fetch wards for district ${districtId}`);
+      const data: ApiResponse<WardV2> = await response.json();
+      return data.results;
     } catch (error) {
-      console.error('Error fetching provinces with details:', error);
+      console.error(`Error fetching wards for district ${districtId}:`, error);
       throw error;
     }
   },
 
-  // Convert API v2 data to UI format
+  // Convert API data to UI format
   convertToUIFormat: (provincesV2: ProvinceV2[]): Province[] => {
     return provincesV2.map(province => ({
-      code: province.code.toString(),
-      name: province.name,
-      districts: [] // Will be populated when needed
+      code: province.province_id,
+      name: province.province_name,
+      districts: []
     }));
-  },
-
-  // Get districts for a specific province
-  getDistrictsForProvince: async (provinceCode: number): Promise<DistrictV2[]> => {
-    try {
-      const province = await provincesService.getProvinceWithDetails(provinceCode);
-
-      // API v2 structure: wards are directly under province, need to group by district
-      if (province.wards) {
-        // Group wards by district_code if available
-        const districtsMap = new Map<number, DistrictV2>();
-
-        province.wards.forEach(ward => {
-          if (ward.district_code) {
-            if (!districtsMap.has(ward.district_code)) {
-              // Create district entry (we'll need to derive district name from wards)
-              districtsMap.set(ward.district_code, {
-                name: ward.name.split(',')[0] || 'District', // Extract district name from ward
-                code: ward.district_code,
-                division_type: 'huyện',
-                codename: ward.codename.split('_')[0] || '',
-                province_code: provinceCode,
-                wards: []
-              });
-            }
-            districtsMap.get(ward.district_code)!.wards!.push(ward);
-          }
-        });
-
-        return Array.from(districtsMap.values());
-      }
-
-      return [];
-    } catch (error) {
-      console.error(`Error fetching districts for province ${provinceCode}:`, error);
-      throw error;
-    }
   },
 
   // Search provinces by name
@@ -141,8 +101,7 @@ export const provincesService = {
     try {
       const allProvinces = await provincesService.getAllProvinces();
       return allProvinces.filter(province =>
-        province.name.toLowerCase().includes(query.toLowerCase()) ||
-        province.codename.includes(query.toLowerCase())
+        province.province_name.toLowerCase().includes(query.toLowerCase())
       );
     } catch (error) {
       console.error('Error searching provinces:', error);
@@ -166,7 +125,7 @@ export const provincesService = {
   validateProvince: async (provinceName: string): Promise<boolean> => {
     try {
       const provinces = await provincesService.getAllProvinces();
-      return provinces.some(p => p.name === provinceName);
+      return provinces.some(p => p.province_name === provinceName);
     } catch (error) {
       console.error('Error validating province:', error);
       return false;
