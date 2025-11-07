@@ -67,7 +67,8 @@ export default function ChatBox() {
 
   // Initialize SignalR connection when user is authenticated
   useEffect(() => {
-    if (!isAuthenticated) {
+    // Don't initialize for admins or unauthenticated users
+    if (!isAuthenticated || !user || user.role === 'admin') {
       return;
     }
 
@@ -137,7 +138,7 @@ export default function ChatBox() {
     return () => {
       signalRService.stop();
     };
-  }, [isAuthenticated]);
+  }, [isAuthenticated, user]);
 
   // Handle sending message
   const handleSendMessage = async () => {
@@ -199,8 +200,9 @@ export default function ChatBox() {
     }
   };
 
-  // Don't render if user is not authenticated
-  if (!isAuthenticated || !user) {
+  // Don't render if user is not authenticated or is admin
+  // Admins should use the dedicated chat dashboard instead
+  if (!isAuthenticated || !user || user.role === 'admin') {
     return null;
   }
 
@@ -317,38 +319,76 @@ export default function ChatBox() {
 
                 {messages.map((msg) => {
                   const isCurrentUser = msg.fromUserId === user.userId.toString();
+
+                  // Get sender info
+                  const senderEmail = isCurrentUser ? user.email : 'Admin Support';
+                  const senderAvatar = isCurrentUser
+                    ? (user.avatarUrl || user.email?.charAt(0).toUpperCase())
+                    : 'A';
+
                   return (
                     <Box
                       key={msg.id}
                       sx={{
                         display: 'flex',
                         justifyContent: isCurrentUser ? 'flex-end' : 'flex-start',
+                        mb: 2,
+                        gap: 1,
+                        flexDirection: isCurrentUser ? 'row-reverse' : 'row',
                       }}
                     >
-                      <Paper
+                      {/* Avatar */}
+                      <Avatar
+                        src={isCurrentUser ? user.avatarUrl : undefined}
                         sx={{
-                          p: 1.5,
-                          maxWidth: '70%',
-                          bgcolor: isCurrentUser ? 'primary.main' : 'white',
-                          color: isCurrentUser ? 'white' : 'text.primary',
-                          borderRadius: 2,
+                          width: 32,
+                          height: 32,
+                          bgcolor: isCurrentUser ? 'primary.main' : 'success.main',
+                          fontSize: '0.875rem',
                         }}
                       >
-                        <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
-                          {msg.text}
-                        </Typography>
+                        {senderAvatar}
+                      </Avatar>
+
+                      {/* Message Bubble */}
+                      <Box sx={{ maxWidth: '70%' }}>
                         <Typography
                           variant="caption"
                           sx={{
                             display: 'block',
-                            mt: 0.5,
-                            opacity: 0.7,
-                            fontSize: '0.65rem',
+                            mb: 0.5,
+                            px: 0.5,
+                            color: 'text.secondary',
+                            fontSize: '0.7rem',
                           }}
                         >
-                          {new Date(msg.sentAt).toLocaleTimeString()}
+                          {senderEmail}
                         </Typography>
-                      </Paper>
+                        <Paper
+                          sx={{
+                            p: 1.5,
+                            bgcolor: isCurrentUser ? 'primary.main' : 'white',
+                            color: isCurrentUser ? 'white' : 'text.primary',
+                            borderRadius: 2,
+                            boxShadow: 1,
+                          }}
+                        >
+                          <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
+                            {msg.text}
+                          </Typography>
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              display: 'block',
+                              mt: 0.5,
+                              opacity: 0.7,
+                              fontSize: '0.65rem',
+                            }}
+                          >
+                            {new Date(msg.sentAt).toLocaleTimeString()}
+                          </Typography>
+                        </Paper>
+                      </Box>
                     </Box>
                   );
                 })}

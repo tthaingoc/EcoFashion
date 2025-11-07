@@ -40,6 +40,7 @@ import SupplierLandingPage from "./pages/explore/SupplierLandingPage";
 import DashboardHome from "./pages/admin/DashboardHome";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import ApplicationManagement from "./pages/admin/ApplicationManagement";
+import { AdminChatDashboard } from "./components/admin/chat";
 import MaterialsAll from "./pages/admin/MaterialsAll";
 import MaterialsPending from "./pages/admin/MaterialsPending";
 import MaterialsApproved from "./pages/admin/MaterialsApproved";
@@ -349,6 +350,7 @@ function App() {
           <Route path="walletWithdraw" element={<WalletWithdraw />} />
           <Route path="materials/approved" element={<MaterialsApproved />} />
           <Route path="analytics/inventory" element={<InventoryReport />} />
+          <Route path="chat" element={<AdminChatDashboard />} />
         </Route>
 
         {/* Allow direct access to /admin/applications for admin */}
