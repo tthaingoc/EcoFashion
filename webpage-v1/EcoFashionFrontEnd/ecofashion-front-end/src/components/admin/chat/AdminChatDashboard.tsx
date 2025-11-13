@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import {
   Box,
   Paper,
@@ -7,13 +7,13 @@ import {
   Grid,
   CircularProgress,
   Alert,
-} from '@mui/material';
-import { toast } from 'react-toastify';
-import ChatService from '../../../services/api/chatService';
-import { signalRService } from '../../../services/api/signalrConnection';
-import type { ChatSessionSummaryDto } from '../../../types/chat.types';
-import SessionList from './SessionList';
-import AdminChatWindow from './AdminChatWindow';
+} from "@mui/material";
+import { toast } from "react-toastify";
+import ChatService from "../../../services/api/chatService";
+import { signalRService } from "../../../services/api/signalrConnection";
+import type { ChatSessionSummaryDto } from "../../../types/chat.types";
+import SessionList from "./SessionList";
+import AdminChatWindow from "./AdminChatWindow";
 
 /**
  * Admin Chat Dashboard Component
@@ -40,25 +40,36 @@ const AdminChatDashboard = () => {
         // Connect to SignalR if not already connected
         if (!signalRService.isConnected()) {
           await signalRService.start();
-          console.log('✅ Admin connected to SignalR');
+          console.log("✅ Admin connected to SignalR");
         }
 
         // Listen for new sessions
-        const handleNewSession = (data: { sessionId: number; userId: string; createdAt: string }) => {
-          console.log('🆕 New session created:', data);
+        const handleNewSession = (data: {
+          sessionId: number;
+          userId: string;
+          createdAt: string;
+        }) => {
+          console.log("🆕 New session created:", data);
           toast.info(`New chat from user ${data.userId}`, {
-            position: 'top-right',
+            position: "top-right",
           });
           // Reload sessions to show the new one
           loadSessions();
         };
 
         // Listen for new message notifications
-        const handleNewMessage = (data: { sessionId: number; userId: string; messagePreview: string }) => {
-          console.log('💬 New message in session:', data);
-          toast.info(`New message from user ${data.userId}: ${data.messagePreview}`, {
-            position: 'top-right',
-          });
+        const handleNewMessage = (data: {
+          sessionId: number;
+          userId: string;
+          messagePreview: string;
+        }) => {
+          console.log("💬 New message in session:", data);
+          toast.info(
+            `New message from user ${data.userId}: ${data.messagePreview}`,
+            {
+              position: "top-right",
+            }
+          );
           // Reload sessions to update last message
           loadSessions();
         };
@@ -75,10 +86,10 @@ const AdminChatDashboard = () => {
           signalRService.offNewMessageNotification(handleNewMessage);
         };
       } catch (error) {
-        console.error('❌ Failed to setup SignalR:', error);
+        console.error("❌ Failed to setup SignalR:", error);
         setIsConnecting(false);
-        toast.error('Failed to connect to chat server', {
-          position: 'top-right',
+        toast.error("Failed to connect to chat server", {
+          position: "top-right",
         });
       }
     };
@@ -93,13 +104,13 @@ const AdminChatDashboard = () => {
       setError(null);
       const data = await ChatService.getAllSessions(false); // Only active sessions
       setSessions(data);
-      console.log('📋 Loaded', data.length, 'active sessions');
+      console.log("📋 Loaded", data.length, "active sessions");
     } catch (err) {
-      const errorMessage = 'Failed to load chat sessions';
-      console.error('❌', errorMessage, err);
+      const errorMessage = "Failed to load chat sessions";
+      console.error("❌", errorMessage, err);
       setError(errorMessage);
       toast.error(errorMessage, {
-        position: 'top-right',
+        position: "top-right",
       });
     } finally {
       setIsLoading(false);
@@ -115,8 +126,8 @@ const AdminChatDashboard = () => {
   const handleCloseSession = async (sessionId: number) => {
     try {
       await ChatService.closeSession(sessionId);
-      toast.success('Session closed successfully', {
-        position: 'top-right',
+      toast.success("Session closed successfully", {
+        position: "top-right",
       });
       // If this was the active session, clear it
       if (activeSessionId === sessionId) {
@@ -125,9 +136,9 @@ const AdminChatDashboard = () => {
       // Reload sessions
       loadSessions();
     } catch (error) {
-      console.error('❌ Failed to close session:', error);
-      toast.error('Failed to close session', {
-        position: 'top-right',
+      console.error("❌ Failed to close session:", error);
+      toast.error("Failed to close session", {
+        position: "top-right",
       });
     }
   };
@@ -152,7 +163,12 @@ const AdminChatDashboard = () => {
 
       {/* Loading State */}
       {isLoading && (
-        <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          minHeight="400px"
+        >
           <CircularProgress />
         </Box>
       )}
@@ -166,19 +182,19 @@ const AdminChatDashboard = () => {
 
       {/* Main Content */}
       {!isLoading && (
-        <Grid container spacing={2} sx={{ height: 'calc(100vh - 200px)' }}>
+        <Grid container spacing={2} sx={{ height: "calc(100vh - 200px)" }}>
           {/* Left Panel - Session List */}
-          <Grid item xs={12} md={4} lg={3}>
+          <Grid>
             <Paper
               elevation={3}
               sx={{
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                overflow: 'hidden',
+                height: "100%",
+                display: "flex",
+                flexDirection: "column",
+                overflow: "hidden",
               }}
             >
-              <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
+              <Box sx={{ p: 2, borderBottom: 1, borderColor: "divider" }}>
                 <Typography variant="h6">
                   Active Chats ({sessions.length})
                 </Typography>
@@ -193,14 +209,14 @@ const AdminChatDashboard = () => {
           </Grid>
 
           {/* Right Panel - Chat Window */}
-          <Grid item xs={12} md={8} lg={9}>
+          <Grid>
             <Paper
               elevation={3}
               sx={{
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                overflow: 'hidden',
+                height: "100%",
+                display: "flex",
+                flexDirection: "column",
+                overflow: "hidden",
               }}
             >
               {activeSessionId ? (
@@ -215,7 +231,7 @@ const AdminChatDashboard = () => {
                   justifyContent="center"
                   alignItems="center"
                   height="100%"
-                  sx={{ color: 'text.secondary' }}
+                  sx={{ color: "text.secondary" }}
                 >
                   <Box textAlign="center">
                     <Typography variant="h6" gutterBottom>

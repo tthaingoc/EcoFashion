@@ -1859,8 +1859,8 @@ namespace EcoFashionBackEnd.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("Phone")
-                        .HasMaxLength(10)
-                        .HasColumnType("character varying(10)");
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
 
                     b.Property<int>("RoleId")
                         .HasColumnType("integer");

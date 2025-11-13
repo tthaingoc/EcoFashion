@@ -180,7 +180,6 @@ namespace EcoFashionBackEnd.Services
                 LastUpdatedAt = DateTime.UtcNow
             };
 
-
             await _dbContext.Wallets.AddAsync(wallet);
             var res = await _dbContext.SaveChangesAsync();
             if (res <= 0)
@@ -189,7 +188,7 @@ namespace EcoFashionBackEnd.Services
             }
 
 
-            // 5. Gửi OTP email qua Resend
+            // 5. Gửi OTP email qua SMTP Gmail
             var mailData = new MailData
             {
                 EmailToId = newUser.Email ?? "",
@@ -205,7 +204,6 @@ namespace EcoFashionBackEnd.Services
                                <p>Trân trọng,<br/>Đội ngũ EcoFashion</p>
                            "
             };
-
 
             var emailResult = await _emailService.SendEmailAsync(mailData);
             if (!emailResult)

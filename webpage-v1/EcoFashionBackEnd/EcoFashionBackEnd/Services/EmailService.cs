@@ -1,48 +1,57 @@
-﻿using System.Net.Http;
-using System.Net.Http.Json;
-using System.Threading.Tasks;
+using System.Net;
+using System.Net.Mail;
 using EcoFashionBackEnd.Helpers;
-using EcoFashionBackEnd.Services;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 
-
-public class EmailService : IEmailService
+namespace EcoFashionBackEnd.Services
 {
-    private readonly HttpClient _httpClient;
-    private readonly string _apiKey;
-
-    public EmailService(IConfiguration config)
+    public class EmailService : IEmailService
     {
-        _httpClient = new HttpClient();
-        _apiKey = config["RESEND_API_KEY"]; // đọc từ ENV Railway
-        if (string.IsNullOrWhiteSpace(_apiKey))
-            throw new InvalidOperationException("RESEND_API_KEY không được null.");
-        _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_apiKey}");
-    }
+        private readonly MailSettings _mailSettings;
 
-    public async Task<bool> SendEmailAsync(MailData mailData)
-    {
-        try
+        public EmailService(IOptions<MailSettings> mailSettings)
         {
-            var payload = new
-            {
-                from = "onboarding@resend.dev", // test ban đầu
-                to = new[] { mailData.EmailToId },
-                subject = mailData.EmailSubject,
-                html = mailData.EmailBody // support HTML
-            };
-
-            var response = await _httpClient.PostAsJsonAsync("https://api.resend.com/emails", payload);
-            var body = await response.Content.ReadAsStringAsync();
-
-            Console.WriteLine($"[Resend] Status: {response.StatusCode}, Body: {body}");
-
-            return response.IsSuccessStatusCode;
+            _mailSettings = mailSettings.Value;
         }
-        catch (Exception ex)
+
+        public async Task<bool> SendEmailAsync(MailData mailData)
         {
-            Console.WriteLine($"[EmailService] Error: {ex.Message}");
-            return false;
+            try
+            {
+                // Validate MailSettings
+                if (string.IsNullOrWhiteSpace(_mailSettings?.Server) ||
+                    string.IsNullOrWhiteSpace(_mailSettings?.UserName) ||
+                    string.IsNullOrWhiteSpace(_mailSettings?.Password))
+                {
+                    return false;
+                }
+
+                using var smtpClient = new SmtpClient(_mailSettings.Server, int.Parse(_mailSettings.Port))
+                {
+                    EnableSsl = true,
+                    Credentials = new NetworkCredential(_mailSettings.UserName, _mailSettings.Password)
+                };
+
+                var mailMessage = new MailMessage
+                {
+                    From = new MailAddress(_mailSettings.SenderEmail, _mailSettings.SenderName),
+                    Subject = mailData.EmailSubject,
+                    Body = mailData.EmailBody,
+                    IsBodyHtml = true
+                };
+
+                mailMessage.To.Add(mailData.EmailToId);
+
+                await smtpClient.SendMailAsync(mailMessage);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[EmailService] Failed to send email: {ex.Message}");
+                return false;
+            }
         }
     }
 }

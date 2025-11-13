@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EcoFashionBackEnd.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251107035323_init")]
+    [Migration("20251113074937_init")]
     partial class init
     {
         /// <inheritdoc />
@@ -1862,8 +1862,8 @@ namespace EcoFashionBackEnd.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("Phone")
-                        .HasMaxLength(10)
-                        .HasColumnType("character varying(10)");
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
 
                     b.Property<int>("RoleId")
                         .HasColumnType("integer");

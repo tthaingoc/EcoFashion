@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from "react";
 import {
   Box,
   Paper,
@@ -9,21 +9,20 @@ import {
   Chip,
   CircularProgress,
   Stack,
-  Divider,
   Tooltip,
   Button,
-} from '@mui/material';
+} from "@mui/material";
 import {
   Send as SendIcon,
   Close as CloseIcon,
   Person as PersonIcon,
   AdminPanelSettings as AdminIcon,
   CheckCircle as CheckCircleIcon,
-} from '@mui/icons-material';
-import { toast } from 'react-toastify';
-import ChatService from '../../../services/api/chatService';
-import { signalRService } from '../../../services/api/signalrConnection';
-import type { ChatMessageDto, ChatSessionDto } from '../../../types/chat.types';
+} from "@mui/icons-material";
+import { toast } from "react-toastify";
+import ChatService from "../../../services/api/chatService";
+import { signalRService } from "../../../services/api/signalrConnection";
+import type { ChatMessageDto, ChatSessionDto } from "../../../types/chat.types";
 
 interface AdminChatWindowProps {
   sessionId: number;
@@ -36,10 +35,14 @@ interface AdminChatWindowProps {
  * Detail chat window for a specific session
  * Allows admin to view history and send messages
  */
-const AdminChatWindow = ({ sessionId, onClose, onCloseSession }: AdminChatWindowProps) => {
+const AdminChatWindow = ({
+  sessionId,
+  onClose,
+  onCloseSession,
+}: AdminChatWindowProps) => {
   const [session, setSession] = useState<ChatSessionDto | null>(null);
   const [messages, setMessages] = useState<ChatMessageDto[]>([]);
-  const [inputMessage, setInputMessage] = useState('');
+  const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -47,7 +50,7 @@ const AdminChatWindow = ({ sessionId, onClose, onCloseSession }: AdminChatWindow
 
   // Auto scroll to bottom when messages change
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
@@ -65,26 +68,30 @@ const AdminChatWindow = ({ sessionId, onClose, onCloseSession }: AdminChatWindow
         setIsLoading(true);
 
         // 1. Load session messages from API
-        console.log('📥 Loading session:', sessionId);
+        console.log("📥 Loading session:", sessionId);
         const sessionData = await ChatService.getSessionMessages(sessionId);
         setSession(sessionData);
         setMessages(sessionData.messages);
         hasLoadedRef.current = true;
 
-        console.log('✅ Loaded session with', sessionData.messages.length, 'messages');
+        console.log(
+          "✅ Loaded session with",
+          sessionData.messages.length,
+          "messages"
+        );
 
         // 2. Join SignalR group for this session
         if (signalRService.isConnected()) {
           await signalRService.joinSession(sessionId);
-          console.log('🔌 Joined SignalR group for session:', sessionId);
+          console.log("🔌 Joined SignalR group for session:", sessionId);
         }
 
         // 3. Mark messages as read
         await ChatService.markAsRead(sessionId);
       } catch (error) {
-        console.error('❌ Failed to load session:', error);
-        toast.error('Failed to load chat session', {
-          position: 'top-right',
+        console.error("❌ Failed to load session:", error);
+        toast.error("Failed to load chat session", {
+          position: "top-right",
         });
       } finally {
         setIsLoading(false);
@@ -97,7 +104,7 @@ const AdminChatWindow = ({ sessionId, onClose, onCloseSession }: AdminChatWindow
     return () => {
       if (sessionId && signalRService.isConnected()) {
         signalRService.leaveSession(sessionId).catch(console.error);
-        console.log('👋 Left SignalR group for session:', sessionId);
+        console.log("👋 Left SignalR group for session:", sessionId);
       }
       hasLoadedRef.current = false;
     };
@@ -113,7 +120,7 @@ const AdminChatWindow = ({ sessionId, onClose, onCloseSession }: AdminChatWindow
           const exists = prev.some((m) => m.id === message.id);
           if (exists) return prev;
 
-          console.log('💬 New message received:', message);
+          console.log("💬 New message received:", message);
           return [...prev, message];
         });
 
@@ -136,12 +143,12 @@ const AdminChatWindow = ({ sessionId, onClose, onCloseSession }: AdminChatWindow
     try {
       setIsSending(true);
       await signalRService.sendMessageToSession(sessionId, inputMessage);
-      setInputMessage('');
-      console.log('✅ Message sent to session:', sessionId);
+      setInputMessage("");
+      console.log("✅ Message sent to session:", sessionId);
     } catch (error) {
-      console.error('❌ Failed to send message:', error);
-      toast.error('Failed to send message', {
-        position: 'top-right',
+      console.error("❌ Failed to send message:", error);
+      toast.error("Failed to send message", {
+        position: "top-right",
       });
     } finally {
       setIsSending(false);
@@ -150,7 +157,7 @@ const AdminChatWindow = ({ sessionId, onClose, onCloseSession }: AdminChatWindow
 
   // Handle Enter key
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
     }
@@ -158,7 +165,7 @@ const AdminChatWindow = ({ sessionId, onClose, onCloseSession }: AdminChatWindow
 
   // Handle close session
   const handleCloseSession = async () => {
-    if (window.confirm('Are you sure you want to close this chat session?')) {
+    if (window.confirm("Are you sure you want to close this chat session?")) {
       onCloseSession();
     }
   };
@@ -166,36 +173,41 @@ const AdminChatWindow = ({ sessionId, onClose, onCloseSession }: AdminChatWindow
   // Format timestamp
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
+    return date.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   if (isLoading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100%">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100%"
+      >
         <CircularProgress />
       </Box>
     );
   }
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
       {/* Header */}
       <Box
         sx={{
           p: 2,
           borderBottom: 1,
-          borderColor: 'divider',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          bgcolor: 'background.default',
+          borderColor: "divider",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          bgcolor: "background.default",
         }}
       >
         <Box display="flex" alignItems="center" gap={2}>
-          <Avatar sx={{ bgcolor: 'primary.main' }}>
+          <Avatar sx={{ bgcolor: "primary.main" }}>
             <PersonIcon />
           </Avatar>
           <Box>
@@ -208,9 +220,9 @@ const AdminChatWindow = ({ sessionId, onClose, onCloseSession }: AdminChatWindow
               />
               <Chip
                 icon={<CheckCircleIcon sx={{ fontSize: 14 }} />}
-                label={session?.isActive ? 'Active' : 'Closed'}
+                label={session?.isActive ? "Active" : "Closed"}
                 size="small"
-                color={session?.isActive ? 'success' : 'default'}
+                color={session?.isActive ? "success" : "default"}
               />
               <Typography variant="caption" color="text.secondary">
                 {messages.length} messages
@@ -243,18 +255,18 @@ const AdminChatWindow = ({ sessionId, onClose, onCloseSession }: AdminChatWindow
       <Box
         sx={{
           flexGrow: 1,
-          overflow: 'auto',
+          overflow: "auto",
           p: 2,
-          bgcolor: 'grey.50',
-          '&::-webkit-scrollbar': {
-            width: '8px',
+          bgcolor: "grey.50",
+          "&::-webkit-scrollbar": {
+            width: "8px",
           },
-          '&::-webkit-scrollbar-track': {
-            backgroundColor: 'transparent',
+          "&::-webkit-scrollbar-track": {
+            backgroundColor: "transparent",
           },
-          '&::-webkit-scrollbar-thumb': {
-            backgroundColor: 'rgba(0,0,0,0.2)',
-            borderRadius: '4px',
+          "&::-webkit-scrollbar-thumb": {
+            backgroundColor: "rgba(0,0,0,0.2)",
+            borderRadius: "4px",
           },
         }}
       >
@@ -264,7 +276,7 @@ const AdminChatWindow = ({ sessionId, onClose, onCloseSession }: AdminChatWindow
             justifyContent="center"
             alignItems="center"
             height="100%"
-            sx={{ color: 'text.secondary' }}
+            sx={{ color: "text.secondary" }}
           >
             <Typography variant="body2">No messages yet</Typography>
           </Box>
@@ -275,28 +287,32 @@ const AdminChatWindow = ({ sessionId, onClose, onCloseSession }: AdminChatWindow
               <Box
                 key={msg.id}
                 sx={{
-                  display: 'flex',
-                  justifyContent: isFromAdmin ? 'flex-end' : 'flex-start',
+                  display: "flex",
+                  justifyContent: isFromAdmin ? "flex-end" : "flex-start",
                   mb: 2,
                 }}
               >
                 <Box
                   sx={{
-                    maxWidth: '70%',
-                    display: 'flex',
+                    maxWidth: "70%",
+                    display: "flex",
                     gap: 1,
-                    flexDirection: isFromAdmin ? 'row-reverse' : 'row',
+                    flexDirection: isFromAdmin ? "row-reverse" : "row",
                   }}
                 >
                   {/* Avatar */}
                   <Avatar
                     sx={{
-                      bgcolor: isFromAdmin ? 'success.main' : 'primary.main',
+                      bgcolor: isFromAdmin ? "success.main" : "primary.main",
                       width: 32,
                       height: 32,
                     }}
                   >
-                    {isFromAdmin ? <AdminIcon sx={{ fontSize: 18 }} /> : <PersonIcon sx={{ fontSize: 18 }} />}
+                    {isFromAdmin ? (
+                      <AdminIcon sx={{ fontSize: 18 }} />
+                    ) : (
+                      <PersonIcon sx={{ fontSize: 18 }} />
+                    )}
                   </Avatar>
 
                   {/* Message Bubble */}
@@ -304,7 +320,7 @@ const AdminChatWindow = ({ sessionId, onClose, onCloseSession }: AdminChatWindow
                     elevation={1}
                     sx={{
                       p: 1.5,
-                      bgcolor: isFromAdmin ? 'success.light' : 'white',
+                      bgcolor: isFromAdmin ? "success.light" : "white",
                       borderRadius: 2,
                     }}
                   >
@@ -314,16 +330,19 @@ const AdminChatWindow = ({ sessionId, onClose, onCloseSession }: AdminChatWindow
                       display="block"
                       sx={{ mb: 0.5 }}
                     >
-                      {isFromAdmin ? 'Admin' : `User #${msg.fromUserId}`}
+                      {isFromAdmin ? "Admin" : `User #${msg.fromUserId}`}
                     </Typography>
-                    <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
+                    <Typography
+                      variant="body2"
+                      sx={{ wordBreak: "break-word" }}
+                    >
                       {msg.text}
                     </Typography>
                     <Typography
                       variant="caption"
                       color="text.secondary"
                       display="block"
-                      sx={{ mt: 0.5, textAlign: 'right' }}
+                      sx={{ mt: 0.5, textAlign: "right" }}
                     >
                       {formatTime(msg.sentAt)}
                     </Typography>
@@ -341,8 +360,8 @@ const AdminChatWindow = ({ sessionId, onClose, onCloseSession }: AdminChatWindow
         sx={{
           p: 2,
           borderTop: 1,
-          borderColor: 'divider',
-          bgcolor: 'background.paper',
+          borderColor: "divider",
+          bgcolor: "background.paper",
         }}
       >
         <Box display="flex" gap={1} alignItems="flex-end">
@@ -357,7 +376,7 @@ const AdminChatWindow = ({ sessionId, onClose, onCloseSession }: AdminChatWindow
             disabled={!session?.isActive || isSending}
             size="small"
             sx={{
-              '& .MuiOutlinedInput-root': {
+              "& .MuiOutlinedInput-root": {
                 borderRadius: 2,
               },
             }}
@@ -367,21 +386,29 @@ const AdminChatWindow = ({ sessionId, onClose, onCloseSession }: AdminChatWindow
             onClick={handleSendMessage}
             disabled={!inputMessage.trim() || !session?.isActive || isSending}
             sx={{
-              bgcolor: 'primary.main',
-              color: 'white',
-              '&:hover': {
-                bgcolor: 'primary.dark',
+              bgcolor: "primary.main",
+              color: "white",
+              "&:hover": {
+                bgcolor: "primary.dark",
               },
-              '&.Mui-disabled': {
-                bgcolor: 'grey.300',
+              "&.Mui-disabled": {
+                bgcolor: "grey.300",
               },
             }}
           >
-            {isSending ? <CircularProgress size={24} color="inherit" /> : <SendIcon />}
+            {isSending ? (
+              <CircularProgress size={24} color="inherit" />
+            ) : (
+              <SendIcon />
+            )}
           </IconButton>
         </Box>
         {!session?.isActive && (
-          <Typography variant="caption" color="error" sx={{ mt: 1, display: 'block' }}>
+          <Typography
+            variant="caption"
+            color="error"
+            sx={{ mt: 1, display: "block" }}
+          >
             This session is closed. You cannot send messages.
           </Typography>
         )}
